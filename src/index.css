@@ -1,0 +1,81 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/space-grotesk';
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk Variable', 'Inter Variable', ui-sans-serif, sans-serif;
+
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-ink: var(--accent-ink);
+  --color-danger: var(--danger);
+  --color-warn: var(--warn);
+  --color-stage: var(--stage);
+}
+
+:root {
+  color-scheme: dark;
+  --surface-0: #0f1115;
+  --surface-1: #161920;
+  --surface-2: #1e222b;
+  --surface-3: #2a2f3a;
+  --ink: #eef0f4;
+  --ink-soft: #a7adba;
+  --ink-faint: #6c7383;
+  --line: #2a2f3a;
+  --accent: #f59e3c;
+  --accent-strong: #ffb45c;
+  --accent-ink: #1b1206;
+  --danger: #f2626b;
+  --warn: #f5c542;
+  --stage: #12151b;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --surface-0: #ffffff;
+    --surface-1: #f6f5f2;
+    --surface-2: #eeece7;
+    --surface-3: #dedbd3;
+    --ink: #1c1d21;
+    --ink-soft: #5b5f69;
+    --ink-faint: #8d919b;
+    --line: #e2dfd8;
+    --accent: #e0812a;
+    --accent-strong: #c96d18;
+    --accent-ink: #ffffff;
+    --danger: #d23f48;
+    --warn: #b98a00;
+    --stage: #e9e6df;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-1);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Thin scrollbars that follow the theme. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-3) transparent;
+}

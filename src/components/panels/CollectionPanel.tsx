@@ -1,0 +1,225 @@
+import { Download, Plus, Search, Sparkles, Trash2, Upload } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { createBackup, parseBackup, parseCsv } from '../../domain/backup'
+import { gameColor } from '../../domain/color'
+import { useLayout } from '../../hooks/useLayout'
+import { useT } from '../../i18n'
+import { useAppStore } from '../../store/appStore'
+import { Button } from '../ui'
+import { cx, inputClass } from '../styles'
+import { GameEditor } from './GameEditor'
+
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+
+function download(name: string, content: string, type: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = name
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export function CollectionPanel() {
+  const t = useT()
+  const games = useAppStore((s) => s.games)
+  const selectedId = useAppStore((s) => s.selectedId)
+  const editing = useAppStore((s) => s.editing)
+  const {
+    addGame,
+    updateGame,
+    removeGame,
+    addGames,
+    loadSample,
+    clearGames,
+    select,
+    restore,
+    edit: setEditing,
+  } = useAppStore.getState()
+  const layout = useLayout()
+  const [query, setQuery] = useState('')
+  const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
+
+  const unplaced = useMemo(() => new Map(layout.unplaced.map((u) => [u.gameId, u.reason])), [layout.unplaced])
+  const sagaNames = useMemo(() => [...new Set(Object.values(layout.sagas))].sort(collator.compare), [layout.sagas])
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return games
+      .filter((g) => !q || g.name.toLowerCase().includes(q) || layout.sagas[g.id]?.toLowerCase().includes(q))
+      .sort((a, b) => collator.compare(a.name, b.name))
+  }, [games, query, layout.sagas])
+
+  const importFile = async (file: File) => {
+    try {
+      const text = await file.text()
+      if (file.name.toLowerCase().endsWith('.json')) {
+        const backup = parseBackup(text)
+        restore(backup)
+        setMessage({ text: t('collection.imported', { count: backup.games.length }) })
+      } else {
+        const rows = parseCsv(text)
+        addGames(rows)
+        setMessage({ text: t('collection.imported', { count: rows.length }) })
+      }
+    } catch (err) {
+      setMessage({ text: t('collection.importError', { error: (err as Error).message }), error: true })
+    }
+  }
+
+  const exportBackup = () => {
+    const { games, units, cube, options } = useAppStore.getState()
+    const stamp = new Date().toISOString().slice(0, 10)
+    download(
+      `shelf-planner-${stamp}.json`,
+      JSON.stringify(createBackup({ games, units, cube, options }), null, 2),
+      'application/json',
+    )
+  }
+
+  const editingGame = editing && editing !== 'new' ? games.find((g) => g.id === editing) : undefined
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="space-y-3 border-b border-line px-5 py-4">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-faint" />
+            <input
+              className={cx(inputClass, 'pl-9')}
+              placeholder={t('collection.search')}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          <Button
+            variant="primary"
+            onClick={() => setEditing('new')}
+            aria-label={t('collection.add')}
+            title={t('collection.add')}
+          >
+            <Plus className="size-4" />
+          </Button>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="mr-auto text-ink-soft">{t('collection.count', { count: games.length })}</span>
+          <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => fileInput.current?.click()}>
+            <Upload className="size-3.5" /> {t('collection.import')}
+          </Button>
+          <Button variant="ghost" className="px-2 py-1 text-xs" onClick={exportBackup} disabled={games.length === 0}>
+            <Download className="size-3.5" /> {t('collection.export')}
+          </Button>
+          <Button
+            variant="ghost"
+            className="px-2 py-1 text-xs"
+            disabled={games.length === 0}
+            title={t('collection.clear')}
+            aria-label={t('collection.clear')}
+            onClick={() => window.confirm(t('collection.clearConfirm', { count: games.length })) && clearGames()}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".json,.csv,text/csv,application/json"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) void importFile(file)
+              e.target.value = ''
+            }}
+          />
+        </div>
+        {message && (
+          <p className={cx('text-xs', message.error ? 'text-danger' : 'text-ink-soft')} role="status">
+            {message.text}
+          </p>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-3 py-3">
+        {editing && (
+          <div className="mb-3">
+            <GameEditor
+              key={editing}
+              initial={editingGame}
+              sagas={sagaNames}
+              onCancel={() => setEditing(null)}
+              onSave={(draft) => {
+                if (editingGame) updateGame(editingGame.id, draft)
+                else addGame(draft)
+                setEditing(null)
+              }}
+              onDelete={
+                editingGame
+                  ? () => {
+                      removeGame(editingGame.id)
+                      setEditing(null)
+                    }
+                  : undefined
+              }
+            />
+          </div>
+        )}
+
+        {games.length === 0 && !editing && (
+          <div className="flex flex-col items-center gap-4 px-6 py-12 text-center">
+            <p className="text-sm text-ink-soft">{t('collection.empty')}</p>
+            <Button variant="primary" onClick={loadSample}>
+              <Sparkles className="size-4" /> {t('collection.loadSample')}
+            </Button>
+            <p className="text-xs text-ink-faint">{t('collection.sampleNote')}</p>
+          </div>
+        )}
+
+        <ul className="space-y-0.5">
+          {visible.map((g) => {
+            const reason = unplaced.get(g.id)
+            const saga = layout.sagas[g.id]
+            return (
+              <li key={g.id}>
+                <button
+                  type="button"
+                  onClick={() => select(g.id === selectedId ? null : g.id)}
+                  onDoubleClick={() => setEditing(g.id)}
+                  className={cx(
+                    'group flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors',
+                    g.id === selectedId ? 'bg-accent/15 ring-1 ring-accent/50' : 'hover:bg-surface-2',
+                  )}
+                >
+                  <span className="h-8 w-2.5 shrink-0 rounded-sm" style={{ background: gameColor(g) }} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{g.name}</span>
+                    <span className="flex gap-2 text-xs text-ink-faint">
+                      <span className="tabular-nums">
+                        {g.dims.width} × {g.dims.height} × {g.dims.depth}
+                      </span>
+                      {saga && <span className="truncate text-ink-soft">· {saga}</span>}
+                    </span>
+                  </span>
+                  {reason && (
+                    <span className="shrink-0 rounded-full bg-danger/15 px-2 py-0.5 text-[10px] font-semibold text-danger">
+                      {t(reason === 'too-big' ? 'game.tooBig' : 'game.noSpace')}
+                    </span>
+                  )}
+                  <span
+                    role="button"
+                    tabIndex={-1}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setEditing(g.id)
+                    }}
+                    className="shrink-0 rounded px-1.5 py-0.5 text-xs text-ink-faint opacity-0 group-hover:opacity-100 hover:text-ink"
+                  >
+                    {t('game.edit')}
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    </div>
+  )
+}
