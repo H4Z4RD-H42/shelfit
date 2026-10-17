@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-10-17
+
+### Fixed
+
+- After a CSV import, the "without size" count now refers to the collection, not to the file: sizes entered by hand and kept by the merge are no longer counted as missing.
+
 ## [0.4.2] - 2026-10-17
 
 ### Fixed
@@ -66,7 +72,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.3.0...v0.4.0

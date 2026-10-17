@@ -177,14 +177,16 @@ const MERGED_FIELDS = [
  * Adds imported games to the collection. A game already present (same BGG id,
  * or same name when there is no id) is updated with the fields the import
  * provides, so that re-importing never wipes sizes or choices made by hand.
+ * `missing` counts the imported games that are still without a size.
  */
 export function mergeGames(
   existing: Game[],
   incoming: ImportedGame[],
   makeId: () => string,
   now: number,
-): { games: Game[]; added: number; updated: number } {
+): { games: Game[]; added: number; updated: number; missing: number } {
   const games = existing.slice()
+  const touched = new Set<number>()
   const byBgg = new Map<number, number>()
   const byName = new Map<string, number>()
   const index = (g: Game, i: number) => {
@@ -201,6 +203,7 @@ export function mergeGames(
       const game: Game = { ...row, id: makeId(), createdAt: now + n }
       games.push(game)
       index(game, games.length - 1)
+      touched.add(games.length - 1)
       added++
       return
     }
@@ -212,7 +215,10 @@ export function mergeGames(
     if (row.orientation !== 'inherit') patch.orientation = row.orientation
     games[i] = { ...old, ...patch }
     index(games[i]!, i)
+    touched.add(i)
     updated++
   })
-  return { games, added, updated }
+  // Counted on the merged games: sizes entered by hand survive a re-import.
+  const missing = [...touched].filter((i) => !hasDims(games[i]!)).length
+  return { games, added, updated, missing }
 }

@@ -27,7 +27,7 @@ export const en: Messages = {
   'collection.clear': 'Clear collection',
   'collection.clearConfirm': 'Delete all {count} games? You can export a backup first.',
   'collection.imported': '{count} games imported',
-  'collection.importedCsv': '{added} games added, {updated} updated. {missing} without size.',
+  'collection.importedCsv': '{added} games added, {updated} updated. Still without size: {missing}.',
   'collection.filter.all': 'All',
   'collection.filter.missing': 'No size',
   'collection.filter.unplaced': 'No spot',

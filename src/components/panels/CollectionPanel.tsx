@@ -77,8 +77,7 @@ export function CollectionPanel() {
         setMessage({ text: t('collection.imported', { count: backup.games.length }) })
       } else {
         const rows = parseCsv(text)
-        const { added, updated } = importGames(rows)
-        const missing = rows.filter((r) => !r.dims).length
+        const { added, updated, missing } = importGames(rows)
         setMessage({ text: t('collection.importedCsv', { added, updated, missing }) })
       }
     } catch (err) {

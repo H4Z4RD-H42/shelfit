@@ -25,7 +25,7 @@ export const it = {
   'collection.clear': 'Svuota collezione',
   'collection.clearConfirm': 'Eliminare tutti i {count} giochi? Puoi prima esportare un backup.',
   'collection.imported': '{count} giochi importati',
-  'collection.importedCsv': '{added} giochi aggiunti, {updated} aggiornati. {missing} senza misure.',
+  'collection.importedCsv': '{added} giochi aggiunti, {updated} aggiornati. Ancora senza misure: {missing}.',
   'collection.filter.all': 'Tutti',
   'collection.filter.missing': 'Senza misure',
   'collection.filter.unplaced': 'Senza posto',

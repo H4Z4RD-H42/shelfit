@@ -83,6 +83,8 @@ describe('mergeGames', () => {
     )
     expect(result.added).toBe(1)
     expect(result.updated).toBe(2)
+    // Azul keeps its manual size and Catan gets one: only the new Root lacks a size.
+    expect(result.missing).toBe(1)
     expect(result.games[0]).toMatchObject({ name: 'Azul', year: 2018, orientation: 'vertical', dims: { width: 26 } })
     expect(result.games[1]!.dims).toEqual({ width: 29, height: 29, depth: 7 })
     expect(result.games[2]).toMatchObject({ id: 'new1', name: 'Root', bggId: 237182, createdAt: 102 })

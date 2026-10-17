@@ -30,7 +30,7 @@ export interface AppState {
   updateGame: (id: string, patch: Partial<Omit<Game, 'id'>>) => void
   removeGame: (id: string) => void
   /** Merges imported games into the collection. */
-  importGames: (games: ImportedGame[]) => { added: number; updated: number }
+  importGames: (games: ImportedGame[]) => { added: number; updated: number; missing: number }
   loadSample: () => void
   clearGames: () => void
 
@@ -85,7 +85,7 @@ export const useAppStore = create<AppState>()(
       importGames: (rows) => {
         const result = mergeGames(getState().games, rows, nanoid, Date.now())
         setState({ games: result.games })
-        return { added: result.added, updated: result.updated }
+        return { added: result.added, updated: result.updated, missing: result.missing }
       },
       loadSample: () => setState((s) => ({ games: [...s.games, ...sampleCollection(nanoid)] })),
       clearGames: () => setState({ games: [], selectedId: null }),
