@@ -42,6 +42,16 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 - Printable image of the front view.
 - Box textures from game images in the 3D view.
 
+### Public stats page (with the edge worker)
+
+A public `/stats` page in the spirit of a service status page, fed by anonymous events sent to the same Cloudflare worker as the BGG proxy (stored in D1).
+
+- **Community**: shelves planned, boxes placed, KALLAX units by size (1×4, 2×2, 4×4…), average fill.
+- **Service status**: BGG proxy health, import success rate, queue length, cache hit rate.
+- **Curiosities**: most shelved games, most common shelf setup, largest collection.
+- **Activity**: layouts computed per day (bar chart) and an anonymous feed of the latest plans (no usernames).
+- **Privacy**: on by default, switchable off in the settings and explained on the page; no cookies, no IP stored, a random installation id only, aggregated per day.
+
 ### 1.0 — Public release
 
 - Final name and branding, public repository, hosting on a custom domain.
