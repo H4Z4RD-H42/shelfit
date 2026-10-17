@@ -12,6 +12,7 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 - **0.6** — Sizes typed by hand always win over imported ones.
 - **0.7** — Long side at the front for lying boxes; redesigned options panel.
 - **0.8** — Phone layout with bottom navigation; 3D camera fitted to the screen.
+- **0.9** — Deep boxes can stick out at the back; games that fit in no cube go on top by default.
 
 ## Planned
 
@@ -21,11 +22,12 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 - Import a collection from a BGG username, sizes taken from the owned version (fallback: other editions).
 - Game search by name, thumbnails, "Powered by BGG" attribution.
 - Genre, designer and families filled automatically; families as an extra saga signal.
+- Expansion → base game links (by BGG id): each expansion placed right after the game it expands, and the base game's box shown when locating an expansion stored inside it.
 
 ### Better layouts
 
 - Drag & drop to pin a game to a cube; the engine works around pinned games.
-- Expansions stored inside the base box.
+- Expansions stored inside the base box (uses the BGG expansion links).
 - Weight-aware stacking and shelf load warnings.
 - Run the engine in a Web Worker for very large collections.
 

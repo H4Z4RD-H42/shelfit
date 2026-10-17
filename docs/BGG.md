@@ -28,6 +28,10 @@ Sizes were read from the public versions pages (`/boardgame/<id>/<slug>/versions
 
 Takeaways for the importer: prefer the owned version, fall back to the most common size among the other editions, flag the source (`own` / `alt`) so the user knows which sizes to double-check, and keep manual entry first-class.
 
+## Expansion links
+
+The collection CSV only says whether an item is an expansion (`itemtype`), not which game it expands. `GET /xmlapi2/thing?id=<id>` lists `<link type="boardgameexpansion">` entries: on an expansion they point to the base games (marked `inbound="true"`), on a base game to its expansions. An expansion may expand several games, and usually a specific edition (e.g. a first-edition expansion while the owned base is the second edition), so match the links against the owned ids and keep every match. To be verified against a live response once the token is available.
+
 ## Planned architecture
 
 ```
