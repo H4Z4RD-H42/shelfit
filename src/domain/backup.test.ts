@@ -147,7 +147,6 @@ describe('backup', () => {
     const data = {
       games: [{ id: 'a', name: 'A', dims: { width: 1, height: 2, depth: 3 }, orientation: 'inherit' as const, createdAt: 1 }],
       units: [{ id: 'u', name: 'U', columns: 2, rows: 2, color: '#fff' }],
-      cube: KALLAX_CUBE,
       options: DEFAULT_OPTIONS,
       zones: [{ id: 'z', rule: 'small' as const, place: 'end' as const, strategy: 'compact' as const, color: '#e07a5f' }],
     }
@@ -159,13 +158,25 @@ describe('backup', () => {
       ...createBackup({
         games: [],
         units: [{ id: 'u', name: 'U', columns: 1, rows: 1, color: '#fff' }],
-        cube: KALLAX_CUBE,
         options: DEFAULT_OPTIONS,
       }),
+      cube: KALLAX_CUBE,
       version: 2,
     }
     expect(parseBackup(JSON.stringify(old)).zones).toBeUndefined()
     expect(() => parseBackup(JSON.stringify({ ...old, zones: [{ id: 1 }] }))).toThrow(/zones/)
+  })
+
+  it('checks the shape of custom shelves', () => {
+    const custom = { id: 'u', name: 'U', columns: 1, rows: 1, color: '#fff', kind: 'custom' as const }
+    const shape = { columns: [{ width: 40, cells: [30, 25] }], depth: 30, outer: 1.8, inner: 0 }
+    const backup = (units: object[]) =>
+      JSON.stringify({ ...createBackup({ games: [], units: [], options: DEFAULT_OPTIONS }), units })
+    expect(parseBackup(backup([{ ...custom, custom: shape }])).units[0]).toMatchObject({ custom: shape })
+    expect(() => parseBackup(backup([custom]))).toThrow(/shelves/)
+    expect(() => parseBackup(backup([{ ...custom, custom: { ...shape, columns: [{ width: 40, cells: [] }] } }]))).toThrow(
+      /shelves/,
+    )
   })
 
   it('rejects foreign files', () => {

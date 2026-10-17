@@ -4,7 +4,7 @@ import { useGamesById, useLayout } from '../hooks/useLayout'
 import { useBoxColor } from '../hooks/useBoxColor'
 import { useZonesById } from '../hooks/useZones'
 import { useT } from '../i18n'
-import { UNPLACED_LABEL, zoneName } from './labels'
+import { UNPLACED_LABEL, cubePosition, zoneName } from './labels'
 import { useAppStore } from '../store/appStore'
 import { Button, Segmented, Toggle } from './ui'
 
@@ -52,7 +52,7 @@ export function GameDetails() {
           <>
             <dt className="text-ink-faint">{t('list.cube', { n: cube.index + 1 })}</dt>
             <dd className="truncate text-right">
-              {unit.name} · {t('list.position', { row: cube.row + 1, column: cube.column + 1 })}
+              {unit.name} · {cubePosition(t, unit, cube.column, cube.row)}
             </dd>
             <dt className="text-ink-faint">{t('game.orientation')}</dt>
             <dd className="text-right">{t(`orientation.${placement.orientation}`)}</dd>

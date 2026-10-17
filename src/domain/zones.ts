@@ -1,7 +1,7 @@
 import { groupOf } from './grouping'
-import { cubeOrigin, type CubeSlot } from './kallax'
+import { cellAt, unitGeometry, type CubeSlot } from './geometry'
 import { compareInSaga } from './sorting'
-import type { BoxDimensions, CubeLayout, CubeSize, Game, ShelfUnit, Strategy, Zone, ZonePlace, ZoneRule } from './types'
+import type { BoxDimensions, CubeLayout, Game, ShelfUnit, Strategy, Zone, ZonePlace, ZoneRule } from './types'
 
 /*
  * Zones
@@ -201,15 +201,13 @@ export function assignZones(games: Game[], zones: Zone[], ctx: ZoneContext): Rec
  * Free cubes in the order a zone prefers them. `free` lists slot indexes in
  * filling order. A zone on chosen cubes gets exactly those, in filling order.
  */
-export function rankSlots(zone: Zone, slots: CubeSlot[], free: number[], units: ShelfUnit[], cube: CubeSize): number[] {
+export function rankSlots(zone: Zone, slots: CubeSlot[], free: number[]): number[] {
   if (zone.place === 'cubes') {
     const chosen = new Set(zone.cubes)
     return free.filter((i) => chosen.has(cubeId(slots[i]!)))
   }
-  const unitOf = new Map(units.map((u) => [u.id, u]))
   const rank = (i: number): number => {
-    const slot = slots[i]!
-    const unit = unitOf.get(slot.unitId)!
+    const { cell } = slots[i]!
     switch (zone.place) {
       case 'start':
       case 'cubes':
@@ -217,10 +215,10 @@ export function rankSlots(zone: Zone, slots: CubeSlot[], free: number[], units: 
       case 'end':
         return -i
       case 'bottom':
-        // Rows counted from the floor.
-        return unit.rows - 1 - slot.row
+        // Height of the floor of the cube.
+        return cell.y
       case 'eye':
-        return Math.abs(cubeOrigin(unit, slot.column, slot.row, cube).y + cube.height / 2 - EYE_HEIGHT)
+        return Math.abs(cell.y + cell.size.height / 2 - EYE_HEIGHT)
     }
   }
   return [...free].sort((a, b) => rank(a) - rank(b) || a - b)
@@ -230,38 +228,57 @@ export function rankSlots(zone: Zone, slots: CubeSlot[], free: number[], units: 
  * The cubes of a zone that needs `needed` of them, in filling order. A zone on
  * chosen cubes keeps all of them, even the ones it does not fill yet: room to grow.
  */
-export function zoneSlots(
-  zone: Zone,
-  needed: number,
-  slots: CubeSlot[],
-  free: number[],
-  units: ShelfUnit[],
-  cube: CubeSize,
-): number[] {
-  const ranked = rankSlots(zone, slots, free, units, cube)
+export function zoneSlots(zone: Zone, needed: number, slots: CubeSlot[], free: number[]): number[] {
+  const ranked = rankSlots(zone, slots, free)
   if (zone.place === 'cubes') return ranked
   return ranked.slice(0, Math.max(0, needed)).sort((a, b) => a - b)
 }
 
+/** Adjacent cubes of a zone standing on the same panel, which carries one label. */
 export interface ZoneRun {
   zoneId: string
   unitId: string
-  row: number
-  first: number
-  last: number
+  /** Left end of the run and height of the floor of its cubes, in the unit. */
+  x: number
+  y: number
+  width: number
+  /** Thickness of the panel under the cubes. */
+  below: number
 }
 
-/** Groups the cubes of each zone into runs of adjacent cubes on one row: one label per run. */
-export function zoneRuns(cubes: Pick<CubeLayout, 'unitId' | 'row' | 'column' | 'zoneId'>[]): ZoneRun[] {
-  const sorted = cubes
-    .filter((c) => c.zoneId)
-    .sort((a, b) => a.unitId.localeCompare(b.unitId) || a.row - b.row || a.column - b.column)
+/** Groups the cubes of each zone into runs of adjacent cubes at the same height: one label per run. */
+export function zoneRuns(cubes: Pick<CubeLayout, 'unitId' | 'row' | 'column' | 'zoneId'>[], units: ShelfUnit[]): ZoneRun[] {
+  const unitOf = new Map(units.map((u) => [u.id, u]))
+  const cells = cubes.flatMap((c) => {
+    const unit = unitOf.get(c.unitId)
+    const cell = c.zoneId && unit && cellAt(unitGeometry(unit), c.column, c.row)
+    return cell ? [{ zoneId: c.zoneId!, unitId: c.unitId, cell }] : []
+  })
+  const index = new Map(units.map((u, i) => [u.id, i]))
+  cells.sort((a, b) => index.get(a.unitId)! - index.get(b.unitId)! || b.cell.y - a.cell.y || a.cell.column - b.cell.column)
   const runs: ZoneRun[] = []
-  for (const c of sorted) {
+  let previous: (typeof cells)[number] | undefined
+  for (const c of cells) {
     const run = runs[runs.length - 1]
-    if (run && run.zoneId === c.zoneId && run.unitId === c.unitId && run.row === c.row && run.last === c.column - 1)
-      run.last = c.column
-    else runs.push({ zoneId: c.zoneId!, unitId: c.unitId, row: c.row, first: c.column, last: c.column })
+    if (
+      run &&
+      previous &&
+      run.zoneId === c.zoneId &&
+      run.unitId === c.unitId &&
+      Math.abs(previous.cell.y - c.cell.y) < 1e-6 &&
+      previous.cell.column === c.cell.column - 1
+    )
+      run.width = c.cell.x + c.cell.size.width - run.x
+    else
+      runs.push({
+        zoneId: c.zoneId,
+        unitId: c.unitId,
+        x: c.cell.x,
+        y: c.cell.y,
+        width: c.cell.size.width,
+        below: c.cell.below,
+      })
+    previous = c
   }
   return runs
 }

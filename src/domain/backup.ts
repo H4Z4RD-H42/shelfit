@@ -1,8 +1,17 @@
 import { sameDims } from './sizes'
-import { hasDims, type CubeSize, type Game, type GameOrientation, type PackOptions, type ShelfUnit, type Zone } from './types'
+import {
+  hasDims,
+  type CubeSize,
+  type CustomShape,
+  type Game,
+  type GameOrientation,
+  type PackOptions,
+  type ShelfUnit,
+  type Zone,
+} from './types'
 
 export const BACKUP_FORMAT = 'shelf-planner-backup'
-export const BACKUP_VERSION = 3
+export const BACKUP_VERSION = 4
 
 export interface Backup {
   format: typeof BACKUP_FORMAT
@@ -10,13 +19,14 @@ export interface Backup {
   exportedAt: string
   games: Game[]
   units: ShelfUnit[]
-  cube: CubeSize
+  /** Cube size shared by every unit, up to version 3. */
+  cube?: CubeSize
   options: PackOptions
   /** Added in version 3. */
   zones?: Zone[]
 }
 
-export function createBackup(data: Pick<Backup, 'games' | 'units' | 'cube' | 'options' | 'zones'>): Backup {
+export function createBackup(data: Pick<Backup, 'games' | 'units' | 'options' | 'zones'>): Backup {
   return { format: BACKUP_FORMAT, version: BACKUP_VERSION, exportedAt: new Date().toISOString(), ...data }
 }
 
@@ -25,6 +35,25 @@ const isPositive = (n: unknown): n is number => typeof n === 'number' && Number.
 function isGame(value: unknown): value is Game {
   const g = value as Game
   return typeof g?.id === 'string' && typeof g.name === 'string' && (g.dims === undefined || hasDims(g))
+}
+
+const isThickness = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= 0
+
+function isShape(value: unknown): value is CustomShape {
+  const s = value as CustomShape
+  return (
+    Array.isArray(s?.columns) &&
+    s.columns.length > 0 &&
+    s.columns.every((c) => isPositive(c?.width) && Array.isArray(c.cells) && c.cells.length > 0 && c.cells.every(isPositive)) &&
+    isPositive(s.depth) &&
+    isThickness(s.outer) &&
+    isThickness(s.inner)
+  )
+}
+
+function isUnit(value: unknown): value is ShelfUnit {
+  const u = value as ShelfUnit
+  return typeof u?.id === 'string' && (u.custom === undefined || isShape(u.custom)) && (u.kind !== 'custom' || !!u.custom)
 }
 
 function isZone(value: unknown): value is Zone {
@@ -38,7 +67,8 @@ export function parseBackup(text: string): Backup {
   if ((data.version ?? 0) > BACKUP_VERSION) throw new Error('backup made by a newer version')
   if (!Array.isArray(data.games) || !data.games.every(isGame)) throw new Error('invalid games')
   if (!Array.isArray(data.units) || data.units.length === 0) throw new Error('invalid shelves')
-  if (!data.cube || !isPositive(data.cube.width) || !isPositive(data.cube.height) || !isPositive(data.cube.depth))
+  if (!data.units.every(isUnit)) throw new Error('invalid shelves')
+  if (data.cube !== undefined && !(isPositive(data.cube.width) && isPositive(data.cube.height) && isPositive(data.cube.depth)))
     throw new Error('invalid cube size')
   if (data.zones !== undefined && !(Array.isArray(data.zones) && data.zones.every(isZone))) throw new Error('invalid zones')
   return data as Backup

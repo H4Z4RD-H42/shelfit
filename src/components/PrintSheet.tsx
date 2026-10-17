@@ -2,38 +2,43 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { APP_NAME } from '../config'
 import { placementSteps } from '../domain/instructions'
+import { interiorBox, unitGeometry } from '../domain/geometry'
 import { cubeKey, isBlocked } from '../domain/kallax'
 import type { CubeLayout, Placement, ShelfUnit } from '../domain/types'
 import { useGamesById, useLayout } from '../hooks/useLayout'
 import { useT } from '../i18n'
 import { useAppStore } from '../store/appStore'
-import { UNPLACED_LABEL, groupLabel, zoneName } from './labels'
+import { UNPLACED_LABEL, cubePosition, groupLabel, zoneName } from './labels'
 import { useZonesById } from '../hooks/useZones'
 
-/** Grid of a unit with the number of every cube, to find "cube 7" quickly. */
+/** Map of a unit, to scale, with the number of every cube, to find "cube 7" quickly. */
 function UnitMap({ unit, numbers }: { unit: ShelfUnit; numbers: Map<string, number> }) {
-  const cell = 12
+  const box = interiorBox(unit)
+  // Centimetres of the unit; a KALLAX cube is about 34 px wide on paper.
+  const pad = 1.5
   return (
-    <svg className="unit-map" viewBox={`0 0 ${unit.columns * cell + 2} ${unit.rows * cell + 2}`} width={unit.columns * 34}>
-      {Array.from({ length: unit.columns * unit.rows }, (_, k) => {
-        const column = k % unit.columns
-        const row = Math.floor(k / unit.columns)
-        const x = 1 + column * cell
-        const y = 1 + row * cell
+    <svg
+      className="unit-map"
+      viewBox={`${box.left - pad} ${-box.top - pad} ${box.width + 2 * pad} ${box.height + 2 * pad}`}
+      width={box.width}
+    >
+      {unitGeometry(unit).cells.map(({ column, row, x, y: bottom, size }) => {
+        const y = -bottom - size.height
+        const { width: w, height: h } = size
         const blocked = isBlocked(unit, column, row)
         const n = numbers.get(cubeKey(column, row))
         return (
-          <g key={k}>
-            <rect x={x} y={y} width={cell} height={cell} fill={blocked ? '#ddd' : '#fff'} stroke="#000" strokeWidth={0.4} />
+          <g key={`${column}:${row}`}>
+            <rect x={x} y={y} width={w} height={h} fill={blocked ? '#ddd' : '#fff'} stroke="#000" strokeWidth={1.1} />
             {blocked ? (
-              <path d={`M${x} ${y}L${x + cell} ${y + cell}M${x + cell} ${y}L${x} ${y + cell}`} stroke="#888" strokeWidth={0.4} />
+              <path d={`M${x} ${y}L${x + w} ${y + h}M${x + w} ${y}L${x} ${y + h}`} stroke="#888" strokeWidth={1.1} />
             ) : (
               <text
-                x={x + cell / 2}
-                y={y + cell / 2}
+                x={x + w / 2}
+                y={y + h / 2}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fontSize={5}
+                fontSize={Math.min(14, w * 0.45, h * 0.6)}
                 fontWeight={700}
               >
                 {n}
@@ -44,6 +49,11 @@ function UnitMap({ unit, numbers }: { unit: ShelfUnit; numbers: Map<string, numb
       })}
     </svg>
   )
+}
+
+function outerSize(unit: ShelfUnit) {
+  const { width, height } = unitGeometry(unit)
+  return { w: width.toFixed(1), h: height.toFixed(1) }
 }
 
 function Steps({ placements }: { placements: Placement[] }) {
@@ -122,7 +132,8 @@ export function PrintSheet() {
               <div>
                 <h2>{t('print.unit', { n: ui + 1, name: unit.name })}</h2>
                 <p className="how">
-                  {unit.columns} × {unit.rows} · {t('print.mapHint')}
+                  {unit.kind === 'custom' ? t('shelves.outer', outerSize(unit)) : `${unit.columns} × ${unit.rows}`} ·{' '}
+                  {t('print.mapHint')}
                 </p>
               </div>
               <UnitMap unit={unit} numbers={numbers} />
@@ -137,8 +148,7 @@ export function PrintSheet() {
               {cubes.map((c) => (
                 <article key={c.index} className="cube">
                   <h3>
-                    {t('list.cube', { n: c.index + 1 })}{' '}
-                    <span className="how">{t('list.position', { row: c.row + 1, column: c.column + 1 })}</span>
+                    {t('list.cube', { n: c.index + 1 })} <span className="how">{cubePosition(t, unit, c.column, c.row)}</span>
                   </h3>
                   {groupsOf(c) && <p className="group">{groupsOf(c)}</p>}
                   <Steps placements={c.placements} />

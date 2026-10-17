@@ -94,11 +94,11 @@ export function CollectionPanel() {
   }
 
   const exportBackup = () => {
-    const { games, units, cube, options, zones } = useAppStore.getState()
+    const { games, units, options, zones } = useAppStore.getState()
     const stamp = new Date().toISOString().slice(0, 10)
     download(
       `shelf-planner-${stamp}.json`,
-      JSON.stringify(createBackup({ games, units, cube, options, zones }), null, 2),
+      JSON.stringify(createBackup({ games, units, options, zones }), null, 2),
       'application/json',
     )
   }

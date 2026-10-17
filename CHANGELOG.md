@@ -5,6 +5,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-17
+
+### Added
+
+- Custom shelves: in the Shelves tab a unit can be "KALLAX" (standard IKEA sizes, the default for new units) or "Custom". A custom unit starts from the current KALLAX grid and is rebuilt compartment by compartment: tap a compartment to set the width of its column and its own height, add compartments above or below, add columns on either side, remove them, or exclude the compartment. Columns may have different heights, giving stepped shelves; depth and the thickness of outer and inner panels are set per unit.
+- Boxes go only into compartments large enough for them; a box too large for the current compartment waits for the next one it fits in, while the following games move up.
+- On a stepped unit, boxes stored on top lie on its highest part.
+- "By rows" filling reads a custom unit from the highest compartment down, treating compartments whose tops are within 1 cm as one row.
+- The front view draws the real outline of each unit; the cube pickers of the zones and the printed map are drawn to scale.
+
+### Changed
+
+- The cube size is no longer one setting shared by every unit: KALLAX units always have the standard sizes. Units saved with a different cube size become custom units with those sizes, so nothing moves.
+- Backups no longer carry a shared cube size (backup format version 4; older backups still load and are converted the same way).
+
 ## [0.13.0] - 2026-10-17
 
 ### Changed
@@ -172,7 +187,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.10.0...v0.11.0

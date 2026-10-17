@@ -1,4 +1,6 @@
-import type { GroupKey, GroupLevel, OverhangSide, PackOptions, ShelfUnit } from './types'
+import { isCustom, kallaxShape } from './geometry'
+import { KALLAX_CUBE } from './kallax'
+import type { CubeSize, GroupKey, GroupLevel, OverhangSide, PackOptions, ShelfUnit } from './types'
 
 export const DEFAULT_OPTIONS: PackOptions = {
   orientation: 'auto',
@@ -35,6 +37,17 @@ export function migrateUnits(units: ShelfUnit[], legacy: LegacySpaceOptions | un
     overhangSide: u.overhangSide ?? legacy.overhangSide ?? 'front',
     topFree: u.topFree ?? legacy.oversizedOnTop ?? true,
   }))
+}
+
+const sameCube = (a: CubeSize, b: CubeSize) => a.width === b.width && a.height === b.height && a.depth === b.depth
+
+/**
+ * Before 0.14 one cube size, editable, applied to every unit. KALLAX units now
+ * always have the standard sizes, so units with other sizes become custom.
+ */
+export function migrateCube(units: ShelfUnit[], cube: CubeSize | undefined): ShelfUnit[] {
+  if (!cube || sameCube(cube, KALLAX_CUBE)) return units
+  return units.map((u) => (isCustom(u) ? u : { ...u, kind: 'custom', custom: kallaxShape(u, cube) }))
 }
 
 /** Fills options saved by older versions (missing fields, groupBy as plain keys). */

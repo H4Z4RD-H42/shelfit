@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_OPTIONS } from './defaults'
 import { compareGroups, groupOf } from './grouping'
-import { KALLAX_CUBE } from './kallax'
 import { packCollection } from './packer'
 import { orderUnits } from './sorting'
 import type { Game, PackOptions, ShelfUnit } from './types'
@@ -93,12 +92,11 @@ describe('year and direction', () => {
 describe('packCollection with grouping', () => {
   it('starts each group in a new cube when asked', () => {
     const games = [game('A1', { genre: 'A' }), game('B1', { genre: 'B' }), game('B2', { genre: 'B' })]
-    const shared = packCollection(games, [unit(2, 1)], KALLAX_CUBE, opts({ groupBy: [{ key: 'genre', direction: 'asc' }] }))
+    const shared = packCollection(games, [unit(2, 1)], opts({ groupBy: [{ key: 'genre', direction: 'asc' }] }))
     expect(shared.cubes[0]!.placements).toHaveLength(3)
     const split = packCollection(
       games,
       [unit(2, 1)],
-      KALLAX_CUBE,
       opts({ groupBy: [{ key: 'genre', direction: 'asc' }], groupStartsNewCube: true }),
     )
     expect(split.cubes[0]!.placements).toHaveLength(1)
@@ -112,7 +110,7 @@ describe('packCollection with grouping', () => {
       game('Root: Kit del Vagabondo', { publisher: 'Leder Games; MS Edizioni', year: 2020 }),
       game('Root: The Riverfolk', { year: 2019 }),
     ]
-    const layout = packCollection(games, [unit(2, 1)], KALLAX_CUBE, opts({ groupBy: [{ key: 'publisher', direction: 'asc' }] }))
+    const layout = packCollection(games, [unit(2, 1)], opts({ groupBy: [{ key: 'publisher', direction: 'asc' }] }))
     expect(Object.values(layout.groups)).toEqual(['MS Edizioni', 'MS Edizioni', 'MS Edizioni'])
   })
 })

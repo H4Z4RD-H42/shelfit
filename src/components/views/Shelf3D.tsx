@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from 'react'
 import * as THREE from 'three'
 import { contrastText } from '../../domain/color'
 import { LINE_HEIGHT } from '../../domain/label'
-import { FRAME, cubeOrigin, isBlocked, unitOffsets, unitOuterSize } from '../../domain/kallax'
+import { cellAt, unitGeometry, unitOffsets, type UnitCell } from '../../domain/geometry'
+import { isBlocked } from '../../domain/kallax'
 import { TOP_HEIGHT } from '../../domain/packer'
-import type { CubeSize, Game, Placement, ShelfUnit, Zone } from '../../domain/types'
+import type { Game, Placement, ShelfUnit, Zone } from '../../domain/types'
 import { zoneRuns, type ZoneRun } from '../../domain/zones'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
@@ -30,53 +31,44 @@ function Panel({ position, size, color }: { position: [number, number, number]; 
   )
 }
 
-/** Procedural KALLAX frame built from its panels. */
-function KallaxFrame({ unit, cube }: { unit: ShelfUnit; cube: CubeSize }) {
-  const { width, height, depth } = unitOuterSize(unit, cube)
+/** Procedural frame of a unit built from its panels. */
+function UnitFrame({ unit }: { unit: ShelfUnit }) {
+  const { panels, cells, depth } = unitGeometry(unit)
   const z = -depth / 2
-  const panels: { position: [number, number, number]; size: [number, number, number] }[] = [
-    { position: [FRAME.outer / 2, height / 2, z], size: [FRAME.outer, height, depth] },
-    { position: [width - FRAME.outer / 2, height / 2, z], size: [FRAME.outer, height, depth] },
-    { position: [width / 2, FRAME.outer / 2, z], size: [width - 2 * FRAME.outer, FRAME.outer, depth] },
-    { position: [width / 2, height - FRAME.outer / 2, z], size: [width - 2 * FRAME.outer, FRAME.outer, depth] },
-  ]
-  for (let c = 1; c < unit.columns; c++) {
-    const x = FRAME.outer + c * cube.width + (c - 0.5) * FRAME.inner
-    panels.push({ position: [x, height / 2, z], size: [FRAME.inner, height - 2 * FRAME.outer, depth] })
-  }
-  for (let r = 1; r < unit.rows; r++) {
-    const y = FRAME.outer + r * cube.height + (r - 0.5) * FRAME.inner
-    panels.push({ position: [width / 2, y, z], size: [width - 2 * FRAME.outer, FRAME.inner, depth] })
-  }
-  const inserts: { x: number; y: number }[] = []
-  for (let column = 0; column < unit.columns; column++)
-    for (let row = 0; row < unit.rows; row++) if (isBlocked(unit, column, row)) inserts.push(cubeOrigin(unit, column, row, cube))
   return (
     <group>
       {panels.map((p, i) => (
-        <Panel key={i} {...p} color={unit.color} />
+        <Panel
+          key={i}
+          position={[p.x + p.width / 2, p.y + p.height / 2, z]}
+          size={[p.width, p.height, depth]}
+          color={unit.color}
+        />
       ))}
-      {inserts.map((o, i) => (
-        <DrawerInsert key={i} x={o.x} y={o.y} cube={cube} color={unit.color} />
-      ))}
+      {cells
+        .filter((c) => isBlocked(unit, c.column, c.row))
+        .map((c) => (
+          <DrawerInsert key={`${c.column}:${c.row}`} cell={c} color={unit.color} />
+        ))}
     </group>
   )
 }
 
 /** A cube taken by an insert, shown as two drawers. */
-function DrawerInsert({ x, y, cube, color }: { x: number; y: number; cube: CubeSize; color: string }) {
-  const h = cube.height / 2
+function DrawerInsert({ cell, color }: { cell: UnitCell; color: string }) {
+  const { width, height, depth } = cell.size
+  const h = height / 2
   const front = useMemo(() => new THREE.Color(color).multiplyScalar(0.92), [color])
   return (
-    <group position={[x + cube.width / 2, y, 0]}>
+    <group position={[cell.x + width / 2, cell.y, 0]}>
       {[0, 1].map((i) => (
         <group key={i} position={[0, i * h + h / 2, 0]}>
-          <mesh position={[0, 0, -cube.depth / 2]} castShadow receiveShadow>
-            <boxGeometry args={[cube.width - 0.4, h - 0.4, cube.depth]} />
+          <mesh position={[0, 0, -depth / 2]} castShadow receiveShadow>
+            <boxGeometry args={[width - 0.4, h - 0.4, depth]} />
             <meshStandardMaterial color={front} roughness={0.6} />
           </mesh>
           <mesh position={[0, 0, 0.6]}>
-            <boxGeometry args={[8, 1, 1.2]} />
+            <boxGeometry args={[Math.min(8, width / 3), 1, 1.2]} />
             <meshStandardMaterial color="#9aa0a6" metalness={0.6} roughness={0.35} />
           </mesh>
         </group>
@@ -89,38 +81,25 @@ const PX_PER_CM = 14
 const STRIP_PX_PER_CM = 24
 
 /** Back of a cube reserved to a zone, tinted with the zone colour. */
-function ZoneBack({
-  unit,
-  column,
-  row,
-  zone,
-  cube,
-}: {
-  unit: ShelfUnit
-  column: number
-  row: number
-  zone: Zone
-  cube: CubeSize
-}) {
-  const o = cubeOrigin(unit, column, row, cube)
+function ZoneBack({ unit, cell, zone }: { unit: ShelfUnit; cell: UnitCell; zone: Zone }) {
   const color = useMemo(() => new THREE.Color(unit.color).lerp(new THREE.Color(zone.color), 0.6), [unit.color, zone.color])
   return (
-    <mesh position={[o.x + cube.width / 2, o.y + cube.height / 2, -FRAME.depth + 0.05]} receiveShadow>
-      <planeGeometry args={[cube.width, cube.height]} />
+    <mesh
+      position={[cell.x + cell.size.width / 2, cell.y + cell.size.height / 2, -unitGeometry(unit).depth + 0.05]}
+      receiveShadow
+    >
+      <planeGeometry args={[cell.size.width, cell.size.height]} />
       <meshStandardMaterial color={color} roughness={0.8} />
     </mesh>
   )
 }
 
 /** Label of a zone on the front edge of the panel under its cubes, like a label-maker strip. */
-function ZoneStrip({ unit, run, zone, cube }: { unit: ShelfUnit; run: ZoneRun; zone: Zone; cube: CubeSize }) {
+function ZoneStrip({ run, zone }: { run: ZoneRun; zone: Zone }) {
   const t = useT()
   const text = zoneName(t, zone)
-  const first = cubeOrigin(unit, run.first, run.row, cube)
-  const last = cubeOrigin(unit, run.last, run.row, cube)
-  const panel = run.row === unit.rows - 1 ? FRAME.outer : FRAME.inner
-  const height = Math.min(panel, 2)
-  const width = last.x + cube.width - first.x
+  const height = Math.min(run.below, 2)
+  const width = run.width
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas')
     canvas.width = Math.round(width * STRIP_PX_PER_CM)
@@ -140,7 +119,7 @@ function ZoneStrip({ unit, run, zone, cube }: { unit: ShelfUnit; run: ZoneRun; z
   }, [text, zone.color, width, height])
   useEffect(() => () => texture.dispose(), [texture])
   return (
-    <mesh position={[first.x + width / 2, first.y - panel / 2, 0.03]}>
+    <mesh position={[run.x + width / 2, run.y - run.below / 2, 0.03]}>
       <planeGeometry args={[width, height]} />
       <meshStandardMaterial map={texture} roughness={0.5} />
     </mesh>
@@ -250,7 +229,17 @@ const CAMERA_FOV = 40
  * Places the camera so that the whole scene fits the canvas, whatever its
  * proportions: a portrait phone needs to step back much more than a monitor.
  */
-function FitCamera({ center, width, height }: { center: [number, number, number]; width: number; height: number }) {
+function FitCamera({
+  center,
+  width,
+  height,
+  depth,
+}: {
+  center: [number, number, number]
+  width: number
+  height: number
+  depth: number
+}) {
   const camera = useThree((s) => s.camera)
   const size = useThree((s) => s.size)
   const [cx, cy, cz] = center
@@ -258,30 +247,30 @@ function FitCamera({ center, width, height }: { center: [number, number, number]
     const tan = Math.tan(((CAMERA_FOV / 2) * Math.PI) / 180)
     const aspect = size.width / Math.max(1, size.height)
     const fit = Math.max(height / 2 / tan, width / 2 / (tan * aspect))
-    const distance = fit * 1.15 + FRAME.depth
+    const distance = fit * 1.15 + depth
     camera.position.set(cx + distance * 0.2, cy + distance * 0.1, distance)
     camera.lookAt(cx, cy, cz)
-  }, [camera, size.width, size.height, cx, cy, cz, width, height])
+  }, [camera, size.width, size.height, cx, cy, cz, width, height, depth])
   return null
 }
 
 export function Shelf3D() {
   const units = useAppStore((s) => s.units)
-  const cube = useAppStore((s) => s.cube)
   const selectedId = useAppStore((s) => s.selectedId)
   const select = useAppStore((s) => s.select)
   const layout = useLayout()
   const games = useGamesById()
   const boxColor = useBoxColor()
   const zonesById = useZonesById()
-  const runs = zoneRuns(layout.cubes)
+  const runs = zoneRuns(layout.cubes, units)
   const [hovered, setHovered] = useState<string | null>(null)
 
-  const offsets = useMemo(() => unitOffsets(units, cube), [units, cube])
-  const sizes = units.map((u) => unitOuterSize(u, cube))
+  const offsets = useMemo(() => unitOffsets(units), [units])
+  const sizes = units.map(unitGeometry)
   const totalWidth = offsets.length ? offsets[offsets.length - 1]! + sizes[sizes.length - 1]!.width : 0
   const maxHeight = Math.max(...sizes.map((s) => s.height))
-  const center: [number, number, number] = [totalWidth / 2, maxHeight / 2, -FRAME.depth / 2]
+  const maxDepth = Math.max(...sizes.map((s) => s.depth))
+  const center: [number, number, number] = [totalWidth / 2, maxHeight / 2, -maxDepth / 2]
   // Boxes stored on top make the scene taller.
   const sceneHeight = maxHeight + (layout.tops.length > 0 ? TOP_HEIGHT : 0)
   const unitIndex = new Map(units.map((u, i) => [u.id, i]))
@@ -318,14 +307,15 @@ export function Shelf3D() {
 
         {units.map((unit, i) => (
           <group key={unit.id} position={[offsets[i]!, 0, 0]}>
-            <KallaxFrame unit={unit} cube={cube} />
+            <UnitFrame unit={unit} />
             {layout.cubes.map((c) => {
               const zone = c.zoneId && c.unitId === unit.id ? zonesById.get(c.zoneId) : undefined
-              return zone ? <ZoneBack key={c.index} unit={unit} column={c.column} row={c.row} zone={zone} cube={cube} /> : null
+              const cell = zone && cellAt(sizes[i]!, c.column, c.row)
+              return zone && cell ? <ZoneBack key={c.index} unit={unit} cell={cell} zone={zone} /> : null
             })}
             {runs.map((run) => {
               const zone = run.unitId === unit.id ? zonesById.get(run.zoneId) : undefined
-              return zone ? <ZoneStrip key={`${run.row}:${run.first}`} unit={unit} run={run} zone={zone} cube={cube} /> : null
+              return zone ? <ZoneStrip key={`${run.x}:${run.y}`} run={run} zone={zone} /> : null
             })}
           </group>
         ))}
@@ -333,8 +323,9 @@ export function Shelf3D() {
         {layout.cubes.map((c) => {
           const ui = unitIndex.get(c.unitId)
           if (ui === undefined) return null
-          const o = cubeOrigin(units[ui]!, c.column, c.row, cube)
-          const origin = { x: offsets[ui]! + o.x, y: o.y }
+          const cell = cellAt(sizes[ui]!, c.column, c.row)
+          if (!cell) return null
+          const origin = { x: offsets[ui]! + cell.x, y: cell.y }
           return c.placements.map((p) => {
             const game = games.get(p.gameId)
             return game ? (
@@ -355,7 +346,7 @@ export function Shelf3D() {
         {layout.tops.map((top) => {
           const ui = unitIndex.get(top.unitId)
           if (ui === undefined) return null
-          const origin = { x: offsets[ui]!, y: sizes[ui]!.height }
+          const origin = { x: offsets[ui]!, y: sizes[ui]!.top.y }
           return top.placements.map((p) => {
             const game = games.get(p.gameId)
             return game ? (
@@ -380,7 +371,7 @@ export function Shelf3D() {
           blur={2.4}
           far={60}
         />
-        <FitCamera center={center} width={totalWidth} height={sceneHeight} />
+        <FitCamera center={center} width={totalWidth} height={sceneHeight} depth={maxDepth} />
         <OrbitControls
           target={center}
           enableDamping

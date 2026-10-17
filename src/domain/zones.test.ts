@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_OPTIONS } from './defaults'
-import { cubeSlots, KALLAX_CUBE } from './kallax'
+import { cubeSlots } from './geometry'
 import { packCollection } from './packer'
 import type { Game, ShelfUnit, Zone } from './types'
 import { assignZones, newZone, sizeClasses, splitPoint, zoneRuns, zoneSlots, type ZoneContext } from './zones'
@@ -123,8 +123,7 @@ describe('zoneSlots', () => {
   const units = [unit(4, 4)]
   const slots = cubeSlots(units, 'rows')
   const free = slots.map((_, i) => i)
-  const pick = (patch: Partial<Zone>, needed: number, from = free) =>
-    zoneSlots(zone('z', patch), needed, slots, from, units, KALLAX_CUBE)
+  const pick = (patch: Partial<Zone>, needed: number, from = free) => zoneSlots(zone('z', patch), needed, slots, from)
 
   it('takes the first or the last free cubes', () => {
     expect(pick({ place: 'start' }, 3)).toEqual([0, 1, 2])
@@ -147,8 +146,6 @@ describe('zoneSlots', () => {
         1,
         tallSlots,
         tallSlots.map((_, i) => i),
-        tall,
-        KALLAX_CUBE,
       ).map((i) => tallSlots[i]!.row),
     ).toEqual([1])
   })
@@ -162,7 +159,7 @@ describe('zoneSlots', () => {
 describe('packing with zones', () => {
   const opts = DEFAULT_OPTIONS
   const layoutOf = (games: Game[], zones: Zone[], columns = 2, rows = 2) =>
-    packCollection(games, [unit(columns, rows)], KALLAX_CUBE, opts, zones)
+    packCollection(games, [unit(columns, rows)], opts, zones)
   const namesIn = (layout: ReturnType<typeof layoutOf>, index: number, games: Game[]) =>
     layout.cubes[index]!.placements.map((p) => games.find((g) => g.id === p.gameId)!.name).sort()
 
@@ -219,11 +216,13 @@ describe('packing with zones', () => {
 describe('zoneRuns', () => {
   it('joins adjacent cubes of a zone on the same row', () => {
     const cube = (column: number, row: number, zoneId?: string) => ({ unitId: 'u', column, row, zoneId })
-    expect(zoneRuns([cube(0, 0), cube(1, 0, 'a'), cube(2, 0, 'a'), cube(3, 0, 'b'), cube(0, 1, 'a'), cube(2, 1, 'a')])).toEqual([
-      { zoneId: 'a', unitId: 'u', row: 0, first: 1, last: 2 },
-      { zoneId: 'b', unitId: 'u', row: 0, first: 3, last: 3 },
-      { zoneId: 'a', unitId: 'u', row: 1, first: 0, last: 0 },
-      { zoneId: 'a', unitId: 'u', row: 1, first: 2, last: 2 },
+    const cubes = [cube(0, 0), cube(1, 0, 'a'), cube(2, 0, 'a'), cube(3, 0, 'b'), cube(0, 1, 'a'), cube(2, 1, 'a')]
+    // KALLAX 4×2: columns start every 35 cm after the 4.25 cm side; the top row stands on a 1.5 cm shelf.
+    expect(zoneRuns(cubes, [unit(4, 2)])).toEqual([
+      { zoneId: 'a', unitId: 'u', x: 39.25, y: 39.25, width: 68.5, below: 1.5 },
+      { zoneId: 'b', unitId: 'u', x: 109.25, y: 39.25, width: 33.5, below: 1.5 },
+      { zoneId: 'a', unitId: 'u', x: 4.25, y: 4.25, width: 33.5, below: 4.25 },
+      { zoneId: 'a', unitId: 'u', x: 74.25, y: 4.25, width: 33.5, below: 4.25 },
     ])
   })
 })

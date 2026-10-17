@@ -82,14 +82,40 @@ export interface CubeSize {
   depth: number
 }
 
+/** Kind of a unit: a KALLAX grid with the standard sizes, or a shelf built column by column. */
+export type UnitKind = 'kallax' | 'custom'
+
+/** A column of a custom unit: its interior width and the interior height of each compartment, top to bottom. */
+export interface CustomColumn {
+  width: number
+  cells: number[]
+}
+
+/** Shape of a unit built by hand. Columns stand side by side on the floor and may differ in height. */
+export interface CustomShape {
+  columns: CustomColumn[]
+  /** Interior depth of the compartments; the frame is as deep. */
+  depth: number
+  /** Thickness of the sides, of the top and of the bottom. */
+  outer: number
+  /** Thickness of the dividers between columns and of the shelves. */
+  inner: number
+}
+
 export interface ShelfUnit {
   id: string
   name: string
+  /** KALLAX when missing. */
+  kind?: UnitKind
+  /** Grid of a KALLAX unit. */
   columns: number
   rows: number
+  /** Shape of a custom unit; kept when the unit goes back to KALLAX. */
+  custom?: CustomShape
   /** CSS colour of the frame. */
   color: string
-  /** Cubes not available for games (drawers, doors, other uses), as `column:row` keys. */
+  /** Cubes not available for games (drawers, doors, other uses), as `column:row` keys;
+   * in a custom unit `row` counts the compartments of the column from the top. */
   blocked?: string[]
   /** How far (cm) a box deeper than the cubes may stick out of this unit; 0 when missing. */
   overhang?: number

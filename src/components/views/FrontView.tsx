@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
 import { contrastText } from '../../domain/color'
 import { LINE_HEIGHT } from '../../domain/label'
-import { FRAME, cubeOrigin, isBlocked, unitOffsets, unitOuterSize } from '../../domain/kallax'
-import type { Placement, ShelfUnit, Zone } from '../../domain/types'
-import { cubeId, zoneRuns } from '../../domain/zones'
+import { cellAt, unitGeometry, unitOffsets } from '../../domain/geometry'
+import { isBlocked } from '../../domain/kallax'
+import type { Placement, Zone } from '../../domain/types'
+import { cubeId, zoneRuns, type ZoneRun } from '../../domain/zones'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
 import { useZonesById } from '../../hooks/useZones'
@@ -17,7 +18,6 @@ const PAD = 6
 /** Flat, printable elevation of the shelves seen from the front. */
 export function FrontView() {
   const units = useAppStore((s) => s.units)
-  const cube = useAppStore((s) => s.cube)
   const selectedId = useAppStore((s) => s.selectedId)
   const select = useAppStore((s) => s.select)
   const layout = useLayout()
@@ -25,16 +25,16 @@ export function FrontView() {
   const boxColor = useBoxColor()
   const zonesById = useZonesById()
   const cubeZone = new Map(layout.cubes.flatMap((c) => (c.zoneId ? [[cubeId(c), zonesById.get(c.zoneId)] as const] : [])))
-  const runs = zoneRuns(layout.cubes)
+  const runs = zoneRuns(layout.cubes, units)
 
-  const offsets = useMemo(() => unitOffsets(units, cube), [units, cube])
-  const sizes = units.map((u) => unitOuterSize(u, cube))
+  const offsets = useMemo(() => unitOffsets(units), [units])
+  const sizes = units.map(unitGeometry)
   const width = offsets.length ? offsets[offsets.length - 1]! + sizes[sizes.length - 1]!.width : 0
   const topHeight = (unitId: string) =>
     Math.max(0, ...(layout.tops.find((t) => t.unitId === unitId)?.placements.map((p) => p.y + p.sy) ?? []))
   const shelfHeight = Math.max(...sizes.map((s) => s.height))
   // Room above the tallest unit for the boxes stored on top.
-  const height = Math.max(...units.map((u, i) => sizes[i]!.height + topHeight(u.id)), shelfHeight)
+  const height = Math.max(...units.map((u, i) => sizes[i]!.top.y + topHeight(u.id)), shelfHeight)
 
   const unitIndex = new Map(units.map((u, i) => [u.id, i]))
 
@@ -57,32 +57,30 @@ export function FrontView() {
           const top = height - size.height
           return (
             <g key={unit.id} transform={`translate(${ox} ${top})`}>
-              <rect
-                width={size.width}
-                height={size.height}
-                rx={0.6}
+              <polygon
+                points={size.outline.map((p) => `${p.x},${size.height - p.y}`).join(' ')}
                 fill={unit.color}
                 stroke="rgba(0,0,0,.25)"
                 strokeWidth={0.2}
+                strokeLinejoin="round"
               />
-              {Array.from({ length: unit.columns * unit.rows }, (_, k) => {
-                const column = k % unit.columns
-                const row = Math.floor(k / unit.columns)
-                const o = cubeOrigin(unit, column, row, cube)
-                const y = size.height - o.y - cube.height
-                if (isBlocked(unit, column, row)) return <DrawerInsert key={k} x={o.x} y={y} size={cube.width} />
+              {size.cells.map(({ column, row, x, y: bottom, size: cube }) => {
+                const key = `${column}:${row}`
+                const y = size.height - bottom - cube.height
+                if (isBlocked(unit, column, row))
+                  return <DrawerInsert key={key} x={x} y={y} width={cube.width} height={cube.height} />
                 const zone = cubeZone.get(cubeId({ unitId: unit.id, column, row }))
                 return (
-                  <g key={k}>
-                    <rect x={o.x} y={y} width={cube.width} height={cube.height} fill="rgba(0,0,0,.28)" />
-                    {zone && <rect x={o.x} y={y} width={cube.width} height={cube.height} fill={zone.color} opacity={0.3} />}
+                  <g key={key}>
+                    <rect x={x} y={y} width={cube.width} height={cube.height} fill="rgba(0,0,0,.28)" />
+                    {zone && <rect x={x} y={y} width={cube.width} height={cube.height} fill={zone.color} opacity={0.3} />}
                   </g>
                 )
               })}
               {runs.map((run) => {
                 const zone = zonesById.get(run.zoneId)
                 if (run.unitId !== unit.id || !zone) return null
-                return <ZoneLabel key={`${run.row}:${run.first}`} unit={unit} run={run} zone={zone} unitHeight={size.height} />
+                return <ZoneLabel key={`${run.x}:${run.y}`} run={run} zone={zone} unitHeight={size.height} />
               })}
               <text x={size.width / 2} y={size.height + 4.5} textAnchor="middle" fontSize={2.6} className="fill-ink-soft">
                 {unit.name}
@@ -94,10 +92,10 @@ export function FrontView() {
         {layout.cubes.map((c) => {
           const ui = unitIndex.get(c.unitId)
           if (ui === undefined) return null
-          const unit = units[ui]!
-          const o = cubeOrigin(unit, c.column, c.row, cube)
-          const baseX = offsets[ui]! + o.x
-          const baseY = height - o.y // SVG y of the cube floor
+          const cell = cellAt(sizes[ui]!, c.column, c.row)
+          if (!cell) return null
+          const baseX = offsets[ui]! + cell.x
+          const baseY = height - cell.y // SVG y of the cube floor
           return c.placements.map((p) => {
             const game = games.get(p.gameId)
             if (!game) return null
@@ -119,7 +117,7 @@ export function FrontView() {
         {layout.tops.map((top) => {
           const ui = unitIndex.get(top.unitId)
           if (ui === undefined) return null
-          const baseY = height - sizes[ui]!.height // SVG y of the top panel
+          const baseY = height - sizes[ui]!.top.y // SVG y of the top panel
           return top.placements.map((p) => {
             const game = games.get(p.gameId)
             if (!game) return null
@@ -143,30 +141,16 @@ export function FrontView() {
 }
 
 /** Label of a zone on the panel under its cubes, like a label-maker strip. */
-function ZoneLabel({
-  unit,
-  run,
-  zone,
-  unitHeight,
-}: {
-  unit: ShelfUnit
-  run: { row: number; first: number; last: number }
-  zone: Zone
-  unitHeight: number
-}) {
+function ZoneLabel({ run, zone, unitHeight }: { run: ZoneRun; zone: Zone; unitHeight: number }) {
   const t = useT()
-  const cube = useAppStore((s) => s.cube)
-  const first = cubeOrigin(unit, run.first, run.row, cube)
-  const last = cubeOrigin(unit, run.last, run.row, cube)
-  const panel = run.row === unit.rows - 1 ? FRAME.outer : FRAME.inner
-  const height = Math.min(panel, 2)
-  const width = last.x + cube.width - first.x
-  const y = unitHeight - first.y + (panel - height) / 2
+  const height = Math.min(run.below, 2)
+  const { x, width } = run
+  const y = unitHeight - run.y + (run.below - height) / 2
   return (
     <g style={{ pointerEvents: 'none' }}>
-      <rect x={first.x} y={y} width={width} height={height} rx={0.2} fill={zone.color} />
+      <rect x={x} y={y} width={width} height={height} rx={0.2} fill={zone.color} />
       <text
-        x={first.x + width / 2}
+        x={x + width / 2}
         y={y + height / 2}
         textAnchor="middle"
         dominantBaseline="central"
@@ -182,24 +166,32 @@ function ZoneLabel({
 }
 
 /** A cube taken by an insert: drawn as two drawers. */
-function DrawerInsert({ x, y, size }: { x: number; y: number; size: number }) {
-  const h = size / 2
+function DrawerInsert({ x, y, width, height }: { x: number; y: number; width: number; height: number }) {
+  const h = height / 2
+  const handle = Math.min(6, width / 3)
   return (
     <g>
-      <rect x={x} y={y} width={size} height={size} fill="rgba(0,0,0,.12)" />
+      <rect x={x} y={y} width={width} height={height} fill="rgba(0,0,0,.12)" />
       {[0, 1].map((i) => (
         <g key={i}>
           <rect
             x={x + 0.6}
             y={y + i * h + 0.6}
-            width={size - 1.2}
+            width={width - 1.2}
             height={h - 1.2}
             rx={0.4}
             fill="rgba(255,255,255,.18)"
             stroke="rgba(0,0,0,.2)"
             strokeWidth={0.15}
           />
-          <rect x={x + size / 2 - 3} y={y + i * h + h / 2 - 0.4} width={6} height={0.8} rx={0.4} fill="rgba(0,0,0,.35)" />
+          <rect
+            x={x + width / 2 - handle / 2}
+            y={y + i * h + h / 2 - 0.4}
+            width={handle}
+            height={0.8}
+            rx={0.4}
+            fill="rgba(0,0,0,.35)"
+          />
         </g>
       ))}
     </g>

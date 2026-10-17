@@ -62,7 +62,7 @@ describe('orientations', () => {
 describe('packCollection', () => {
   it('stands four 7 cm boxes in one cube', () => {
     const games = Array.from({ length: 4 }, (_, i) => game(`G${i}`, 30, 30, 7))
-    const layout = packCollection(games, [unit(1, 1)], KALLAX_CUBE, opts({ orientation: 'vertical' }))
+    const layout = packCollection(games, [unit(1, 1)], opts({ orientation: 'vertical' }))
     expect(layout.stats.placedGames).toBe(4)
     expect(layout.cubes[0]!.placements.every((p) => p.orientation === 'vertical')).toBe(true)
     assertPhysical(layout)
@@ -70,7 +70,7 @@ describe('packCollection', () => {
 
   it('stacks boxes when horizontal is forced', () => {
     const games = Array.from({ length: 4 }, (_, i) => game(`G${i}`, 30, 30, 7))
-    const layout = packCollection(games, [unit(1, 1)], KALLAX_CUBE, opts({ orientation: 'horizontal' }))
+    const layout = packCollection(games, [unit(1, 1)], opts({ orientation: 'horizontal' }))
     const ys = layout.cubes[0]!.placements.map((p) => p.y).sort((a, b) => a - b)
     expect(ys[0]).toBe(0)
     expect(ys[3]).toBeCloseTo(3 * 7.3)
@@ -81,7 +81,7 @@ describe('packCollection', () => {
     // Two thick books leave 8.9 cm: small boxes fit there only as a flat stack.
     const games = [game('A', 30, 30, 12), game('B', 30, 30, 12), ...Array.from({ length: 4 }, (_, i) => game(`S${i}`, 8, 8, 4))]
     const pack = (orientation: PackOptions['orientation']) =>
-      packCollection(games, [unit(1, 1)], KALLAX_CUBE, opts({ sortBy: 'added', orientation }))
+      packCollection(games, [unit(1, 1)], opts({ sortBy: 'added', orientation }))
     expect(pack('vertical').stats.placedGames).toBe(4)
     expect(pack('horizontal').stats.placedGames).toBe(4)
     const auto = pack('auto')
@@ -91,13 +91,13 @@ describe('packCollection', () => {
 
   it('lets deep boxes stick out of the front when overhang is allowed', () => {
     const deep = game('War of the Ring', 40.5, 27.5, 9)
-    expect(packCollection([deep], [{ ...unit(1, 1), topFree: false }], KALLAX_CUBE, opts()).unplaced).toHaveLength(1)
-    const layout = packCollection([deep], [{ ...unit(1, 1), overhang: 3 }], KALLAX_CUBE, opts())
+    expect(packCollection([deep], [{ ...unit(1, 1), topFree: false }], opts()).unplaced).toHaveLength(1)
+    const layout = packCollection([deep], [{ ...unit(1, 1), overhang: 3 }], opts())
     const p = layout.cubes[0]!.placements[0]!
     expect(p.sz).toBe(40.5)
     expect(p.z).toBeCloseTo(KALLAX_CUBE.depth - 40.5)
 
-    const back = packCollection([deep], [{ ...unit(1, 1), overhang: 3, overhangSide: 'back' }], KALLAX_CUBE, opts())
+    const back = packCollection([deep], [{ ...unit(1, 1), overhang: 3, overhangSide: 'back' }], opts())
     const q = back.cubes[0]!.placements[0]!
     expect(q.z).toBe(0)
     expect(q.z + q.sz).toBeCloseTo(40.5)
@@ -107,14 +107,14 @@ describe('packCollection', () => {
     const wipper = game('Wipper', 35, 35, 8, { onTop: true })
     const crack = game('Crack!', 48.4, 24.3, 5.1)
     const azul = game('Azul', 26, 26, 7)
-    const layout = packCollection([wipper, crack, azul], [unit(4, 4)], KALLAX_CUBE, opts())
+    const layout = packCollection([wipper, crack, azul], [unit(4, 4)], opts())
     expect(layout.unplaced).toEqual([])
     const top = layout.tops[0]!.placements
     expect(top.map((p) => p.gameId).sort()).toEqual([crack.id, wipper.id].sort())
     expect(top.every((p) => p.orientation === 'horizontal')).toBe(true)
     expect(layout.cubes[0]!.placements.map((p) => p.gameId)).toEqual([azul.id])
 
-    const strict = packCollection([crack], [{ ...unit(2, 2), topFree: false }], KALLAX_CUBE, opts())
+    const strict = packCollection([crack], [{ ...unit(2, 2), topFree: false }], opts())
     expect(strict.unplaced).toEqual([{ gameId: crack.id, reason: 'too-big' }])
   })
 
@@ -124,7 +124,7 @@ describe('packCollection', () => {
     const deep = game('A deep box', 40.5, 27.5, 9)
     const others = [game('B', 30, 30, 7), game('C', 30, 30, 7)]
     for (const strategy of ['ordered', 'compact'] as const) {
-      const layout = packCollection([deep, ...others], [wall, open], KALLAX_CUBE, opts({ strategy }))
+      const layout = packCollection([deep, ...others], [wall, open], opts({ strategy }))
       expect(layout.unplaced).toEqual([])
       const inOpen = layout.cubes.find((c) => c.unitId === 'open')!.placements
       expect(inOpen.map((p) => p.gameId)).toEqual([deep.id])
@@ -139,11 +139,11 @@ describe('packCollection', () => {
     const free: ShelfUnit = { ...unit(4, 1), id: 'free' }
     const crack = game('Crack!', 48.4, 24.3, 5.1)
     const wipper = game('Wipper', 35, 35, 8, { onTop: true })
-    const layout = packCollection([crack, wipper], [tv, free], KALLAX_CUBE, opts())
+    const layout = packCollection([crack, wipper], [tv, free], opts())
     expect(layout.tops.map((t) => t.unitId)).toEqual(['free'])
     expect(layout.tops[0]!.placements).toHaveLength(2)
 
-    const none = packCollection([crack, wipper], [tv], KALLAX_CUBE, opts())
+    const none = packCollection([crack, wipper], [tv], opts())
     expect(none.tops).toEqual([])
     expect(none.unplaced).toEqual([
       { gameId: crack.id, reason: 'too-big' },
@@ -154,7 +154,7 @@ describe('packCollection', () => {
   it('skips blocked cubes', () => {
     const games = Array.from({ length: 2 }, (_, i) => game(`G${i}`, 30, 30, 20))
     const blocked = { ...unit(2, 1), blocked: ['0:0'] }
-    const layout = packCollection(games, [blocked], KALLAX_CUBE, opts({ orientation: 'vertical' }))
+    const layout = packCollection(games, [blocked], opts({ orientation: 'vertical' }))
     expect(layout.cubes).toHaveLength(1)
     expect(layout.cubes[0]).toMatchObject({ column: 1, row: 0 })
     expect(layout.stats.placedGames).toBe(1)
@@ -163,12 +163,12 @@ describe('packCollection', () => {
   it('never stacks a box on a narrower or shallower one', () => {
     const square = game('Square', 30, 30, 5)
     const long = game('Long', 36, 20, 5) // narrower but deeper than Square
-    const layout = packCollection([square, long], [unit(1, 1)], KALLAX_CUBE, opts({ orientation: 'horizontal' }))
+    const layout = packCollection([square, long], [unit(1, 1)], opts({ orientation: 'horizontal' }))
     expect(layout.stats.placedGames).toBe(1)
 
     const small = game('Small', 25, 25, 5)
     const twin = game('Twin', 30.5, 30.5, 5) // within tolerance of Square
-    const ok = packCollection([small, square, twin], [unit(1, 1)], KALLAX_CUBE, opts({ orientation: 'horizontal' }))
+    const ok = packCollection([small, square, twin], [unit(1, 1)], opts({ orientation: 'horizontal' }))
     const stack = [...ok.cubes[0]!.placements].sort((a, b) => a.level - b.level)
     expect(stack.map((p) => p.gameId).at(-1)).toBe(small.id)
     for (let i = 1; i < stack.length; i++) {
@@ -180,7 +180,7 @@ describe('packCollection', () => {
   it('aligns boxes to the left, centre or right of the cube and of each stack', () => {
     const games = [game('Big', 30, 30, 5), game('Small', 20, 20, 5)]
     const at = (align: PackOptions['align']) => {
-      const layout = packCollection(games, [unit(1, 1)], KALLAX_CUBE, opts({ orientation: 'horizontal', align }))
+      const layout = packCollection(games, [unit(1, 1)], opts({ orientation: 'horizontal', align }))
       return Object.fromEntries(layout.cubes[0]!.placements.map((p) => [p.sx, p.x]))
     }
     const half = DEFAULT_OPTIONS.clearance / 2
@@ -192,14 +192,14 @@ describe('packCollection', () => {
 
   it('reports games that do not fit at all', () => {
     const big = game('Gloomhaven', 41.5, 30, 19)
-    const layout = packCollection([big], [{ ...unit(1, 1), topFree: false }], KALLAX_CUBE, opts())
+    const layout = packCollection([big], [{ ...unit(1, 1), topFree: false }], opts())
     expect(layout.unplaced).toEqual([{ gameId: big.id, reason: 'too-big' }])
   })
 
   it('reports games without a size and skips excluded ones', () => {
     const noSize = { ...game('Unknown', 1, 1, 1), dims: undefined }
     const excluded = game('Stored in base box', 10, 10, 3, { excluded: true })
-    const layout = packCollection([noSize, excluded], [unit(1, 1)], KALLAX_CUBE, opts())
+    const layout = packCollection([noSize, excluded], [unit(1, 1)], opts())
     expect(layout.unplaced).toEqual([{ gameId: noSize.id, reason: 'no-size' }])
     expect(layout.stats.totalGames).toBe(1)
     expect(layout.cubes[0]!.placements).toHaveLength(0)
@@ -207,7 +207,7 @@ describe('packCollection', () => {
 
   it('reports games left out when shelves are full', () => {
     const games = Array.from({ length: 5 }, (_, i) => game(`G${i}`, 30, 30, 7))
-    const layout = packCollection(games, [unit(1, 1)], KALLAX_CUBE, opts({ orientation: 'vertical' }))
+    const layout = packCollection(games, [unit(1, 1)], opts({ orientation: 'vertical' }))
     expect(layout.stats.placedGames).toBe(4)
     expect(layout.unplaced).toHaveLength(1)
     expect(layout.unplaced[0]!.reason).toBe('no-space')
@@ -216,7 +216,7 @@ describe('packCollection', () => {
   it('keeps alphabetical order across cubes', () => {
     const names = ['Delta', 'Alpha', 'Echo', 'Charlie', 'Bravo', 'Foxtrot']
     const games = names.map((n) => game(n, 30, 30, 10))
-    const layout = packCollection(games, [unit(2, 1)], KALLAX_CUBE, opts({ orientation: 'vertical', groupSagas: false }))
+    const layout = packCollection(games, [unit(2, 1)], opts({ orientation: 'vertical', groupSagas: false }))
     const byId = new Map(games.map((g) => [g.id, g.name]))
     const order = layout.cubes.flatMap((c) => [...c.placements].sort((a, b) => a.x - b.x).map((p) => byId.get(p.gameId)))
     expect(order).toEqual(['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot'])
@@ -229,7 +229,7 @@ describe('packCollection', () => {
       game('Zombicide', 30, 30, 10),
       game('Zombicide: Black Plague', 30, 30, 10),
     ]
-    const layout = packCollection(games, [unit(2, 1)], KALLAX_CUBE, opts({ orientation: 'vertical' }))
+    const layout = packCollection(games, [unit(2, 1)], opts({ orientation: 'vertical' }))
     expect(layout.cubes[0]!.placements).toHaveLength(2)
     expect(layout.cubes[1]!.placements).toHaveLength(2)
     expect(layout.sagas[games[2]!.id]).toBe('Zombicide')
@@ -241,13 +241,13 @@ describe('packCollection', () => {
     const counts = (layout: ReturnType<typeof packCollection>) => layout.cubes.map((c) => c.placements.length)
 
     it('lets a saga wrap onto the next row by default', () => {
-      const layout = packCollection(collection(), [unit(2, 2)], KALLAX_CUBE, opts({ orientation: 'vertical' }))
+      const layout = packCollection(collection(), [unit(2, 2)], opts({ orientation: 'vertical' }))
       expect(counts(layout)).toEqual([3, 3, 1, 0])
     })
 
     it('starts the saga on the next row instead of wrapping', () => {
       const games = collection()
-      const layout = packCollection(games, [unit(2, 2)], KALLAX_CUBE, opts({ orientation: 'vertical', keepSagasInLine: true }))
+      const layout = packCollection(games, [unit(2, 2)], opts({ orientation: 'vertical', keepSagasInLine: true }))
       expect(counts(layout)).toEqual([2, 0, 3, 2])
       const sagaIds = new Set(games.slice(2).map((g) => g.id))
       expect([...layout.cubes[2]!.placements, ...layout.cubes[3]!.placements].every((p) => sagaIds.has(p.gameId))).toBe(true)
@@ -258,7 +258,6 @@ describe('packCollection', () => {
       const layout = packCollection(
         collection(),
         [unit(2, 2)],
-        KALLAX_CUBE,
         opts({ orientation: 'vertical', keepSagasInLine: true, fillOrder: 'columns' }),
       )
       // Cubes are listed in filling order: down the first column, then the second.
@@ -268,7 +267,7 @@ describe('packCollection', () => {
 
     it('lets a saga longer than a line wrap anyway', () => {
       const games = [game('Azul', 30, 30, 10), ...Array.from({ length: 7 }, (_, i) => game(`Zombicide ${i + 2}`, 30, 30, 10))]
-      const layout = packCollection(games, [unit(2, 2)], KALLAX_CUBE, opts({ orientation: 'vertical', keepSagasInLine: true }))
+      const layout = packCollection(games, [unit(2, 2)], opts({ orientation: 'vertical', keepSagasInLine: true }))
       expect(layout.stats.placedGames).toBe(8)
       expect(counts(layout)[0]).toBe(3)
     })
@@ -279,8 +278,8 @@ describe('packCollection', () => {
       ...Array.from({ length: 6 }, (_, i) => game(`Big ${i}`, 30, 30, 10)),
       ...Array.from({ length: 6 }, (_, i) => game(`Small ${i}`, 15, 10, 3)),
     ]
-    const ordered = packCollection(games, [unit(4, 4)], KALLAX_CUBE, opts({ groupSagas: false }))
-    const compact = packCollection(games, [unit(4, 4)], KALLAX_CUBE, opts({ strategy: 'compact', groupSagas: false }))
+    const ordered = packCollection(games, [unit(4, 4)], opts({ groupSagas: false }))
+    const compact = packCollection(games, [unit(4, 4)], opts({ strategy: 'compact', groupSagas: false }))
     expect(compact.stats.placedGames).toBe(12)
     expect(compact.stats.usedCubes).toBeLessThanOrEqual(ordered.stats.usedCubes)
     assertPhysical(compact)
@@ -289,7 +288,7 @@ describe('packCollection', () => {
   it('handles a large collection quickly', () => {
     const games = Array.from({ length: 300 }, (_, i) => game(`Game ${i}`, 20 + (i % 11), 20 + (i % 7), 4 + (i % 9)))
     const start = performance.now()
-    const layout = packCollection(games, [unit(5, 5), unit(5, 5)], KALLAX_CUBE, opts({ strategy: 'compact' }))
+    const layout = packCollection(games, [unit(5, 5), unit(5, 5)], opts({ strategy: 'compact' }))
     expect(performance.now() - start).toBeLessThan(5000)
     expect(layout.stats.placedGames).toBeGreaterThan(200)
     assertPhysical(layout)

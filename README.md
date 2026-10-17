@@ -13,6 +13,7 @@
 - **On top and blocked cubes** — boxes that fit in no cube can be stored on top of the shelves; cubes used for drawers or other things can be excluded.
 - **Sagas** — chapters of the same series (Zombicide, Pandemic Legacy, Ticket to Ride…) are detected from their names and kept together, even avoiding splitting them across two cubes.
 - **Realistic 3D KALLAX** — the shelf is built procedurally from its real measurements, in every official size (1×1 to 5×5) and finish, and you can combine several units.
+- **Custom shelves** — any other bookcase can be rebuilt column by column: each column has its own width and its own compartments, each with its own height, columns may differ in height (stepped shelves), and depth and panel thickness are yours to set.
 - **Three views** — interactive 3D shelf, front view and a cube-by-cube list.
 - **Printable instructions** — a step-by-step list to rearrange the shelves with pen and paper, no screen needed.
 - **Local-first PWA** — installable on desktop and mobile, works offline, data stays on your device. Import/export as JSON backup or CSV.

@@ -3,21 +3,21 @@ import { useGamesById, useLayout } from '../../hooks/useLayout'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useZonesById } from '../../hooks/useZones'
 import { useT } from '../../i18n'
-import { UNPLACED_LABEL, groupLabel, zoneName } from '../labels'
+import { unitGeometry, cellAt } from '../../domain/geometry'
+import { UNPLACED_LABEL, cubePosition, groupLabel, zoneName } from '../labels'
 import { useAppStore } from '../../store/appStore'
 import { cx } from '../styles'
 
 export function ListView() {
   const t = useT()
   const units = useAppStore((s) => s.units)
-  const cube = useAppStore((s) => s.cube)
   const selectedId = useAppStore((s) => s.selectedId)
   const select = useAppStore((s) => s.select)
   const layout = useLayout()
   const games = useGamesById()
   const boxColor = useBoxColor()
   const zonesById = useZonesById()
-  const unitName = new Map(units.map((u) => [u.id, u.name]))
+  const unitOf = new Map(units.map((u) => [u.id, u]))
   const outer = useAppStore((s) => s.options.groupBy[0]?.key)
   const cubeGroups = (gameIds: string[]) =>
     outer ? [...new Set(gameIds.map((id) => groupLabel(t, outer, layout.groups[id])))] : []
@@ -28,7 +28,9 @@ export function ListView() {
         {layout.tops.map((top) => (
           <article key={`top-${top.unitId}`} className="rounded-xl border border-accent/40 bg-surface-0 p-3">
             <header className="mb-2">
-              <h3 className="font-display text-sm font-semibold">{t('list.top', { unit: unitName.get(top.unitId) ?? '' })}</h3>
+              <h3 className="font-display text-sm font-semibold">
+                {t('list.top', { unit: unitOf.get(top.unitId)?.name ?? '' })}
+              </h3>
             </header>
             <ul className="space-y-0.5">
               {[...top.placements]
@@ -56,7 +58,9 @@ export function ListView() {
           </article>
         ))}
         {layout.cubes.map((c) => {
-          const fill = Math.round((c.usedWidth / cube.width) * 100)
+          const unit = unitOf.get(c.unitId)
+          const width = (unit && cellAt(unitGeometry(unit), c.column, c.row)?.size.width) || 1
+          const fill = Math.round((c.usedWidth / width) * 100)
           const zone = c.zoneId ? zonesById.get(c.zoneId) : undefined
           return (
             <article
@@ -67,7 +71,7 @@ export function ListView() {
               <header className="mb-2 flex items-baseline justify-between gap-2">
                 <h3 className="font-display text-sm font-semibold">{t('list.cube', { n: c.index + 1 })}</h3>
                 <span className="truncate text-xs text-ink-faint">
-                  {unitName.get(c.unitId)} · {t('list.position', { row: c.row + 1, column: c.column + 1 })}
+                  {unit?.name} · {cubePosition(t, unit, c.column, c.row)}
                 </span>
               </header>
               {zone && (

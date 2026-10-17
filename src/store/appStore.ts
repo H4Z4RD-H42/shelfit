@@ -4,8 +4,9 @@ import { create } from 'zustand'
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import { sampleCollection } from '../data/sampleCollection'
 import { mergeGames, type ImportedGame } from '../domain/backup'
-import { DEFAULT_OPTIONS, migrateUnits, normalizeOptions, type LegacySpaceOptions } from '../domain/defaults'
-import { KALLAX_CUBE, KALLAX_FINISHES } from '../domain/kallax'
+import { DEFAULT_OPTIONS, migrateCube, migrateUnits, normalizeOptions, type LegacySpaceOptions } from '../domain/defaults'
+import { editShape, remapKeys, type ShapeEdit } from '../domain/geometry'
+import { KALLAX_FINISHES } from '../domain/kallax'
 import type { CubeSize, Game, PackOptions, ShelfUnit, Zone, ZoneRule } from '../domain/types'
 import { newZone } from '../domain/zones'
 import { detectLanguage, type Language } from '../i18n/language'
@@ -19,7 +20,6 @@ export type MobileScreen = 'shelf' | 'panel'
 export interface AppState {
   games: Game[]
   units: ShelfUnit[]
-  cube: CubeSize
   options: PackOptions
   zones: Zone[]
   language: Language
@@ -42,7 +42,8 @@ export interface AppState {
   addUnit: () => void
   updateUnit: (id: string, patch: Partial<Omit<ShelfUnit, 'id'>>) => void
   removeUnit: (id: string) => void
-  setCube: (cube: CubeSize) => void
+  /** Adds or removes a column or a compartment of a custom unit; blocked and zone cubes follow. */
+  reshapeUnit: (id: string, edit: ShapeEdit) => void
 
   addZone: (rule?: ZoneRule) => void
   updateZone: (id: string, patch: Partial<Omit<Zone, 'id'>>) => void
@@ -61,7 +62,7 @@ export interface AppState {
   locate: (id: string) => void
   select: (id: string | null) => void
   edit: (id: string | null) => void
-  restore: (data: Pick<AppState, 'games' | 'units' | 'cube' | 'options'> & { zones?: Zone[] }) => void
+  restore: (data: Pick<AppState, 'games' | 'units' | 'options'> & { cube?: CubeSize; zones?: Zone[] }) => void
 }
 
 const idbStorage: StateStorage = {
@@ -83,7 +84,6 @@ export const useAppStore = create<AppState>()(
     (setState, getState) => ({
       games: [],
       units: [newUnit(1)],
-      cube: KALLAX_CUBE,
       options: DEFAULT_OPTIONS,
       zones: [],
       language: detectLanguage(),
@@ -110,7 +110,16 @@ export const useAppStore = create<AppState>()(
       addUnit: () => setState((s) => ({ units: [...s.units, newUnit(s.units.length + 1)] })),
       updateUnit: (id, patch) => setState((s) => ({ units: s.units.map((u) => (u.id === id ? { ...u, ...patch } : u)) })),
       removeUnit: (id) => setState((s) => ({ units: s.units.length > 1 ? s.units.filter((u) => u.id !== id) : s.units })),
-      setCube: (cube) => setState({ cube }),
+      reshapeUnit: (id, edit) =>
+        setState((s) => {
+          const unit = s.units.find((u) => u.id === id)
+          if (!unit?.custom) return {}
+          const { shape, remap } = editShape(unit.custom, edit)
+          return {
+            units: s.units.map((u) => (u.id === id ? { ...u, custom: shape, blocked: remapKeys(u.blocked, remap) } : u)),
+            zones: s.zones.map((z) => (z.cubes ? { ...z, cubes: remapKeys(z.cubes, remap, `${id}:`) } : z)),
+          }
+        }),
 
       addZone: (rule) => setState((s) => ({ zones: [...s.zones, newZone(nanoid(), s.zones, rule)] })),
       updateZone: (id, patch) => setState((s) => ({ zones: s.zones.map((z) => (z.id === id ? { ...z, ...patch } : z)) })),
@@ -147,9 +156,9 @@ export const useAppStore = create<AppState>()(
       restore: ({ games, units, cube, options, zones }) =>
         setState({
           games,
-          // Backups made before 0.13 keep the overhang and the top in the options.
-          units: migrateUnits(units, options as LegacySpaceOptions),
-          cube,
+          // Backups made before 0.13 keep the overhang and the top in the options,
+          // before 0.14 one cube size for every unit.
+          units: migrateCube(migrateUnits(units, options as LegacySpaceOptions), cube),
           options: normalizeOptions(options),
           zones: zones ?? [],
           selectedId: null,
@@ -157,7 +166,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'shelf-planner',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => idbStorage),
       migrate: (persisted, version) => {
         const p = (persisted ?? {}) as Partial<AppState>
@@ -166,12 +175,14 @@ export const useAppStore = create<AppState>()(
         if (version < 2 && legacy) legacy.oversizedOnTop = true
         // v3: overhang and top became settings of each unit.
         if (version < 3 && p.units) p.units = migrateUnits(p.units, legacy ?? {})
-        return p as AppState
+        // v4: KALLAX units have the standard sizes; units with other sizes became custom.
+        const { cube, ...rest } = p as Partial<AppState> & { cube?: CubeSize }
+        if (version < 4 && rest.units) rest.units = migrateCube(rest.units, cube)
+        return rest as AppState
       },
       partialize: (s) => ({
         games: s.games,
         units: s.units,
-        cube: s.cube,
         options: s.options,
         zones: s.zones,
         language: s.language,

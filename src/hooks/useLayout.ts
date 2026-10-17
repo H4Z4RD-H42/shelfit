@@ -6,10 +6,9 @@ import { useAppStore } from '../store/appStore'
 export function useLayout() {
   const games = useAppStore((s) => s.games)
   const units = useAppStore((s) => s.units)
-  const cube = useAppStore((s) => s.cube)
   const options = useAppStore((s) => s.options)
   const zones = useAppStore((s) => s.zones)
-  return useMemo(() => packCollection(games, units, cube, options, zones), [games, units, cube, options, zones])
+  return useMemo(() => packCollection(games, units, options, zones), [games, units, options, zones])
 }
 
 export function useGamesById(): Map<string, Game> {

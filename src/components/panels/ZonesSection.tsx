@@ -6,7 +6,8 @@ import { ZONE_PLACES, ZONE_RULES, cubeId, defaultStrategy } from '../../domain/z
 import { useGamesById, useLayout } from '../../hooks/useLayout'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
-import { zoneName } from '../labels'
+import { cubePosition, zoneName } from '../labels'
+import { UnitCells } from '../UnitCells'
 import { cx, inputClass } from '../styles'
 import { Button, InfoButton, Reveal, Segmented } from '../ui'
 
@@ -32,10 +33,10 @@ function CubePicker({ zone }: { zone: Zone }) {
       {units.map((unit) => (
         <div key={unit.id} className="space-y-1">
           {units.length > 1 && <p className="text-[11px] text-ink-faint">{unit.name}</p>}
-          <div className="grid w-40 gap-1" style={{ gridTemplateColumns: `repeat(${unit.columns}, 1fr)` }}>
-            {Array.from({ length: unit.columns * unit.rows }, (_, k) => {
-              const column = k % unit.columns
-              const row = Math.floor(k / unit.columns)
+          <UnitCells
+            unit={unit}
+            max={{ width: 160, height: 200 }}
+            render={({ column, row }, style) => {
               const key = cubeId({ unitId: unit.id, column, row })
               const blocked = isBlocked(unit, column, row)
               const other = takenBy.get(key)
@@ -46,26 +47,27 @@ function CubePicker({ zone }: { zone: Zone }) {
                   type="button"
                   aria-pressed={selected}
                   disabled={blocked || !!other}
-                  title={other ? zoneName(t, other) : t('zones.cube', { row: row + 1, column: column + 1 })}
+                  title={other ? zoneName(t, other) : cubePosition(t, unit, column, row)}
                   onClick={() => toggle(key)}
                   className={cx(
-                    'flex aspect-square items-center justify-center rounded-md border transition-colors',
+                    'flex items-center justify-center rounded-md border transition-colors',
                     blocked && 'border-line bg-surface-3 text-ink-faint',
                     !blocked && !selected && !other && 'border-line bg-surface-2 hover:border-ink-faint',
                   )}
-                  style={
-                    selected
+                  style={{
+                    ...style,
+                    ...(selected
                       ? { background: zone.color, borderColor: zone.color }
                       : other
                         ? { background: `${other.color}40`, borderColor: `${other.color}80` }
-                        : undefined
-                  }
+                        : undefined),
+                  }}
                 >
                   {blocked && <X className="size-3.5" />}
                 </button>
               )
-            })}
-          </div>
+            }}
+          />
         </div>
       ))}
     </div>

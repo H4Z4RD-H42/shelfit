@@ -1,4 +1,5 @@
-import { FRAME, cubeSlots, isTopFree, unitOuterSize, unitOverhang, unitOverhangSide, type CubeSlot } from './kallax'
+import { cubeSlots, unitGeometry, type CubeSlot } from './geometry'
+import { isTopFree, unitOverhang, unitOverhangSide } from './kallax'
 import { detectSagas } from './saga'
 import { groupOf } from './grouping'
 import { boxVolume, orderUnits } from './sorting'
@@ -9,7 +10,6 @@ import {
   type BoxDimensions,
   type CubeLayout,
   type CubeSize,
-  type FillOrder,
   type Game,
   type Layout,
   type Orientation,
@@ -54,9 +54,9 @@ interface Item {
   volume: number
   /**
    * Extents for each feasible orientation, already filtered by preference,
-   * for each overhang (cm) of the units the box fits in.
+   * for each kind of cube the box fits in (see `Ctx.key`).
    */
-  fits: Map<number, Fits>
+  fits: Map<string, Fits>
 }
 
 interface Column {
@@ -82,9 +82,13 @@ interface Ctx {
   stackHeight: number
   align: Align
   overhangSide: OverhangSide
-  /** Overhang of the unit, the key of `Item.fits`. */
-  overhang: number
+  /** Cubes with the same key take the same boxes: the key of `Item.fits`. */
+  key: string
 }
+
+/** Room for a box in a cube: its interior plus the overhang of the unit. */
+const roomOf = (cube: CubeSize, overhang: number): CubeSize => ({ ...cube, depth: cube.depth + overhang })
+const roomKey = (room: CubeSize) => `${room.width}x${room.height}x${room.depth}`
 
 /** Computes the possible extents of a box in each orientation. */
 export function orientations(dims: BoxDimensions, cube: CubeSize, clearance: number, longSideFront = false): Fits {
@@ -126,7 +130,7 @@ function allowedFits(game: Game & { dims: BoxDimensions }, options: PackOptions,
 }
 
 const NO_FITS: Fits = {}
-const fitsAt = (item: Item, ctx: Ctx) => item.fits.get(ctx.overhang) ?? NO_FITS
+const fitsAt = (item: Item, ctx: Ctx) => item.fits.get(ctx.key) ?? NO_FITS
 const fitsIn = (item: Item, ctx: Ctx) => {
   const fits = fitsAt(item, ctx)
   return !!(fits.vertical || fits.horizontal)
@@ -366,8 +370,8 @@ function packOrdered(units: QueuedUnit[], lines: number[], ctxs: Ctx[], options:
   return { states, leftover: queue.flatMap((u) => u.items) }
 }
 
-/** One context per kind of unit (same overhang). */
-const distinct = (ctxs: Ctx[]) => [...new Map(ctxs.map((c) => [c.overhang, c])).values()]
+/** One context per kind of cube (same room). */
+const distinct = (ctxs: Ctx[]) => [...new Map(ctxs.map((c) => [c.key, c])).values()]
 
 function packCompact(units: Item[][], ctxs: Ctx[]): Packed {
   const kinds = distinct(ctxs)
@@ -486,6 +490,19 @@ function toPlacements(state: CubeState, ctx: Ctx): Placement[] {
   return placements
 }
 
+/** The most frequent cube size; the first one on a tie. */
+function mostCommon(cubes: CubeSize[]): CubeSize | undefined {
+  const count = new Map<string, { cube: CubeSize; n: number }>()
+  for (const cube of cubes) {
+    const entry = count.get(roomKey(cube)) ?? { cube, n: 0 }
+    entry.n++
+    count.set(roomKey(cube), entry)
+  }
+  let best: { cube: CubeSize; n: number } | undefined
+  for (const entry of count.values()) if (!best || entry.n > best.n) best = entry
+  return best?.cube
+}
+
 /** Height (cm) up to which boxes are stacked on top of a unit. */
 export const TOP_HEIGHT = 40
 
@@ -501,79 +518,82 @@ function topExtents(dims: BoxDimensions, width: number, clearance: number): Exte
 function packTop(
   games: Game[],
   units: ShelfUnit[],
-  cube: CubeSize,
   clearance: number,
   align: Align,
 ): { tops: TopLayout[]; leftover: Game[]; tooBig: Game[] } {
   const tops: TopLayout[] = []
   const free = units.filter(isTopFree)
   if (free.length === 0) return { tops, leftover: games, tooBig: [] }
-  const widest = Math.max(...free.map((u) => unitOuterSize(u, cube).width))
+  const widest = Math.max(...free.map((u) => unitGeometry(u).top.width))
   const tooBig = games.filter((g) => !topExtents(g.dims!, widest, clearance))
   let queue = games.filter((g) => !tooBig.includes(g))
   for (const unit of free) {
     if (queue.length === 0) break
-    const width = unitOuterSize(unit, cube).width
+    const { top, depth } = unitGeometry(unit)
+    const width = top.width
     const ctx: Ctx = {
-      cube: { width, height: TOP_HEIGHT, depth: FRAME.depth },
+      cube: { width, height: TOP_HEIGHT, depth },
       clearance,
       stackHeight: TOP_HEIGHT,
       align,
       overhangSide: unitOverhangSide(unit),
-      overhang: 0,
+      key: 'top',
     }
     const items: Item[] = []
     for (const [order, game] of queue.entries()) {
       const ext = topExtents(game.dims!, width, clearance)
       if (!ext) break
-      items.push({ game, order, volume: boxVolume(game), fits: new Map([[0, { horizontal: ext }]]) })
+      items.push({ game, order, volume: boxVolume(game), fits: new Map([['top', { horizontal: ext }]]) })
     }
     const prefixes = fillConsecutive(items, ctx)
     const count = prefixes.length - 1
     if (count === 0) continue
-    tops.push({ unitId: unit.id, placements: toPlacements(prefixes[count]!, ctx) })
+    // Placements on top are relative to the left side of the unit.
+    const placements = toPlacements(prefixes[count]!, ctx).map((p) => ({ ...p, x: p.x + top.x }))
+    tops.push({ unitId: unit.id, placements })
     queue = queue.slice(count)
   }
   return { tops, leftover: queue, tooBig }
 }
 
 /** Numbers the shelf lines (rows, or columns) of the cubes, in filling order. */
-function shelfLines(slots: CubeSlot[], fillOrder: FillOrder): number[] {
+function shelfLines(slots: CubeSlot[]): number[] {
   let line = -1
   let previous = ''
   return slots.map((s) => {
-    const key = `${s.unitId}:${fillOrder === 'rows' ? s.row : s.column}`
+    const key = `${s.unitId}:${s.line}`
     if (key !== previous) line++
     previous = key
     return line
   })
 }
 
-export function packCollection(
-  games: Game[],
-  units: ShelfUnit[],
-  cube: CubeSize,
-  options: PackOptions,
-  zones: Zone[] = [],
-): Layout {
+export function packCollection(games: Game[], units: ShelfUnit[], options: PackOptions, zones: Zone[] = []): Layout {
   const sagas = detectSagas(games, options.autoDetectSagas)
-  const stackHeight = options.maxStackHeight > 0 ? Math.min(options.maxStackHeight, cube.height) : cube.height
-  // Every unit has its own overhang, so a box may fit in the cubes of some units only.
-  const ctxOf = new Map(
-    units.map((u): [string, Ctx] => [
-      u.id,
-      {
-        cube,
-        clearance: options.clearance,
-        stackHeight,
-        align: options.align,
-        overhangSide: unitOverhangSide(u),
-        overhang: unitOverhang(u),
-      },
-    ]),
-  )
-  const overhangs = [...new Set(units.map(unitOverhang))]
-  const deepest = { ...cube, depth: cube.depth + Math.max(0, ...overhangs) }
+  const stackHeightOf = (cube: CubeSize) =>
+    options.maxStackHeight > 0 ? Math.min(options.maxStackHeight, cube.height) : cube.height
+  const slots = cubeSlots(units, options.fillOrder)
+  const unitOf = new Map(units.map((u) => [u.id, u]))
+  // Every cube has its own size and every unit its own overhang, so a box may fit in some cubes only.
+  const rooms = new Map<string, CubeSize>()
+  const slotCtx = slots.map((slot): Ctx => {
+    const unit = unitOf.get(slot.unitId)!
+    const cube = slot.cell.size
+    const room = roomOf(cube, unitOverhang(unit))
+    const key = roomKey(room)
+    rooms.set(key, room)
+    return {
+      cube,
+      clearance: options.clearance,
+      stackHeight: stackHeightOf(cube),
+      align: options.align,
+      overhangSide: unitOverhangSide(unit),
+      key,
+    }
+  })
+  // Small and large boxes are judged against the most common cube.
+  const reference = mostCommon(slots.map((s) => s.cell.size)) ?? { width: 0, height: 0, depth: 0 }
+  const deepest = roomOf(reference, Math.max(0, ...units.map(unitOverhang)))
   const topFree = units.some(isTopFree)
   const shelved = games.filter((g) => !g.excluded)
   const unplaced: UnplacedGame[] = []
@@ -588,10 +608,10 @@ export function packCollection(
       onTop.push(game)
       continue
     }
-    const fits = new Map<number, Fits>()
-    for (const overhang of overhangs) {
-      const f = allowedFits(game, options, { ...cube, depth: cube.depth + overhang })
-      if (f.vertical || f.horizontal) fits.set(overhang, f)
+    const fits = new Map<string, Fits>()
+    for (const [key, room] of rooms) {
+      const f = allowedFits(game, options, room)
+      if (f.vertical || f.horizontal) fits.set(key, f)
     }
     // Games that fit in no cube go on top of the shelves, where there is room.
     if (fits.size > 0) itemOf.set(game.id, { game, order: 0, volume: boxVolume(game), fits })
@@ -602,7 +622,6 @@ export function packCollection(
   const top = packTop(
     orderUnits(onTop, {}, { ...options, groupSagas: false, groupBy: [] }).flatMap((u) => u.games),
     units,
-    cube,
     options.clearance,
     options.align,
   )
@@ -611,7 +630,12 @@ export function packCollection(
 
   const inCubes = shelved.filter((g) => itemOf.has(g.id))
   const capacityOf = (dims: BoxDimensions) =>
-    cubeCapacity(orientations(dims, deepest, options.clearance, options.longSideFront), cube, options.clearance, stackHeight)
+    cubeCapacity(
+      orientations(dims, deepest, options.clearance, options.longSideFront),
+      reference,
+      options.clearance,
+      stackHeightOf(reference),
+    )
   const zoneOf =
     zones.length > 0
       ? assignZones(inCubes, zones, {
@@ -637,8 +661,6 @@ export function packCollection(
     options,
   )
 
-  const slots = cubeSlots(units, options.fillOrder)
-  const slotCtx = slots.map((s) => ctxOf.get(s.unitId)!)
   const ctxsOf = (indexes: number[]) => indexes.map((i) => slotCtx[i]!)
   const states: (CubeState | undefined)[] = []
   const slotZone: (string | undefined)[] = []
@@ -656,7 +678,7 @@ export function packCollection(
     const members = inCubes.filter((g) => zoneOf[g.id] === zone.id)
     const unitsOfZone = queue(members, { ...options, groupBy: [] })
     zoneUnits.push(...unitsOfZone)
-    const ranked = rankSlots(zone, slots, free, units, cube)
+    const ranked = rankSlots(zone, slots, free)
     let taken = ranked
     if (zone.place !== 'cubes') {
       // How many of the preferred cubes the zone needs; they are then filled in reading order.
@@ -678,7 +700,7 @@ export function packCollection(
   const mainSlots = free.map((i) => slots[i]!)
   const packed =
     options.strategy === 'ordered'
-      ? packOrdered(mainUnits, shelfLines(mainSlots, options.fillOrder), ctxsOf(free), options)
+      ? packOrdered(mainUnits, shelfLines(mainSlots), ctxsOf(free), options)
       : packCompact(
           mainUnits.map((u) => u.items),
           ctxsOf(free),
@@ -717,10 +739,10 @@ export function packCollection(
       }
   }
 
-  const filled = states.filter((s): s is CubeState => !!s)
-  const placedVolume = filled.reduce((acc, s) => acc + s.volume, 0)
-  const usedCubes = filled.filter((s) => s.columns.length > 0).length
-  const cubeVolume = cube.width * cube.height * cube.depth
+  const used = states.flatMap((s, i) => (s && s.columns.length > 0 ? [{ state: s, cube: slots[i]!.cell.size }] : []))
+  const placedVolume = used.reduce((acc, u) => acc + u.state.volume, 0)
+  const usedVolume = used.reduce((acc, u) => acc + u.cube.width * u.cube.height * u.cube.depth, 0)
+  const usedCubes = used.length
   return {
     cubes,
     tops: top.tops,
@@ -734,7 +756,7 @@ export function packCollection(
       placedGames: shelved.length - unplaced.length,
       totalCubes: slots.length,
       usedCubes,
-      volumeFill: usedCubes ? placedVolume / (usedCubes * cubeVolume) : 0,
+      volumeFill: usedVolume ? placedVolume / usedVolume : 0,
     },
   }
 }
