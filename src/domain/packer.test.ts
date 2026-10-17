@@ -91,25 +91,25 @@ describe('packCollection', () => {
 
   it('lets deep boxes stick out of the front when overhang is allowed', () => {
     const deep = game('War of the Ring', 40.5, 27.5, 9)
-    expect(packCollection([deep], [unit(1, 1)], KALLAX_CUBE, opts()).unplaced).toHaveLength(1)
+    expect(packCollection([deep], [unit(1, 1)], KALLAX_CUBE, opts({ oversizedOnTop: false })).unplaced).toHaveLength(1)
     const layout = packCollection([deep], [unit(1, 1)], KALLAX_CUBE, opts({ overhang: 3 }))
     const p = layout.cubes[0]!.placements[0]!
     expect(p.sz).toBe(40.5)
     expect(p.z).toBeCloseTo(KALLAX_CUBE.depth - 40.5)
   })
 
-  it('puts games on top of the shelf when asked or when they fit nowhere', () => {
+  it('puts games on top of the shelf when asked or, by default, when they fit nowhere', () => {
     const wipper = game('Wipper', 35, 35, 8, { onTop: true })
     const crack = game('Crack!', 48.4, 24.3, 5.1)
     const azul = game('Azul', 26, 26, 7)
-    const layout = packCollection([wipper, crack, azul], [unit(4, 4)], KALLAX_CUBE, opts({ oversizedOnTop: true }))
+    const layout = packCollection([wipper, crack, azul], [unit(4, 4)], KALLAX_CUBE, opts())
     expect(layout.unplaced).toEqual([])
     const top = layout.tops[0]!.placements
     expect(top.map((p) => p.gameId).sort()).toEqual([crack.id, wipper.id].sort())
     expect(top.every((p) => p.orientation === 'horizontal')).toBe(true)
     expect(layout.cubes[0]!.placements.map((p) => p.gameId)).toEqual([azul.id])
 
-    const strict = packCollection([crack], [unit(2, 2)], KALLAX_CUBE, opts())
+    const strict = packCollection([crack], [unit(2, 2)], KALLAX_CUBE, opts({ oversizedOnTop: false }))
     expect(strict.unplaced).toEqual([{ gameId: crack.id, reason: 'too-big' }])
   })
 
@@ -154,7 +154,7 @@ describe('packCollection', () => {
 
   it('reports games that do not fit at all', () => {
     const big = game('Gloomhaven', 41.5, 30, 19)
-    const layout = packCollection([big], [unit(1, 1)], KALLAX_CUBE, opts())
+    const layout = packCollection([big], [unit(1, 1)], KALLAX_CUBE, opts({ oversizedOnTop: false }))
     expect(layout.unplaced).toEqual([{ gameId: big.id, reason: 'too-big' }])
   })
 

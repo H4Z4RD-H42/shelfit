@@ -15,7 +15,7 @@ export const DEFAULT_OPTIONS: PackOptions = {
   clearance: 0.3,
   maxStackHeight: 0,
   overhang: 0,
-  oversizedOnTop: false,
+  oversizedOnTop: true,
   align: 'left',
   longSideFront: false,
 }

@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-10-17
+
+### Changed
+
+- Games that physically fit in no cube now go on top of the shelves by default, instead of among the games without a spot. Saved settings are updated too; the option can still be turned off.
+
 ## [0.8.0] - 2026-10-17
 
 ### Added
@@ -121,7 +127,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.6.0...v0.7.0

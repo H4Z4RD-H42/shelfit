@@ -118,8 +118,14 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'shelf-planner',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => idbStorage),
+      migrate: (persisted, version) => {
+        const p = (persisted ?? {}) as Partial<AppState>
+        // v2: games that fit in no cube go on top of the shelves by default.
+        if (version < 2 && p.options) p.options = { ...p.options, oversizedOnTop: true }
+        return p as AppState
+      },
       partialize: (s) => ({
         games: s.games,
         units: s.units,
