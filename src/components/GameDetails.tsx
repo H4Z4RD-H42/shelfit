@@ -6,6 +6,7 @@ import { useZonesById } from '../hooks/useZones'
 import { useT } from '../i18n'
 import { UNPLACED_LABEL, cubePosition, zoneName } from './labels'
 import { useAppStore } from '../store/appStore'
+import { cx } from './styles'
 import { Button, Segmented, Toggle } from './ui'
 
 /** Floating card describing the selected game and where it ended up. */
@@ -13,6 +14,7 @@ export function GameDetails() {
   const t = useT()
   const selectedId = useAppStore((s) => s.selectedId)
   const units = useAppStore((s) => s.units)
+  const lensOpen = useAppStore((s) => s.lensOpen)
   const { select, edit, updateGame } = useAppStore.getState()
   const games = useGamesById()
   const boxColor = useBoxColor()
@@ -31,7 +33,13 @@ export function GameDetails() {
   const zone = zonesById.get(layout.zones[game.id] ?? '')
 
   return (
-    <div className="absolute right-3 bottom-3 left-3 z-10 rounded-2xl border border-line bg-surface-0/95 p-4 shadow-2xl backdrop-blur sm:left-auto sm:w-80">
+    <div
+      className={cx(
+        'absolute right-3 bottom-3 left-3 z-10 rounded-2xl border border-line bg-surface-0/95 p-4 shadow-2xl backdrop-blur sm:left-auto sm:w-80',
+        // Beside the lens panel, which takes the right edge on wide screens.
+        lensOpen && 'md:right-[21.5rem]',
+      )}
+    >
       <div className="flex items-start gap-3">
         <span className="mt-0.5 h-10 w-3 shrink-0 rounded" style={{ background: boxColor(game) }} />
         <div className="min-w-0 flex-1">

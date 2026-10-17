@@ -1,6 +1,7 @@
 import { RectangleHorizontal, RectangleVertical } from 'lucide-react'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
 import { useBoxColor } from '../../hooks/useBoxColor'
+import { useDimmed } from '../../hooks/useLens'
 import { useZonesById } from '../../hooks/useZones'
 import { useT } from '../../i18n'
 import { unitGeometry, cellAt } from '../../domain/geometry'
@@ -16,6 +17,7 @@ export function ListView() {
   const layout = useLayout()
   const games = useGamesById()
   const boxColor = useBoxColor()
+  const dimmed = useDimmed()
   const zonesById = useZonesById()
   const unitOf = new Map(units.map((u) => [u.id, u]))
   const outer = useAppStore((s) => s.options.groupBy[0]?.key)
@@ -46,6 +48,7 @@ export function ListView() {
                         className={cx(
                           'flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left text-sm',
                           p.gameId === selectedId ? 'bg-accent/15' : 'hover:bg-surface-2',
+                          dimmed(p.gameId) && 'opacity-35',
                         )}
                       >
                         <span className="size-2.5 shrink-0 rounded-sm" style={{ background: boxColor(game) }} />
@@ -106,6 +109,7 @@ export function ListView() {
                             className={cx(
                               'flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left text-sm',
                               p.gameId === selectedId ? 'bg-accent/15' : 'hover:bg-surface-2',
+                              dimmed(p.gameId) && 'opacity-35',
                             )}
                           >
                             <span className="size-2.5 shrink-0 rounded-sm" style={{ background: boxColor(game) }} />

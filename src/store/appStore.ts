@@ -6,6 +6,7 @@ import { sampleCollection } from '../data/sampleCollection'
 import { mergeGames, type ImportedGame } from '../domain/backup'
 import { DEFAULT_OPTIONS, migrateCube, migrateUnits, normalizeOptions, type LegacySpaceOptions } from '../domain/defaults'
 import { editShape, remapKeys, type ShapeEdit } from '../domain/geometry'
+import { EMPTY_LENS, type Lens } from '../domain/lens'
 import { KALLAX_FINISHES } from '../domain/kallax'
 import type { CubeSize, Game, PackOptions, ShelfUnit, Zone, ZoneRule } from '../domain/types'
 import { newZone } from '../domain/zones'
@@ -30,6 +31,9 @@ export interface AppState {
   selectedId: string | null
   /** Game open in the editor: an id, `new`, or nothing. */
   editing: string | null
+  /** Filters and map painted on the shelves; not saved, like the data views of a game. */
+  lens: Lens
+  lensOpen: boolean
 
   addGame: (game: Omit<Game, 'id' | 'createdAt'>) => void
   updateGame: (id: string, patch: Partial<Omit<Game, 'id'>>) => void
@@ -62,6 +66,9 @@ export interface AppState {
   locate: (id: string) => void
   select: (id: string | null) => void
   edit: (id: string | null) => void
+  setLens: (update: (lens: Lens) => Lens) => void
+  clearLens: () => void
+  setLensOpen: (open: boolean) => void
   restore: (data: Pick<AppState, 'games' | 'units' | 'options'> & { cube?: CubeSize; zones?: Zone[] }) => void
 }
 
@@ -93,6 +100,8 @@ export const useAppStore = create<AppState>()(
       panel: 'collection',
       selectedId: null,
       editing: null,
+      lens: EMPTY_LENS,
+      lensOpen: false,
 
       addGame: (game) => setState((s) => ({ games: [...s.games, { ...game, id: nanoid(), createdAt: Date.now() }] })),
       updateGame: (id, patch) => setState((s) => ({ games: s.games.map((g) => (g.id === id ? { ...g, ...patch } : g)) })),
@@ -153,6 +162,9 @@ export const useAppStore = create<AppState>()(
       locate: (selectedId) => setState({ selectedId, mobileScreen: 'shelf' }),
       select: (selectedId) => setState({ selectedId }),
       edit: (editing) => setState(editing ? { editing, panel: 'collection', mobileScreen: 'panel' } : { editing }),
+      setLens: (update) => setState((s) => ({ lens: update(s.lens) })),
+      clearLens: () => setState({ lens: EMPTY_LENS }),
+      setLensOpen: (lensOpen) => setState({ lensOpen }),
       restore: ({ games, units, cube, options, zones }) =>
         setState({
           games,

@@ -220,3 +220,46 @@ export function Section({ title, children, action }: { title: ReactNode; childre
     </section>
   )
 }
+
+/** Slider with two handles choosing a range between `min` and `max`. */
+export function RangeSlider({
+  min,
+  max,
+  step,
+  value,
+  onChange,
+  label,
+}: {
+  min: number
+  max: number
+  step: number
+  value: [number, number]
+  onChange: (value: [number, number]) => void
+  label: string
+}) {
+  const [lo, hi] = value
+  const pct = (v: number) => (max > min ? ((v - min) / (max - min)) * 100 : 0)
+  const common = { type: 'range', min, max, step, className: 'range-thumb' } as const
+  return (
+    <div className="relative h-5">
+      {/* The fill is inset by half a handle, like the travel of the native handles. */}
+      <div className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-surface-3">
+        <div className="absolute h-full rounded-full bg-accent" style={{ left: `${pct(lo)}%`, right: `${100 - pct(hi)}%` }} />
+      </div>
+      <input
+        {...common}
+        value={lo}
+        aria-label={`${label} (min)`}
+        // When both handles meet at the top, the lower one must stay reachable.
+        style={{ zIndex: lo >= hi && lo > (min + max) / 2 ? 2 : 1 }}
+        onChange={(e) => onChange([Math.min(Number(e.target.value), hi), hi])}
+      />
+      <input
+        {...common}
+        value={hi}
+        aria-label={`${label} (max)`}
+        onChange={(e) => onChange([lo, Math.max(Number(e.target.value), lo)])}
+      />
+    </div>
+  )
+}

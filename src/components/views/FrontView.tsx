@@ -7,6 +7,7 @@ import type { Placement, Zone } from '../../domain/types'
 import { cubeId, zoneRuns, type ZoneRun } from '../../domain/zones'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
+import { useDimmed } from '../../hooks/useLens'
 import { useZonesById } from '../../hooks/useZones'
 import { useAppStore } from '../../store/appStore'
 import { fitBoxLabel, LABEL_WEIGHT } from '../boxLabel'
@@ -23,6 +24,7 @@ export function FrontView() {
   const layout = useLayout()
   const games = useGamesById()
   const boxColor = useBoxColor()
+  const dimmed = useDimmed()
   const zonesById = useZonesById()
   const cubeZone = new Map(layout.cubes.flatMap((c) => (c.zoneId ? [[cubeId(c), zonesById.get(c.zoneId)] as const] : [])))
   const runs = zoneRuns(layout.cubes, units)
@@ -107,6 +109,7 @@ export function FrontView() {
                 y={baseY - p.y - p.sy}
                 name={game.name}
                 color={boxColor(game)}
+                dimmed={dimmed(p.gameId)}
                 selected={p.gameId === selectedId}
                 onSelect={() => select(p.gameId)}
               />
@@ -129,6 +132,7 @@ export function FrontView() {
                 y={baseY - p.y - p.sy}
                 name={game.name}
                 color={boxColor(game)}
+                dimmed={dimmed(p.gameId)}
                 selected={p.gameId === selectedId}
                 onSelect={() => select(p.gameId)}
               />
@@ -204,6 +208,7 @@ function BoxRect({
   y,
   name,
   color,
+  dimmed,
   selected,
   onSelect,
 }: {
@@ -212,6 +217,8 @@ function BoxRect({
   y: number
   name: string
   color: string
+  /** Faded out by the filters of the lens. */
+  dimmed: boolean
   selected: boolean
   onSelect: () => void
 }) {
@@ -228,6 +235,7 @@ function BoxRect({
   return (
     <g
       className="cursor-pointer"
+      opacity={dimmed && !selected ? 0.3 : 1}
       onClick={(e) => {
         e.stopPropagation()
         onSelect()
@@ -241,7 +249,7 @@ function BoxRect({
         height={p.sy}
         rx={0.25}
         fill={color}
-        filter="url(#box-shadow)"
+        filter={dimmed ? undefined : 'url(#box-shadow)'}
         stroke={selected ? 'var(--accent)' : 'rgba(0,0,0,.35)'}
         strokeWidth={selected ? 0.6 : 0.12}
       />

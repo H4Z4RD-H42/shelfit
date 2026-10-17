@@ -11,6 +11,7 @@ import type { Game, Placement, ShelfUnit, Zone } from '../../domain/types'
 import { zoneRuns, type ZoneRun } from '../../domain/zones'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
+import { useDimmed } from '../../hooks/useLens'
 import { useZonesById } from '../../hooks/useZones'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
@@ -171,6 +172,7 @@ function useLabelTexture(name: string, color: string, faceW: number, faceH: numb
 function GameBox({
   game,
   color,
+  dimmed,
   p,
   origin,
   selected,
@@ -179,6 +181,8 @@ function GameBox({
 }: {
   game: Game
   color: string
+  /** Faded out by the filters of the lens: a ghost of the box. */
+  dimmed: boolean
   p: Placement
   origin: { x: number; y: number }
   selected: boolean
@@ -189,12 +193,16 @@ function GameBox({
   const texture = useLabelTexture(game.name, color, p.sx, p.sy, vertical)
   const side = useMemo(() => new THREE.Color(color).multiplyScalar(0.8), [color])
   const emissive = selected ? '#f59e3c' : '#000000'
+  const ghost = dimmed && !selected
+  const fade = { transparent: ghost, opacity: ghost ? 0.18 : 1, depthWrite: !ghost }
+  // three.js compiles `transparent` into the shader: new materials when it changes.
+  const look = ghost ? 'ghost' : 'solid'
 
   // boxGeometry material order: +x, -x, +y, -y, +z (front), -z.
   return (
     <mesh
       position={[origin.x + p.x + p.sx / 2, origin.y + p.y + p.sy / 2, -(p.z + p.sz / 2)]}
-      castShadow
+      castShadow={!ghost}
       receiveShadow
       onClick={(e: ThreeEvent<MouseEvent>) => {
         e.stopPropagation()
@@ -209,16 +217,25 @@ function GameBox({
       <boxGeometry args={[p.sx, p.sy, p.sz]} />
       {[0, 1, 2, 3].map((i) => (
         <meshStandardMaterial
-          key={i}
+          key={`${look}${i}`}
           attach={`material-${i}`}
           color={side}
           roughness={0.7}
           emissive={emissive}
           emissiveIntensity={0.25}
+          {...fade}
         />
       ))}
-      <meshStandardMaterial attach="material-4" map={texture} roughness={0.6} emissive={emissive} emissiveIntensity={0.25} />
-      <meshStandardMaterial attach="material-5" color={side} roughness={0.7} />
+      <meshStandardMaterial
+        key={`${look}4`}
+        attach="material-4"
+        map={texture}
+        roughness={0.6}
+        emissive={emissive}
+        emissiveIntensity={0.25}
+        {...fade}
+      />
+      <meshStandardMaterial key={`${look}5`} attach="material-5" color={side} roughness={0.7} {...fade} />
     </mesh>
   )
 }
@@ -261,6 +278,7 @@ export function Shelf3D() {
   const layout = useLayout()
   const games = useGamesById()
   const boxColor = useBoxColor()
+  const dimmed = useDimmed()
   const zonesById = useZonesById()
   const runs = zoneRuns(layout.cubes, units)
   const [hovered, setHovered] = useState<string | null>(null)
@@ -333,6 +351,7 @@ export function Shelf3D() {
                 key={p.gameId}
                 game={game}
                 color={boxColor(game)}
+                dimmed={dimmed(p.gameId)}
                 p={p}
                 origin={origin}
                 selected={p.gameId === selectedId}
@@ -354,6 +373,7 @@ export function Shelf3D() {
                 key={p.gameId}
                 game={game}
                 color={boxColor(game)}
+                dimmed={dimmed(p.gameId)}
                 p={p}
                 origin={origin}
                 selected={p.gameId === selectedId}

@@ -5,6 +5,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-10-17
+
+### Added
+
+- Maps and filters: a panel over the shelves (3D, front and list views), opened from the "Maps and filters" button, that colours the boxes by their data, like the data views of a city builder. It floats on the right on wide screens and rises from the bottom on phones.
+- Maps: colour every box on a scale by year, complexity, playing time, maximum players, rating, plays, weight or box volume, or with one colour per genre, designer, publisher or language, with a legend. Games without the data are grey.
+- Filters: players the game must be playable with, ranges (year, complexity, playing time, rating, plays, weight) on two-handle sliders, expansion / for trade / never played, and genres, BGG categories, designers, publishers, languages and tags. Games matching every filter stay lit; the others fade out (see-through ghosts in 3D). Filters and map work together: the map scale is measured on the games left.
+- Only the data the collection actually has is offered. The lens is not saved: reloading the page shows the shelves as usual.
+
 ## [0.14.0] - 2026-10-17
 
 ### Added

@@ -1,6 +1,7 @@
 import { Box, LayoutGrid, Library, List, Printer, Rows3, Settings2 } from 'lucide-react'
 import { Suspense, lazy, type ReactNode } from 'react'
 import { GameDetails } from './components/GameDetails'
+import { LensButton, LensPanel } from './components/LensPanel'
 import { Logo } from './components/Logo'
 import { CollectionPanel } from './components/panels/CollectionPanel'
 import { OptionsPanel } from './components/panels/OptionsPanel'
@@ -109,6 +110,8 @@ function ShelfStage() {
       {view === 'front' && <FrontView />}
       {view === 'list' && <ListView />}
       <GameDetails />
+      <LensButton />
+      <LensPanel />
     </div>
   )
 }
