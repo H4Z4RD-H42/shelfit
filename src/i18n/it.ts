@@ -2,6 +2,8 @@ export const it = {
   'app.tagline': 'Il posto giusto per ogni scatola',
   'app.workInProgress': 'Anteprima di sviluppo',
 
+  'tab.shelf': 'Scaffale',
+  'game.locate': 'Mostra sullo scaffale',
   'tab.collection': 'Collezione',
   'tab.shelves': 'Scaffali',
   'tab.options': 'Opzioni',

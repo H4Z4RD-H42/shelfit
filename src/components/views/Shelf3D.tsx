@@ -1,9 +1,10 @@
 import { ContactShadows, OrbitControls } from '@react-three/drei'
-import { Canvas, type ThreeEvent } from '@react-three/fiber'
+import { Canvas, useThree, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useMemo, useState } from 'react'
 import * as THREE from 'three'
 import { contrastText } from '../../domain/color'
 import { FRAME, cubeOrigin, isBlocked, unitOffsets, unitOuterSize } from '../../domain/kallax'
+import { TOP_HEIGHT } from '../../domain/packer'
 import type { CubeSize, Game, Placement, ShelfUnit } from '../../domain/types'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
@@ -181,6 +182,27 @@ function GameBox({
   )
 }
 
+const CAMERA_FOV = 40
+
+/**
+ * Places the camera so that the whole scene fits the canvas, whatever its
+ * proportions: a portrait phone needs to step back much more than a monitor.
+ */
+function FitCamera({ center, width, height }: { center: [number, number, number]; width: number; height: number }) {
+  const camera = useThree((s) => s.camera)
+  const size = useThree((s) => s.size)
+  const [cx, cy, cz] = center
+  useEffect(() => {
+    const tan = Math.tan(((CAMERA_FOV / 2) * Math.PI) / 180)
+    const aspect = size.width / Math.max(1, size.height)
+    const fit = Math.max(height / 2 / tan, width / 2 / (tan * aspect))
+    const distance = fit * 1.15 + FRAME.depth
+    camera.position.set(cx + distance * 0.2, cy + distance * 0.1, distance)
+    camera.lookAt(cx, cy, cz)
+  }, [camera, size.width, size.height, cx, cy, cz, width, height])
+  return null
+}
+
 export function Shelf3D() {
   const units = useAppStore((s) => s.units)
   const cube = useAppStore((s) => s.cube)
@@ -196,7 +218,8 @@ export function Shelf3D() {
   const totalWidth = offsets.length ? offsets[offsets.length - 1]! + sizes[sizes.length - 1]!.width : 0
   const maxHeight = Math.max(...sizes.map((s) => s.height))
   const center: [number, number, number] = [totalWidth / 2, maxHeight / 2, -FRAME.depth / 2]
-  const distance = Math.max(totalWidth, maxHeight) * 1.25 + 60
+  // Boxes stored on top make the scene taller.
+  const sceneHeight = maxHeight + (layout.tops.length > 0 ? TOP_HEIGHT : 0)
   const unitIndex = new Map(units.map((u, i) => [u.id, i]))
 
   useEffect(() => {
@@ -210,12 +233,7 @@ export function Shelf3D() {
 
   return (
     <div className="relative h-full w-full">
-      <Canvas
-        shadows
-        dpr={[1, 2]}
-        camera={{ position: [center[0] + distance * 0.25, center[1] + distance * 0.12, distance], fov: 40, near: 1, far: 5000 }}
-        onPointerMissed={() => select(null)}
-      >
+      <Canvas shadows dpr={[1, 2]} camera={{ fov: CAMERA_FOV, near: 1, far: 5000 }} onPointerMissed={() => select(null)}>
         <color
           attach="background"
           args={[getComputedStyle(document.documentElement).getPropertyValue('--stage').trim() || '#12151b']}
@@ -290,11 +308,12 @@ export function Shelf3D() {
           blur={2.4}
           far={60}
         />
+        <FitCamera center={center} width={totalWidth} height={sceneHeight} />
         <OrbitControls
           target={center}
           enableDamping
           minDistance={40}
-          maxDistance={distance * 3}
+          maxDistance={3000}
           maxPolarAngle={Math.PI / 2 - 0.02}
           makeDefault
         />

@@ -4,6 +4,8 @@ export const en: Messages = {
   'app.tagline': 'The right spot for every box',
   'app.workInProgress': 'Development preview',
 
+  'tab.shelf': 'Shelf',
+  'game.locate': 'Show on the shelf',
   'tab.collection': 'Collection',
   'tab.shelves': 'Shelves',
   'tab.options': 'Options',

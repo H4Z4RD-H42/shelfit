@@ -11,6 +11,7 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 - **0.5** — Grouping by decade, direction of every grouping level, box alignment.
 - **0.6** — Sizes typed by hand always win over imported ones.
 - **0.7** — Long side at the front for lying boxes; redesigned options panel.
+- **0.8** — Phone layout with bottom navigation; 3D camera fitted to the screen.
 
 ## Planned
 

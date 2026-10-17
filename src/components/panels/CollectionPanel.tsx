@@ -1,8 +1,9 @@
-import { Download, Layers, Plus, RulerDimensionLine, Search, Sparkles, Trash2, Upload } from 'lucide-react'
+import { Download, Layers, MapPin, Pencil, Plus, RulerDimensionLine, Search, Sparkles, Trash2, Upload } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { createBackup, parseBackup, parseCsv } from '../../domain/backup'
 import { hasDims } from '../../domain/types'
 import { useLayout } from '../../hooks/useLayout'
+import { useIsDesktop } from '../../hooks/useMediaQuery'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
@@ -39,9 +40,11 @@ export function CollectionPanel() {
     select,
     restore,
     edit: setEditing,
+    locate,
   } = useAppStore.getState()
   const layout = useLayout()
   const boxColor = useBoxColor()
+  const isDesktop = useIsDesktop()
   const language = useAppStore((s) => s.language)
   const num = (n: number) => n.toLocaleString(language)
   const [query, setQuery] = useState('')
@@ -215,15 +218,18 @@ export function CollectionPanel() {
             const reason = unplaced.get(g.id)
             const saga = layout.sagas[g.id]
             return (
-              <li key={g.id}>
+              <li
+                key={g.id}
+                className={cx(
+                  'group flex items-center rounded-lg pr-1 transition-colors',
+                  g.id === selectedId ? 'bg-accent/15 ring-1 ring-accent/50' : 'hover:bg-surface-2',
+                )}
+              >
                 <button
                   type="button"
                   onClick={() => select(g.id === selectedId ? null : g.id)}
                   onDoubleClick={() => setEditing(g.id)}
-                  className={cx(
-                    'group flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors',
-                    g.id === selectedId ? 'bg-accent/15 ring-1 ring-accent/50' : 'hover:bg-surface-2',
-                  )}
+                  className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2 text-left"
                 >
                   <span
                     className={cx('h-8 w-2.5 shrink-0 rounded-sm', g.excluded && 'opacity-30')}
@@ -281,18 +287,30 @@ export function CollectionPanel() {
                       </span>
                     )
                   )}
-                  <span
-                    role="button"
-                    tabIndex={-1}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setEditing(g.id)
-                    }}
-                    className="shrink-0 rounded px-1.5 py-0.5 text-xs text-ink-faint opacity-0 group-hover:opacity-100 hover:text-ink"
-                  >
-                    {t('game.edit')}
-                  </span>
                 </button>
+                {/* Always visible on touch screens, on hover with a mouse. */}
+                <div className="flex shrink-0 items-center [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-within:opacity-100">
+                  {!isDesktop && !reason && (
+                    <button
+                      type="button"
+                      onClick={() => locate(g.id)}
+                      aria-label={t('game.locate')}
+                      title={t('game.locate')}
+                      className="flex size-9 items-center justify-center rounded-md text-ink-faint hover:text-ink"
+                    >
+                      <MapPin className="size-4" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setEditing(g.id)}
+                    aria-label={t('game.edit')}
+                    title={t('game.edit')}
+                    className="flex size-9 items-center justify-center rounded-md text-ink-faint hover:text-ink"
+                  >
+                    <Pencil className="size-4" />
+                  </button>
+                </div>
               </li>
             )
           })}

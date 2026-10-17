@@ -12,6 +12,8 @@ import { detectLanguage, type Language } from '../i18n/language'
 export type ViewMode = '3d' | 'front' | 'list'
 export type PanelTab = 'collection' | 'shelves' | 'options'
 export type ColorBy = 'game' | 'group'
+/** Page shown on phones, where the shelves and the panels do not fit side by side. */
+export type MobileScreen = 'shelf' | 'panel'
 
 export interface AppState {
   games: Game[]
@@ -22,6 +24,7 @@ export interface AppState {
   view: ViewMode
   panel: PanelTab
   colorBy: ColorBy
+  mobileScreen: MobileScreen
   selectedId: string | null
   /** Game open in the editor: an id, `new`, or nothing. */
   editing: string | null
@@ -45,6 +48,9 @@ export interface AppState {
   setView: (view: ViewMode) => void
   setColorBy: (colorBy: ColorBy) => void
   setPanel: (panel: PanelTab) => void
+  showShelf: () => void
+  /** Selects a game and shows it on the shelves. */
+  locate: (id: string) => void
   select: (id: string | null) => void
   edit: (id: string | null) => void
   restore: (data: Pick<AppState, 'games' | 'units' | 'cube' | 'options'>) => void
@@ -74,6 +80,7 @@ export const useAppStore = create<AppState>()(
       language: detectLanguage(),
       view: '3d',
       colorBy: 'game',
+      mobileScreen: 'shelf',
       panel: 'collection',
       selectedId: null,
       editing: null,
@@ -101,9 +108,11 @@ export const useAppStore = create<AppState>()(
       setLanguage: (language) => setState({ language }),
       setView: (view) => setState({ view }),
       setColorBy: (colorBy) => setState({ colorBy }),
-      setPanel: (panel) => setState({ panel }),
+      setPanel: (panel) => setState({ panel, mobileScreen: 'panel' }),
+      showShelf: () => setState({ mobileScreen: 'shelf' }),
+      locate: (selectedId) => setState({ selectedId, mobileScreen: 'shelf' }),
       select: (selectedId) => setState({ selectedId }),
-      edit: (editing) => setState(editing ? { editing, panel: 'collection' } : { editing }),
+      edit: (editing) => setState(editing ? { editing, panel: 'collection', mobileScreen: 'panel' } : { editing }),
       restore: ({ games, units, cube, options }) =>
         setState({ games, units, cube, options: normalizeOptions(options), selectedId: null }),
     }),
