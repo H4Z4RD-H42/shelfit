@@ -25,6 +25,7 @@ Requirements: Node.js 22+.
 ```bash
 npm install
 npm run dev        # development server
+npm run dev:lan    # development server reachable from other devices on the same network
 npm run check      # typecheck, lint, format check and tests
 npm run build      # production build in dist/
 ```
