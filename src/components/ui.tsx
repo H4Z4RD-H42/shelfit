@@ -67,11 +67,13 @@ export function Toggle({
   checked,
   onChange,
   label,
+  hint,
   disabled,
 }: {
   checked: boolean
   onChange: (v: boolean) => void
   label: ReactNode
+  hint?: ReactNode
   disabled?: boolean
 }) {
   return (
@@ -81,7 +83,10 @@ export function Toggle({
         disabled && 'cursor-default opacity-40',
       )}
     >
-      <span>{label}</span>
+      <span>
+        {label}
+        {hint && <span className="mt-0.5 block text-xs text-ink-faint">{hint}</span>}
+      </span>
       <button
         type="button"
         role="switch"

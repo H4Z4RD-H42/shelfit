@@ -1,9 +1,9 @@
 import { Download, Plus, Search, Sparkles, Trash2, Upload } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { createBackup, parseBackup, parseCsv } from '../../domain/backup'
-import { gameColor } from '../../domain/color'
 import { hasDims } from '../../domain/types'
 import { useLayout } from '../../hooks/useLayout'
+import { useBoxColor } from '../../hooks/useBoxColor'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
 import { UNPLACED_LABEL } from '../labels'
@@ -41,12 +41,23 @@ export function CollectionPanel() {
     edit: setEditing,
   } = useAppStore.getState()
   const layout = useLayout()
+  const boxColor = useBoxColor()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
 
   const unplaced = useMemo(() => new Map(layout.unplaced.map((u) => [u.gameId, u.reason])), [layout.unplaced])
+  const suggestions = useMemo(() => {
+    const collect = (key: 'genre' | 'designer' | 'publisher' | 'language') =>
+      [...new Set(games.flatMap((g) => (g[key] ?? '').split(';').map((v) => v.trim())).filter(Boolean))].sort(collator.compare)
+    return {
+      genre: collect('genre'),
+      designer: collect('designer'),
+      publisher: collect('publisher'),
+      language: collect('language'),
+    }
+  }, [games])
   const sagaNames = useMemo(() => [...new Set(Object.values(layout.sagas))].sort(collator.compare), [layout.sagas])
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -168,6 +179,7 @@ export function CollectionPanel() {
               key={editing}
               initial={editingGame}
               sagas={sagaNames}
+              suggestions={suggestions}
               onCancel={() => setEditing(null)}
               onSave={(draft) => {
                 if (editingGame) updateGame(editingGame.id, draft)
@@ -213,11 +225,16 @@ export function CollectionPanel() {
                 >
                   <span
                     className={cx('h-8 w-2.5 shrink-0 rounded-sm', g.excluded && 'opacity-30')}
-                    style={{ background: gameColor(g) }}
+                    style={{ background: boxColor(g) }}
                   />
                   <span className={cx('min-w-0 flex-1', g.excluded && 'opacity-50')}>
                     <span className="flex items-center gap-1.5">
                       <span className="truncate text-sm font-medium">{g.name}</span>
+                      {g.onTop && (
+                        <span className="shrink-0 rounded bg-accent/15 px-1 text-[10px] font-semibold text-accent">
+                          {t('game.onTopShort')}
+                        </span>
+                      )}
                       {g.expansion && (
                         <span className="shrink-0 rounded bg-surface-3 px-1 text-[10px] font-semibold text-ink-soft">
                           {t('game.expansionShort')}

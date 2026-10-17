@@ -1,11 +1,11 @@
 import { Pencil, X } from 'lucide-react'
-import { gameColor } from '../domain/color'
 import type { GameOrientation } from '../domain/types'
 import { useGamesById, useLayout } from '../hooks/useLayout'
+import { useBoxColor } from '../hooks/useBoxColor'
 import { useT } from '../i18n'
 import { UNPLACED_LABEL } from './labels'
 import { useAppStore } from '../store/appStore'
-import { Button, Segmented } from './ui'
+import { Button, Segmented, Toggle } from './ui'
 
 /** Floating card describing the selected game and where it ended up. */
 export function GameDetails() {
@@ -14,12 +14,15 @@ export function GameDetails() {
   const units = useAppStore((s) => s.units)
   const { select, edit, updateGame } = useAppStore.getState()
   const games = useGamesById()
+  const boxColor = useBoxColor()
   const layout = useLayout()
   const game = selectedId ? games.get(selectedId) : undefined
   if (!game) return null
 
   const cube = layout.cubes.find((c) => c.placements.some((p) => p.gameId === game.id))
-  const placement = cube?.placements.find((p) => p.gameId === game.id)
+  const top = layout.tops.find((c) => c.placements.some((p) => p.gameId === game.id))
+  const topUnit = top && units.find((u) => u.id === top.unitId)
+  const placement = (cube ?? top)?.placements.find((p) => p.gameId === game.id)
   const unplaced = layout.unplaced.find((u) => u.gameId === game.id)
   const unit = cube && units.find((u) => u.id === cube.unitId)
   const saga = layout.sagas[game.id]
@@ -27,7 +30,7 @@ export function GameDetails() {
   return (
     <div className="absolute right-3 bottom-3 left-3 z-10 rounded-2xl border border-line bg-surface-0/95 p-4 shadow-2xl backdrop-blur sm:left-auto sm:w-80">
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 h-10 w-3 shrink-0 rounded" style={{ background: gameColor(game) }} />
+        <span className="mt-0.5 h-10 w-3 shrink-0 rounded" style={{ background: boxColor(game) }} />
         <div className="min-w-0 flex-1">
           <h3 className="font-display leading-tight font-semibold">{game.name}</h3>
           <p className="text-xs text-ink-soft">{[saga, game.year].filter(Boolean).join(' · ')}</p>
@@ -52,9 +55,13 @@ export function GameDetails() {
             <dd className="text-right">{t(`orientation.${placement.orientation}`)}</dd>
           </>
         )}
+        {topUnit && <dd className="col-span-2 font-medium text-accent">{t('list.top', { unit: topUnit.name })}</dd>}
         {unplaced && <dd className="col-span-2 font-medium text-danger">{t(UNPLACED_LABEL[unplaced.reason])}</dd>}
       </dl>
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-2">
+        <Toggle label={t('game.onTop')} checked={!!game.onTop} onChange={(onTop) => updateGame(game.id, { onTop })} />
+      </div>
+      <div className="mt-1 flex items-center gap-2">
         <div className="flex-1">
           <Segmented<GameOrientation>
             size="sm"

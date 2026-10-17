@@ -91,6 +91,30 @@ describe('packCollection', () => {
     expect(p.z).toBeCloseTo(KALLAX_CUBE.depth - 40.5)
   })
 
+  it('puts games on top of the shelf when asked or when they fit nowhere', () => {
+    const wipper = game('Wipper', 35, 35, 8, { onTop: true })
+    const crack = game('Crack!', 48.4, 24.3, 5.1)
+    const azul = game('Azul', 26, 26, 7)
+    const layout = packCollection([wipper, crack, azul], [unit(2, 2)], KALLAX_CUBE, opts({ oversizedOnTop: true }))
+    expect(layout.unplaced).toEqual([])
+    const top = layout.tops[0]!.placements
+    expect(top.map((p) => p.gameId).sort()).toEqual([crack.id, wipper.id].sort())
+    expect(top.every((p) => p.orientation === 'horizontal')).toBe(true)
+    expect(layout.cubes[0]!.placements.map((p) => p.gameId)).toEqual([azul.id])
+
+    const strict = packCollection([crack], [unit(2, 2)], KALLAX_CUBE, opts())
+    expect(strict.unplaced).toEqual([{ gameId: crack.id, reason: 'too-big' }])
+  })
+
+  it('skips blocked cubes', () => {
+    const games = Array.from({ length: 2 }, (_, i) => game(`G${i}`, 30, 30, 20))
+    const blocked = { ...unit(2, 1), blocked: ['0:0'] }
+    const layout = packCollection(games, [blocked], KALLAX_CUBE, opts({ orientation: 'vertical' }))
+    expect(layout.cubes).toHaveLength(1)
+    expect(layout.cubes[0]).toMatchObject({ column: 1, row: 0 })
+    expect(layout.stats.placedGames).toBe(1)
+  })
+
   it('reports games that do not fit at all', () => {
     const big = game('Gloomhaven', 41.5, 30, 19)
     const layout = packCollection([big], [unit(1, 1)], KALLAX_CUBE, opts())

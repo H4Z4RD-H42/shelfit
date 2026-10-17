@@ -74,16 +74,23 @@ export interface CubeSlot {
   row: number
 }
 
-/** Lists every cube of every unit, in the order in which they are filled. */
+export const cubeKey = (column: number, row: number) => `${column}:${row}`
+
+export function isBlocked(unit: Pick<ShelfUnit, 'blocked'>, column: number, row: number): boolean {
+  return !!unit.blocked?.includes(cubeKey(column, row))
+}
+
+/** Lists every usable cube of every unit, in the order in which they are filled. */
 export function cubeSlots(units: ShelfUnit[], fillOrder: FillOrder): CubeSlot[] {
   const slots: CubeSlot[] = []
   for (const unit of units) {
+    const add = (column: number, row: number) => {
+      if (!isBlocked(unit, column, row)) slots.push({ unitId: unit.id, column, row })
+    }
     if (fillOrder === 'rows') {
-      for (let row = 0; row < unit.rows; row++)
-        for (let column = 0; column < unit.columns; column++) slots.push({ unitId: unit.id, column, row })
+      for (let row = 0; row < unit.rows; row++) for (let column = 0; column < unit.columns; column++) add(column, row)
     } else {
-      for (let column = 0; column < unit.columns; column++)
-        for (let row = 0; row < unit.rows; row++) slots.push({ unitId: unit.id, column, row })
+      for (let column = 0; column < unit.columns; column++) for (let row = 0; row < unit.rows; row++) add(column, row)
     }
   }
   return slots

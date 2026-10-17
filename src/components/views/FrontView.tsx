@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
-import { contrastText, gameColor } from '../../domain/color'
-import { cubeOrigin, unitOffsets, unitOuterSize } from '../../domain/kallax'
+import { contrastText } from '../../domain/color'
+import { cubeOrigin, isBlocked, unitOffsets, unitOuterSize } from '../../domain/kallax'
 import type { Placement } from '../../domain/types'
+import { useBoxColor } from '../../hooks/useBoxColor'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
 import { useAppStore } from '../../store/appStore'
 
@@ -15,11 +16,16 @@ export function FrontView() {
   const select = useAppStore((s) => s.select)
   const layout = useLayout()
   const games = useGamesById()
+  const boxColor = useBoxColor()
 
   const offsets = useMemo(() => unitOffsets(units, cube), [units, cube])
   const sizes = units.map((u) => unitOuterSize(u, cube))
   const width = offsets.length ? offsets[offsets.length - 1]! + sizes[sizes.length - 1]!.width : 0
-  const height = Math.max(...sizes.map((s) => s.height))
+  const topHeight = (unitId: string) =>
+    Math.max(0, ...(layout.tops.find((t) => t.unitId === unitId)?.placements.map((p) => p.y + p.sy) ?? []))
+  const shelfHeight = Math.max(...sizes.map((s) => s.height))
+  // Room above the tallest unit for the boxes stored on top.
+  const height = Math.max(...units.map((u, i) => sizes[i]!.height + topHeight(u.id)), shelfHeight)
 
   const unitIndex = new Map(units.map((u, i) => [u.id, i]))
 
@@ -54,16 +60,9 @@ export function FrontView() {
                 const column = k % unit.columns
                 const row = Math.floor(k / unit.columns)
                 const o = cubeOrigin(unit, column, row, cube)
-                return (
-                  <rect
-                    key={k}
-                    x={o.x}
-                    y={size.height - o.y - cube.height}
-                    width={cube.width}
-                    height={cube.height}
-                    fill="rgba(0,0,0,.28)"
-                  />
-                )
+                const y = size.height - o.y - cube.height
+                if (isBlocked(unit, column, row)) return <DrawerInsert key={k} x={o.x} y={y} size={cube.width} />
+                return <rect key={k} x={o.x} y={y} width={cube.width} height={cube.height} fill="rgba(0,0,0,.28)" />
               })}
               <text x={size.width / 2} y={size.height + 4.5} textAnchor="middle" fontSize={2.6} className="fill-ink-soft">
                 {unit.name}
@@ -89,7 +88,29 @@ export function FrontView() {
                 x={baseX + p.x}
                 y={baseY - p.y - p.sy}
                 name={game.name}
-                color={gameColor(game)}
+                color={boxColor(game)}
+                selected={p.gameId === selectedId}
+                onSelect={() => select(p.gameId)}
+              />
+            )
+          })
+        })}
+
+        {layout.tops.map((top) => {
+          const ui = unitIndex.get(top.unitId)
+          if (ui === undefined) return null
+          const baseY = height - sizes[ui]!.height // SVG y of the top panel
+          return top.placements.map((p) => {
+            const game = games.get(p.gameId)
+            if (!game) return null
+            return (
+              <BoxRect
+                key={p.gameId}
+                p={p}
+                x={offsets[ui]! + p.x}
+                y={baseY - p.y - p.sy}
+                name={game.name}
+                color={boxColor(game)}
                 selected={p.gameId === selectedId}
                 onSelect={() => select(p.gameId)}
               />
@@ -98,6 +119,31 @@ export function FrontView() {
         })}
       </svg>
     </div>
+  )
+}
+
+/** A cube taken by an insert: drawn as two drawers. */
+function DrawerInsert({ x, y, size }: { x: number; y: number; size: number }) {
+  const h = size / 2
+  return (
+    <g>
+      <rect x={x} y={y} width={size} height={size} fill="rgba(0,0,0,.12)" />
+      {[0, 1].map((i) => (
+        <g key={i}>
+          <rect
+            x={x + 0.6}
+            y={y + i * h + 0.6}
+            width={size - 1.2}
+            height={h - 1.2}
+            rx={0.4}
+            fill="rgba(255,255,255,.18)"
+            stroke="rgba(0,0,0,.2)"
+            strokeWidth={0.15}
+          />
+          <rect x={x + size / 2 - 3} y={y + i * h + h / 2 - 0.4} width={6} height={0.8} rx={0.4} fill="rgba(0,0,0,.35)" />
+        </g>
+      ))}
+    </g>
   )
 }
 

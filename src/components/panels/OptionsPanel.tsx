@@ -1,19 +1,60 @@
 import { ArrowDownAZ, ArrowUpZA, RotateCcw } from 'lucide-react'
-import type { OrientationMode, SortKey } from '../../domain/types'
+import { GROUP_KEYS } from '../../domain/grouping'
+import type { GroupKey, OrientationMode, SortKey } from '../../domain/types'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
-import { Button, Field, NumberInput, Section, Segmented, Toggle } from '../ui'
 import { cx, inputClass } from '../styles'
+import { Button, Field, NumberInput, Section, Segmented, Toggle } from '../ui'
 
 // 'weight' becomes selectable once weights can be imported from BGG.
-const SORT_KEYS: SortKey[] = ['name', 'year', 'size', 'color', 'added']
+const SORT_KEYS: SortKey[] = ['name', 'year', 'size', 'complexity', 'playtime', 'rating', 'color', 'added']
 const ORIENTATIONS: OrientationMode[] = ['auto', 'vertical', 'horizontal']
+
+function GroupSelect({
+  value,
+  exclude,
+  onChange,
+  label,
+}: {
+  value: GroupKey | undefined
+  exclude?: GroupKey
+  onChange: (key: GroupKey | undefined) => void
+  label: string
+}) {
+  const t = useT()
+  return (
+    <Field label={label}>
+      <select
+        className={inputClass}
+        value={value ?? ''}
+        onChange={(e) => onChange((e.target.value || undefined) as GroupKey | undefined)}
+      >
+        <option value="">{t('group.none')}</option>
+        {GROUP_KEYS.filter((k) => k !== exclude).map((k) => (
+          <option key={k} value={k}>
+            {t(`group.${k}`)}
+          </option>
+        ))}
+      </select>
+    </Field>
+  )
+}
 
 export function OptionsPanel() {
   const t = useT()
   const options = useAppStore((s) => s.options)
-  const { setOptions, resetOptions } = useAppStore.getState()
+  const colorBy = useAppStore((s) => s.colorBy)
+  const { setOptions, resetOptions, setColorBy } = useAppStore.getState()
   const ordered = options.strategy === 'ordered'
+  const [primary, secondary] = options.groupBy
+
+  const setGroup = (level: 0 | 1, key: GroupKey | undefined) => {
+    const next = [primary, secondary]
+    next[level] = key
+    // Dropping the first level promotes the second one.
+    const groupBy = next.filter((k, i): k is GroupKey => !!k && next.indexOf(k) === i)
+    setOptions({ groupBy })
+  }
 
   return (
     <div className="h-full overflow-y-auto">
@@ -44,6 +85,32 @@ export function OptionsPanel() {
         </div>
       </Section>
 
+      <Section title={t('options.grouping')}>
+        <div className={cx('space-y-3', !ordered && 'pointer-events-none opacity-40')}>
+          <p className="text-xs text-ink-soft">{t('options.groupingHint')}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <GroupSelect label={t('options.groupBy')} value={primary} onChange={(k) => setGroup(0, k)} />
+            {primary && (
+              <GroupSelect label={t('options.thenBy')} value={secondary} exclude={primary} onChange={(k) => setGroup(1, k)} />
+            )}
+          </div>
+          <Toggle
+            label={t('options.groupStartsNewCube')}
+            hint={t('options.groupStartsNewCubeHint')}
+            checked={options.groupStartsNewCube}
+            disabled={!primary}
+            onChange={(groupStartsNewCube) => setOptions({ groupStartsNewCube })}
+          />
+        </div>
+        <Toggle
+          label={t('options.colorByGroup')}
+          hint={t('options.colorByGroupHint')}
+          checked={colorBy === 'group'}
+          disabled={!primary}
+          onChange={(v) => setColorBy(v ? 'group' : 'game')}
+        />
+      </Section>
+
       <Section title={t('options.sortBy')}>
         <div className={cx('space-y-3', !ordered && 'pointer-events-none opacity-40')}>
           <div className="flex gap-2">
@@ -66,7 +133,12 @@ export function OptionsPanel() {
               {options.sortDirection === 'asc' ? <ArrowDownAZ className="size-4" /> : <ArrowUpZA className="size-4" />}
             </Button>
           </div>
-          <Toggle label={t('options.fillGaps')} checked={options.fillGaps} onChange={(fillGaps) => setOptions({ fillGaps })} />
+          <Toggle
+            label={t('options.fillGaps')}
+            hint={t('options.fillGapsHint')}
+            checked={options.fillGaps}
+            onChange={(fillGaps) => setOptions({ fillGaps })}
+          />
         </div>
         <Field label={t('options.fillOrder')}>
           <Segmented
@@ -81,19 +153,31 @@ export function OptionsPanel() {
       <Section title={t('game.saga')}>
         <Toggle
           label={t('options.groupSagas')}
+          hint={t('options.groupSagasHint')}
           checked={options.groupSagas}
           onChange={(groupSagas) => setOptions({ groupSagas })}
         />
         <Toggle
           label={t('options.autoDetectSagas')}
+          hint={t('options.autoDetectSagasHint')}
           checked={options.autoDetectSagas}
           onChange={(autoDetectSagas) => setOptions({ autoDetectSagas })}
         />
         <Toggle
           label={t('options.keepSagasInCube')}
+          hint={t('options.keepSagasInCubeHint')}
           checked={options.keepSagasInCube}
           disabled={!options.groupSagas || !ordered}
           onChange={(keepSagasInCube) => setOptions({ keepSagasInCube })}
+        />
+      </Section>
+
+      <Section title={t('options.top')}>
+        <Toggle
+          label={t('options.oversizedOnTop')}
+          hint={t('options.oversizedOnTopHint')}
+          checked={options.oversizedOnTop}
+          onChange={(oversizedOnTop) => setOptions({ oversizedOnTop })}
         />
       </Section>
 

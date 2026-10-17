@@ -5,6 +5,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-17
+
+### Added
+
+- Grouping on one or two levels: genre, designer, publisher, complexity, number of players, playing time, language. Sagas stay together inside their group.
+- Option to start every group in a new cube, and to colour boxes by group in all views; the list view shows the groups of each cube.
+- Game details: genre, designer, publisher, language, players, playing time, complexity and personal rating, with suggestions from the collection. The BGG CSV import fills publisher, language, players, playing time, complexity and rating.
+- New sort keys: complexity, playing time, personal rating.
+- "On top of the shelf" per game, plus an option to put there every game that fits in no cube; drawn in all views.
+- Cubes not to use (drawers, doors, other uses), chosen per unit and drawn as drawer inserts.
+- Short explanations under every option.
+
 ## [0.2.0] - 2026-10-17
 
 ### Added
@@ -36,6 +48,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/H4Z4RD-H42/kallax/releases/tag/v0.1.0

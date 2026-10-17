@@ -36,6 +36,22 @@ export interface Game {
   expansion?: boolean
   /** Kept off the shelves (e.g. an expansion stored in its base box). */
   excluded?: boolean
+  /** Stored on top of the shelves instead of inside a cube. */
+  onTop?: boolean
+  genre?: string
+  /** Designer(s); lists use ";" as separator. */
+  designer?: string
+  /** Publisher(s) of the owned edition; lists use ";" as separator. */
+  publisher?: string
+  language?: string
+  minPlayers?: number
+  maxPlayers?: number
+  /** Playing time in minutes. */
+  playTime?: number
+  /** BGG complexity ("weight"), 1 to 5. */
+  complexity?: number
+  /** Personal rating, 1 to 10. */
+  rating?: number
   imageUrl?: string
   createdAt: number
 }
@@ -59,9 +75,12 @@ export interface ShelfUnit {
   rows: number
   /** CSS colour of the frame. */
   color: string
+  /** Cubes not available for games (drawers, doors, other uses), as `column:row` keys. */
+  blocked?: string[]
 }
 
-export type SortKey = 'name' | 'year' | 'size' | 'weight' | 'color' | 'added'
+export type SortKey = 'name' | 'year' | 'size' | 'weight' | 'color' | 'added' | 'complexity' | 'playtime' | 'rating'
+export type GroupKey = 'genre' | 'designer' | 'publisher' | 'complexity' | 'players' | 'playtime' | 'language'
 export type SortDirection = 'asc' | 'desc'
 export type Strategy = 'ordered' | 'compact'
 export type FillOrder = 'rows' | 'columns'
@@ -71,6 +90,10 @@ export interface PackOptions {
   strategy: Strategy
   sortBy: SortKey
   sortDirection: SortDirection
+  /** Grouping levels, outermost first (at most two in the UI). */
+  groupBy: GroupKey[]
+  /** Start every outermost group in a fresh cube. */
+  groupStartsNewCube: boolean
   /** Keep games of the same saga next to each other. */
   groupSagas: boolean
   /** Infer sagas from game names when not set explicitly. */
@@ -86,6 +109,8 @@ export interface PackOptions {
   maxStackHeight: number
   /** How far (cm) a box may stick out of the front of a cube. */
   overhang: number
+  /** Put on top of the shelves the games that fit in no cube. */
+  oversizedOnTop: boolean
 }
 
 /** A box placed inside a cube. Coordinates are relative to the cube's
@@ -102,6 +127,12 @@ export interface Placement {
   sx: number
   sy: number
   sz: number
+}
+
+/** Boxes lying on the top panel of a unit; y is measured from the top panel. */
+export interface TopLayout {
+  unitId: string
+  placements: Placement[]
 }
 
 export interface CubeLayout {
@@ -133,8 +164,11 @@ export interface LayoutStats {
 
 export interface Layout {
   cubes: CubeLayout[]
+  tops: TopLayout[]
   unplaced: UnplacedGame[]
   /** Saga name resolved for each game id (explicit or detected). */
   sagas: Record<string, string>
+  /** Outermost group of each game id, when grouping is active. */
+  groups: Record<string, string>
   stats: LayoutStats
 }

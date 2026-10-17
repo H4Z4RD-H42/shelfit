@@ -5,6 +5,8 @@ export const DEFAULT_OPTIONS: PackOptions = {
   strategy: 'ordered',
   sortBy: 'name',
   sortDirection: 'asc',
+  groupBy: [],
+  groupStartsNewCube: false,
   groupSagas: true,
   autoDetectSagas: true,
   keepSagasInCube: true,
@@ -13,4 +15,5 @@ export const DEFAULT_OPTIONS: PackOptions = {
   clearance: 0.3,
   maxStackHeight: 0,
   overhang: 0,
+  oversizedOnTop: false,
 }

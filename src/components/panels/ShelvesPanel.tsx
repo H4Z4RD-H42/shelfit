@@ -1,5 +1,5 @@
 import { Plus, RotateCcw, X } from 'lucide-react'
-import { KALLAX_CUBE, KALLAX_FINISHES, KALLAX_PRESETS, unitOuterSize } from '../../domain/kallax'
+import { KALLAX_CUBE, KALLAX_FINISHES, KALLAX_PRESETS, cubeKey, isBlocked, unitOuterSize } from '../../domain/kallax'
 import type { CubeSize } from '../../domain/types'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
@@ -71,6 +71,37 @@ export function ShelvesPanel() {
                       <span className="text-[10px] text-ink-soft tabular-nums">
                         {p.columns}×{p.rows}
                       </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </Field>
+            <Field label={t('shelves.blocked')} hint={t('shelves.blockedHint')}>
+              <div className="grid max-w-56 gap-1" style={{ gridTemplateColumns: `repeat(${unit.columns}, 1fr)` }}>
+                {Array.from({ length: unit.columns * unit.rows }, (_, k) => {
+                  const column = k % unit.columns
+                  const row = Math.floor(k / unit.columns)
+                  const blocked = isBlocked(unit, column, row)
+                  const key = cubeKey(column, row)
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-pressed={blocked}
+                      title={t('shelves.blockedCube', { row: row + 1, column: column + 1 })}
+                      onClick={() =>
+                        updateUnit(unit.id, {
+                          blocked: blocked ? unit.blocked!.filter((b) => b !== key) : [...(unit.blocked ?? []), key],
+                        })
+                      }
+                      className={cx(
+                        'flex aspect-square items-center justify-center rounded-md border transition-colors',
+                        blocked
+                          ? 'border-danger/50 bg-danger/15 text-danger'
+                          : 'border-line bg-surface-2 text-transparent hover:border-ink-faint',
+                      )}
+                    >
+                      <X className="size-4" />
                     </button>
                   )
                 })}

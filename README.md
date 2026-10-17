@@ -9,6 +9,8 @@
 - **Smart packing engine** — every cube is split into columns of standing boxes ("books") and stacks of flat boxes. A beam search explores all the combinations and picks the one that wastes less room.
 - **Orientation control** — vertical, horizontal or automatic, globally or per game.
 - **Two strategies** — _Ordered_ keeps your order (name, year, size, colour, date added) cube after cube; _Max space_ ignores the order to fit as many games as possible.
+- **Grouping** — keep together games of the same genre, designer, publisher, complexity, player count, playing time or language, on one or two levels, optionally starting each group in a new cube and colouring boxes by group.
+- **On top and blocked cubes** — boxes that fit in no cube can be stored on top of the shelves; cubes used for drawers or other things can be excluded.
 - **Sagas** — chapters of the same series (Zombicide, Pandemic Legacy, Ticket to Ride…) are detected from their names and kept together, even avoiding splitting them across two cubes.
 - **Realistic 3D KALLAX** — the shelf is built procedurally from its real measurements, in every official size (1×1 to 5×5) and finish, and you can combine several units.
 - **Three views** — interactive 3D shelf, printable front view and a cube-by-cube list.

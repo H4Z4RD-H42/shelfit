@@ -1,8 +1,8 @@
 import { RectangleHorizontal, RectangleVertical } from 'lucide-react'
-import { gameColor } from '../../domain/color'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
+import { useBoxColor } from '../../hooks/useBoxColor'
 import { useT } from '../../i18n'
-import { UNPLACED_LABEL } from '../labels'
+import { UNPLACED_LABEL, groupLabel } from '../labels'
 import { useAppStore } from '../../store/appStore'
 import { cx } from '../styles'
 
@@ -14,11 +14,45 @@ export function ListView() {
   const select = useAppStore((s) => s.select)
   const layout = useLayout()
   const games = useGamesById()
+  const boxColor = useBoxColor()
   const unitName = new Map(units.map((u) => [u.id, u.name]))
+  const outer = useAppStore((s) => s.options.groupBy[0])
+  const cubeGroups = (gameIds: string[]) =>
+    outer ? [...new Set(gameIds.map((id) => groupLabel(t, outer, layout.groups[id])))] : []
 
   return (
     <div className="h-full overflow-y-auto p-4 sm:p-6">
       <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-3">
+        {layout.tops.map((top) => (
+          <article key={`top-${top.unitId}`} className="rounded-xl border border-accent/40 bg-surface-0 p-3">
+            <header className="mb-2">
+              <h3 className="font-display text-sm font-semibold">{t('list.top', { unit: unitName.get(top.unitId) ?? '' })}</h3>
+            </header>
+            <ul className="space-y-0.5">
+              {[...top.placements]
+                .sort((a, b) => a.order - b.order)
+                .map((p) => {
+                  const game = games.get(p.gameId)
+                  if (!game) return null
+                  return (
+                    <li key={p.gameId}>
+                      <button
+                        type="button"
+                        onClick={() => select(p.gameId)}
+                        className={cx(
+                          'flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left text-sm',
+                          p.gameId === selectedId ? 'bg-accent/15' : 'hover:bg-surface-2',
+                        )}
+                      >
+                        <span className="size-2.5 shrink-0 rounded-sm" style={{ background: boxColor(game) }} />
+                        <span className="min-w-0 flex-1 truncate">{game.name}</span>
+                      </button>
+                    </li>
+                  )
+                })}
+            </ul>
+          </article>
+        ))}
         {layout.cubes.map((c) => {
           const fill = Math.round((c.usedWidth / cube.width) * 100)
           return (
@@ -29,6 +63,11 @@ export function ListView() {
                   {unitName.get(c.unitId)} · {t('list.position', { row: c.row + 1, column: c.column + 1 })}
                 </span>
               </header>
+              {cubeGroups(c.placements.map((p) => p.gameId)).length > 0 && (
+                <p className="mb-1.5 truncate text-xs font-medium text-accent">
+                  {cubeGroups(c.placements.map((p) => p.gameId)).join(' · ')}
+                </p>
+              )}
               <div className="mb-2 h-1 overflow-hidden rounded-full bg-surface-2">
                 <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, fill)}%` }} />
               </div>
@@ -52,7 +91,7 @@ export function ListView() {
                               p.gameId === selectedId ? 'bg-accent/15' : 'hover:bg-surface-2',
                             )}
                           >
-                            <span className="size-2.5 shrink-0 rounded-sm" style={{ background: gameColor(game) }} />
+                            <span className="size-2.5 shrink-0 rounded-sm" style={{ background: boxColor(game) }} />
                             <span className="min-w-0 flex-1 truncate">{game.name}</span>
                             <Icon className="size-3.5 shrink-0 text-ink-faint" aria-label={t(`orientation.${p.orientation}`)} />
                           </button>

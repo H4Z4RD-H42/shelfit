@@ -68,6 +68,15 @@ const HEADERS = {
   saga: ['saga', 'series', 'serie'],
   year: ['yearpublished', 'year', 'anno'],
   orientation: ['orientation', 'orientamento'],
+  genre: ['genre', 'genere', 'category', 'categoria'],
+  designer: ['designer', 'designers', 'autore', 'autori', 'author'],
+  publisher: ['publisher', 'editore', 'version_publishers'],
+  language: ['version_languages', 'language', 'lingua'],
+  minPlayers: ['minplayers', 'min_players', 'giocatori_min'],
+  maxPlayers: ['maxplayers', 'max_players', 'giocatori_max'],
+  playTime: ['playingtime', 'playtime', 'durata'],
+  complexity: ['avgweight', 'complexity', 'complessita', 'complessità'],
+  rating: ['rating', 'voto'],
   own: ['own'],
   itemType: ['itemtype'],
   versionName: ['version_nickname'],
@@ -130,11 +139,39 @@ export function parseCsv(text: string): ImportedGame[] {
     if (Number.isInteger(bggId) && bggId > 0) game.bggId = bggId
     if (version) game.version = version
     if (at('itemType')) game.expansion = at('itemType') === 'expansion'
+    for (const key of ['genre', 'designer', 'publisher', 'language'] as const) {
+      const value = at(key)
+      if (value) game[key] = value
+    }
+    // BGG writes 0 for unknown numbers.
+    for (const key of ['minPlayers', 'maxPlayers', 'playTime', 'complexity', 'rating'] as const) {
+      const value = num(at(key))
+      if (Number.isFinite(value) && value > 0) game[key] = Math.round(value * 100) / 100
+    }
     return [game]
   })
 }
 
 const normalizeName = (name: string) => name.trim().toLowerCase()
+
+/** Fields an import may update on a game already in the collection. */
+const MERGED_FIELDS = [
+  'dims',
+  'saga',
+  'year',
+  'bggId',
+  'version',
+  'expansion',
+  'genre',
+  'designer',
+  'publisher',
+  'language',
+  'minPlayers',
+  'maxPlayers',
+  'playTime',
+  'complexity',
+  'rating',
+] as const satisfies readonly (keyof ImportedGame)[]
 
 /**
  * Adds imported games to the collection. A game already present (same BGG id,
@@ -169,7 +206,7 @@ export function mergeGames(
     }
     const old = games[i]!
     const patch: Partial<Game> = {}
-    for (const key of ['dims', 'saga', 'year', 'bggId', 'version', 'expansion'] as const) {
+    for (const key of MERGED_FIELDS) {
       if (row[key] !== undefined) Object.assign(patch, { [key]: row[key] })
     }
     if (row.orientation !== 'inherit') patch.orientation = row.orientation

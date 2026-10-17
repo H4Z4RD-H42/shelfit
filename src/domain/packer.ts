@@ -1,5 +1,6 @@
-import { cubeSlots } from './kallax'
+import { FRAME, cubeSlots, unitOuterSize } from './kallax'
 import { detectSagas } from './saga'
+import { groupOf } from './grouping'
 import { boxVolume, orderUnits } from './sorting'
 import {
   hasDims,
@@ -12,6 +13,7 @@ import {
   type PackOptions,
   type Placement,
   type ShelfUnit,
+  type TopLayout,
   type UnplacedGame,
 } from './types'
 
@@ -198,13 +200,22 @@ interface Packed {
   leftover: Item[]
 }
 
-function packOrdered(units: Item[][], cubes: number, ctx: Ctx, options: PackOptions): Packed {
-  // Flat sequence, remembering where each unit starts.
-  let queue = units.map((u) => u.slice())
+interface QueuedUnit {
+  items: Item[]
+  group: string
+}
+
+function packOrdered(units: QueuedUnit[], cubes: number, ctx: Ctx, options: PackOptions): Packed {
+  let queue = units.map((u) => ({ ...u, items: u.items.slice() }))
   const states: CubeState[] = []
+  const newCubePerGroup = options.groupStartsNewCube && options.groupBy.length > 0
 
   while (queue.length > 0 && states.length < cubes) {
-    const flat = queue.flat()
+    // With "new cube per group", a cube only takes games of the current group.
+    const group = queue[0]!.group
+    const end = newCubePerGroup ? queue.findIndex((u) => u.group !== group) : -1
+    const current = end < 0 ? queue : queue.slice(0, end)
+    const flat = current.flatMap((u) => u.items)
     const prefixes = fillConsecutive(flat, ctx)
     let count = prefixes.length - 1
     if (count === 0) break
@@ -212,25 +223,25 @@ function packOrdered(units: Item[][], cubes: number, ctx: Ctx, options: PackOpti
     // Avoid splitting a saga that would fit entirely in the next cube.
     if (options.groupSagas && options.keepSagasInCube && count < flat.length) {
       let start = 0
-      for (const unit of queue) {
-        const end = start + unit.length
-        if (count > start && count < end && start > 0 && unit.length > 1 && fitsInEmptyCube(unit, ctx)) {
+      for (const { items } of current) {
+        const stop = start + items.length
+        if (count > start && count < stop && start > 0 && items.length > 1 && fitsInEmptyCube(items, ctx)) {
           count = start
           break
         }
-        if (end > count) break
-        start = end
+        if (stop > count) break
+        start = stop
       }
     }
 
     let state = prefixes[count]!
     // Consume `count` items from the queue.
     let toTake = count
-    const rest: Item[][] = []
+    const rest: QueuedUnit[] = []
     for (const unit of queue) {
-      if (toTake >= unit.length) toTake -= unit.length
+      if (toTake >= unit.items.length) toTake -= unit.items.length
       else {
-        rest.push(unit.slice(toTake))
+        rest.push({ ...unit, items: unit.items.slice(toTake) })
         toTake = 0
       }
     }
@@ -238,8 +249,8 @@ function packOrdered(units: Item[][], cubes: number, ctx: Ctx, options: PackOpti
 
     if (options.fillGaps) {
       queue = queue.filter((unit) => {
-        if (unit.length !== 1) return true
-        const next = addBest(state, unit[0]!, ctx)
+        if (unit.items.length !== 1 || (newCubePerGroup && unit.group !== group)) return true
+        const next = addBest(state, unit.items[0]!, ctx)
         if (!next) return true
         state = next
         return false
@@ -247,7 +258,7 @@ function packOrdered(units: Item[][], cubes: number, ctx: Ctx, options: PackOpti
     }
     states.push(state)
   }
-  return { states, leftover: queue.flat() }
+  return { states, leftover: queue.flatMap((u) => u.items) }
 }
 
 function packCompact(units: Item[][], cubes: number, ctx: Ctx): Packed {
@@ -340,6 +351,47 @@ function toPlacements(state: CubeState, ctx: Ctx): Placement[] {
   return placements
 }
 
+/** Height (cm) up to which boxes are stacked on top of a unit. */
+export const TOP_HEIGHT = 40
+
+/** On top of a unit a box lies flat, long side along the shelf when it fits. */
+function topExtents(dims: BoxDimensions, width: number, clearance: number): Extents | undefined {
+  const [a, b, c] = [dims.width, dims.height, dims.depth].sort((x, y) => y - x) as [number, number, number]
+  if (a + clearance <= width) return { sx: a, sy: c, sz: b }
+  if (b + clearance <= width) return { sx: b, sy: c, sz: a }
+  return undefined
+}
+
+/** Stacks the given games on top of the units, unit after unit. */
+function packTop(
+  games: Game[],
+  units: ShelfUnit[],
+  cube: CubeSize,
+  clearance: number,
+): { tops: TopLayout[]; leftover: Game[]; tooBig: Game[] } {
+  const tops: TopLayout[] = []
+  const widest = Math.max(0, ...units.map((u) => unitOuterSize(u, cube).width))
+  const tooBig = games.filter((g) => !topExtents(g.dims!, widest, clearance))
+  let queue = games.filter((g) => !tooBig.includes(g))
+  for (const unit of units) {
+    if (queue.length === 0) break
+    const width = unitOuterSize(unit, cube).width
+    const ctx: Ctx = { cube: { width, height: TOP_HEIGHT, depth: FRAME.depth }, clearance, stackHeight: TOP_HEIGHT }
+    const items: Item[] = []
+    for (const [order, game] of queue.entries()) {
+      const ext = topExtents(game.dims!, width, clearance)
+      if (!ext) break
+      items.push({ game, order, volume: boxVolume(game), fits: { horizontal: ext } })
+    }
+    const prefixes = fillConsecutive(items, ctx)
+    const count = prefixes.length - 1
+    if (count === 0) continue
+    tops.push({ unitId: unit.id, placements: toPlacements(prefixes[count]!, ctx) })
+    queue = queue.slice(count)
+  }
+  return { tops, leftover: queue, tooBig }
+}
+
 export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize, options: PackOptions): Layout {
   const sagas = detectSagas(games, options.autoDetectSagas)
   const ctx: Ctx = {
@@ -352,34 +404,54 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
   const shelved = games.filter((g) => !g.excluded)
   const unplaced: UnplacedGame[] = []
   const itemOf = new Map<string, Item>()
+  const onTop: Game[] = []
   for (const game of shelved) {
     if (!hasDims(game)) {
       unplaced.push({ gameId: game.id, reason: 'no-size' })
       continue
     }
+    if (game.onTop) {
+      onTop.push(game)
+      continue
+    }
     const fits = allowedFits(game, options, fitCube)
-    if (!fits.vertical && !fits.horizontal) unplaced.push({ gameId: game.id, reason: 'too-big' })
-    else itemOf.set(game.id, { game, order: 0, volume: boxVolume(game), fits })
+    if (fits.vertical || fits.horizontal) itemOf.set(game.id, { game, order: 0, volume: boxVolume(game), fits })
+    else if (options.oversizedOnTop) onTop.push(game)
+    else unplaced.push({ gameId: game.id, reason: 'too-big' })
   }
+
+  const top = packTop(
+    orderUnits(onTop, {}, { ...options, groupSagas: false, groupBy: [] }).flatMap((u) => u.games),
+    units,
+    cube,
+    options.clearance,
+  )
+  for (const g of top.tooBig) unplaced.push({ gameId: g.id, reason: 'too-big' })
+  for (const g of top.leftover) unplaced.push({ gameId: g.id, reason: 'no-space' })
 
   let order = 0
   const unitsOrdered = orderUnits(
     shelved.filter((g) => itemOf.has(g.id)),
     sagas,
     options,
-  ).map((u) =>
-    u.map((g) => {
+  ).map((u) => ({
+    group: u.group,
+    items: u.games.map((g) => {
       const item = itemOf.get(g.id)!
       item.order = order++
       return item
     }),
-  )
+  }))
 
   const slots = cubeSlots(units, options.fillOrder)
   const packed =
     options.strategy === 'ordered'
       ? packOrdered(unitsOrdered, slots.length, ctx, options)
-      : packCompact(unitsOrdered, slots.length, ctx)
+      : packCompact(
+          unitsOrdered.map((u) => u.items),
+          slots.length,
+          ctx,
+        )
 
   for (const item of packed.leftover) unplaced.push({ gameId: item.game.id, reason: 'no-space' })
 
@@ -395,12 +467,29 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
     }
   })
 
+  const groups: Record<string, string> = {}
+  const outer = options.groupBy[0]
+  if (outer) {
+    for (const g of shelved) {
+      const value = groupOf(g, outer)
+      if (value !== undefined) groups[g.id] = value
+    }
+    // A saga follows the group of its first chapter, as it does on the shelf.
+    for (const u of unitsOrdered)
+      for (const { game } of u.items) {
+        if (u.group) groups[game.id] = u.group
+        else delete groups[game.id]
+      }
+  }
+
   const placedVolume = packed.states.reduce((acc, s) => acc + s.volume, 0)
   const cubeVolume = cube.width * cube.height * cube.depth
   return {
     cubes,
+    tops: top.tops,
     unplaced,
     sagas,
+    groups,
     stats: {
       totalGames: shelved.length,
       placedGames: shelved.length - unplaced.length,

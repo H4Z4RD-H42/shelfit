@@ -1,4 +1,4 @@
-import { ExternalLink } from 'lucide-react'
+import { ChevronDown, ExternalLink } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { bggVersionsUrl } from '../../domain/bgg'
 import { autoColor } from '../../domain/color'
@@ -11,15 +11,47 @@ export type GameDraft = Omit<Game, 'id' | 'createdAt'>
 
 const emptyDraft: GameDraft = { name: '', orientation: 'inherit' }
 
+/** Values already used in the collection, offered while typing. */
+export type Suggestions = Record<'genre' | 'designer' | 'publisher' | 'language', string[]>
+
+function TextWithSuggestions({
+  id,
+  value,
+  options,
+  onChange,
+}: {
+  id: string
+  value?: string
+  options: string[]
+  onChange: (v?: string) => void
+}) {
+  return (
+    <>
+      <input className={inputClass} list={id} value={value ?? ''} onChange={(e) => onChange(e.target.value || undefined)} />
+      <datalist id={id}>
+        {options.map((o) => (
+          <option key={o} value={o} />
+        ))}
+      </datalist>
+    </>
+  )
+}
+
+function hasDetails(game?: Game): boolean {
+  return !!game && [game.genre, game.designer, game.publisher, game.playTime, game.maxPlayers].some((v) => v !== undefined)
+}
+
 export function GameEditor({
   initial,
   sagas,
+  suggestions,
   onSave,
   onCancel,
   onDelete,
 }: {
   initial?: Game
   sagas: string[]
+  suggestions: Suggestions
   onSave: (draft: GameDraft) => void
   onCancel: () => void
   onDelete?: () => void
@@ -111,8 +143,43 @@ export function GameEditor({
           options={orientations.map((o) => ({ value: o, label: t(`orientation.${o}`) }))}
         />
       </Field>
+      <details className="group rounded-lg border border-line" open={hasDetails(initial)}>
+        <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 text-xs font-semibold tracking-wide text-ink-soft uppercase">
+          {t('game.details')}
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="grid grid-cols-2 gap-3 px-3 pt-1 pb-3">
+          {(['genre', 'designer', 'publisher', 'language'] as const).map((key) => (
+            <Field key={key} label={t(`game.${key}`)}>
+              <TextWithSuggestions
+                id={`suggest-${key}`}
+                value={draft[key]}
+                options={suggestions[key]}
+                onChange={(v) => patch({ [key]: v })}
+              />
+            </Field>
+          ))}
+          <Field label={t('game.players')}>
+            <div className="flex items-center gap-1.5">
+              <NumberInput step={1} min={1} value={draft.minPlayers} onChange={(minPlayers) => patch({ minPlayers })} />
+              <span className="text-ink-faint">–</span>
+              <NumberInput step={1} min={1} value={draft.maxPlayers} onChange={(maxPlayers) => patch({ maxPlayers })} />
+            </div>
+          </Field>
+          <Field label={t('game.playTime')}>
+            <NumberInput step={5} value={draft.playTime} onChange={(playTime) => patch({ playTime })} />
+          </Field>
+          <Field label={t('game.complexity')}>
+            <NumberInput step={0.1} min={1} value={draft.complexity} onChange={(complexity) => patch({ complexity })} />
+          </Field>
+          <Field label={t('game.rating')}>
+            <NumberInput step={0.5} min={1} value={draft.rating} onChange={(rating) => patch({ rating })} />
+          </Field>
+        </div>
+      </details>
       <div>
         <Toggle label={t('game.expansion')} checked={!!draft.expansion} onChange={(expansion) => patch({ expansion })} />
+        <Toggle label={t('game.onTop')} checked={!!draft.onTop} onChange={(onTop) => patch({ onTop })} />
         <Toggle label={t('game.excluded')} checked={!!draft.excluded} onChange={(excluded) => patch({ excluded })} />
       </div>
       <Field label={t('game.color')}>

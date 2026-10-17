@@ -39,6 +39,7 @@ describe('parseCsv', () => {
         year: 2018,
         expansion: false,
         version: 'Italian edition · Ghenos Games',
+        publisher: 'Ghenos Games',
         orientation: 'inherit',
       },
       {
@@ -47,6 +48,7 @@ describe('parseCsv', () => {
         year: 2020,
         expansion: true,
         version: 'Leder Games; MS Edizioni',
+        publisher: 'Leder Games; MS Edizioni',
         orientation: 'inherit',
       },
     ])

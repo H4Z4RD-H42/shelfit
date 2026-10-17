@@ -2,9 +2,10 @@ import { ContactShadows, OrbitControls } from '@react-three/drei'
 import { Canvas, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useMemo, useState } from 'react'
 import * as THREE from 'three'
-import { contrastText, gameColor } from '../../domain/color'
-import { FRAME, cubeOrigin, unitOffsets, unitOuterSize } from '../../domain/kallax'
+import { contrastText } from '../../domain/color'
+import { FRAME, cubeOrigin, isBlocked, unitOffsets, unitOuterSize } from '../../domain/kallax'
 import type { CubeSize, Game, Placement, ShelfUnit } from '../../domain/types'
+import { useBoxColor } from '../../hooks/useBoxColor'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
 import { useAppStore } from '../../store/appStore'
 
@@ -40,10 +41,38 @@ function KallaxFrame({ unit, cube }: { unit: ShelfUnit; cube: CubeSize }) {
     const y = FRAME.outer + r * cube.height + (r - 0.5) * FRAME.inner
     panels.push({ position: [width / 2, y, z], size: [width - 2 * FRAME.outer, FRAME.inner, depth] })
   }
+  const inserts: { x: number; y: number }[] = []
+  for (let column = 0; column < unit.columns; column++)
+    for (let row = 0; row < unit.rows; row++) if (isBlocked(unit, column, row)) inserts.push(cubeOrigin(unit, column, row, cube))
   return (
     <group>
       {panels.map((p, i) => (
         <Panel key={i} {...p} color={unit.color} />
+      ))}
+      {inserts.map((o, i) => (
+        <DrawerInsert key={i} x={o.x} y={o.y} cube={cube} color={unit.color} />
+      ))}
+    </group>
+  )
+}
+
+/** A cube taken by an insert, shown as two drawers. */
+function DrawerInsert({ x, y, cube, color }: { x: number; y: number; cube: CubeSize; color: string }) {
+  const h = cube.height / 2
+  const front = useMemo(() => new THREE.Color(color).multiplyScalar(0.92), [color])
+  return (
+    <group position={[x + cube.width / 2, y, 0]}>
+      {[0, 1].map((i) => (
+        <group key={i} position={[0, i * h + h / 2, 0]}>
+          <mesh position={[0, 0, -cube.depth / 2]} castShadow receiveShadow>
+            <boxGeometry args={[cube.width - 0.4, h - 0.4, cube.depth]} />
+            <meshStandardMaterial color={front} roughness={0.6} />
+          </mesh>
+          <mesh position={[0, 0, 0.6]}>
+            <boxGeometry args={[8, 1, 1.2]} />
+            <meshStandardMaterial color="#9aa0a6" metalness={0.6} roughness={0.35} />
+          </mesh>
+        </group>
       ))}
     </group>
   )
@@ -99,6 +128,7 @@ function useLabelTexture(name: string, color: string, faceW: number, faceH: numb
 
 function GameBox({
   game,
+  color,
   p,
   origin,
   selected,
@@ -106,13 +136,13 @@ function GameBox({
   onHover,
 }: {
   game: Game
+  color: string
   p: Placement
   origin: { x: number; y: number }
   selected: boolean
   onSelect: () => void
   onHover: (hovered: boolean) => void
 }) {
-  const color = gameColor(game)
   const vertical = p.orientation === 'vertical'
   const texture = useLabelTexture(game.name, color, p.sx, p.sy, vertical)
   const side = useMemo(() => new THREE.Color(color).multiplyScalar(0.8), [color])
@@ -158,6 +188,7 @@ export function Shelf3D() {
   const select = useAppStore((s) => s.select)
   const layout = useLayout()
   const games = useGamesById()
+  const boxColor = useBoxColor()
   const [hovered, setHovered] = useState<string | null>(null)
 
   const offsets = useMemo(() => unitOffsets(units, cube), [units, cube])
@@ -220,6 +251,28 @@ export function Shelf3D() {
               <GameBox
                 key={p.gameId}
                 game={game}
+                color={boxColor(game)}
+                p={p}
+                origin={origin}
+                selected={p.gameId === selectedId}
+                onSelect={() => select(p.gameId)}
+                onHover={(h) => setHovered((cur) => (h ? p.gameId : cur === p.gameId ? null : cur))}
+              />
+            ) : null
+          })
+        })}
+
+        {layout.tops.map((top) => {
+          const ui = unitIndex.get(top.unitId)
+          if (ui === undefined) return null
+          const origin = { x: offsets[ui]!, y: sizes[ui]!.height }
+          return top.placements.map((p) => {
+            const game = games.get(p.gameId)
+            return game ? (
+              <GameBox
+                key={p.gameId}
+                game={game}
+                color={boxColor(game)}
                 p={p}
                 origin={origin}
                 selected={p.gameId === selectedId}

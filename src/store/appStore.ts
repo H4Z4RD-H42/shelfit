@@ -11,6 +11,7 @@ import { detectLanguage, type Language } from '../i18n/language'
 
 export type ViewMode = '3d' | 'front' | 'list'
 export type PanelTab = 'collection' | 'shelves' | 'options'
+export type ColorBy = 'game' | 'group'
 
 export interface AppState {
   games: Game[]
@@ -20,6 +21,7 @@ export interface AppState {
   language: Language
   view: ViewMode
   panel: PanelTab
+  colorBy: ColorBy
   selectedId: string | null
   /** Game open in the editor: an id, `new`, or nothing. */
   editing: string | null
@@ -41,6 +43,7 @@ export interface AppState {
   resetOptions: () => void
   setLanguage: (language: Language) => void
   setView: (view: ViewMode) => void
+  setColorBy: (colorBy: ColorBy) => void
   setPanel: (panel: PanelTab) => void
   select: (id: string | null) => void
   edit: (id: string | null) => void
@@ -70,6 +73,7 @@ export const useAppStore = create<AppState>()(
       options: DEFAULT_OPTIONS,
       language: detectLanguage(),
       view: '3d',
+      colorBy: 'game',
       panel: 'collection',
       selectedId: null,
       editing: null,
@@ -95,6 +99,7 @@ export const useAppStore = create<AppState>()(
       resetOptions: () => setState({ options: DEFAULT_OPTIONS }),
       setLanguage: (language) => setState({ language }),
       setView: (view) => setState({ view }),
+      setColorBy: (colorBy) => setState({ colorBy }),
       setPanel: (panel) => setState({ panel }),
       select: (selectedId) => setState({ selectedId }),
       edit: (editing) => setState(editing ? { editing, panel: 'collection' } : { editing }),
@@ -112,6 +117,7 @@ export const useAppStore = create<AppState>()(
         options: s.options,
         language: s.language,
         view: s.view,
+        colorBy: s.colorBy,
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<AppState>
