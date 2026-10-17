@@ -95,7 +95,7 @@ describe('packCollection', () => {
     const wipper = game('Wipper', 35, 35, 8, { onTop: true })
     const crack = game('Crack!', 48.4, 24.3, 5.1)
     const azul = game('Azul', 26, 26, 7)
-    const layout = packCollection([wipper, crack, azul], [unit(2, 2)], KALLAX_CUBE, opts({ oversizedOnTop: true }))
+    const layout = packCollection([wipper, crack, azul], [unit(4, 4)], KALLAX_CUBE, opts({ oversizedOnTop: true }))
     expect(layout.unplaced).toEqual([])
     const top = layout.tops[0]!.placements
     expect(top.map((p) => p.gameId).sort()).toEqual([crack.id, wipper.id].sort())
@@ -113,6 +113,23 @@ describe('packCollection', () => {
     expect(layout.cubes).toHaveLength(1)
     expect(layout.cubes[0]).toMatchObject({ column: 1, row: 0 })
     expect(layout.stats.placedGames).toBe(1)
+  })
+
+  it('never stacks a box on a narrower or shallower one', () => {
+    const square = game('Square', 30, 30, 5)
+    const long = game('Long', 36, 20, 5) // narrower but deeper than Square
+    const layout = packCollection([square, long], [unit(1, 1)], KALLAX_CUBE, opts({ orientation: 'horizontal' }))
+    expect(layout.stats.placedGames).toBe(1)
+
+    const small = game('Small', 25, 25, 5)
+    const twin = game('Twin', 30.5, 30.5, 5) // within tolerance of Square
+    const ok = packCollection([small, square, twin], [unit(1, 1)], KALLAX_CUBE, opts({ orientation: 'horizontal' }))
+    const stack = [...ok.cubes[0]!.placements].sort((a, b) => a.level - b.level)
+    expect(stack.map((p) => p.gameId).at(-1)).toBe(small.id)
+    for (let i = 1; i < stack.length; i++) {
+      expect(stack[i]!.sx).toBeLessThanOrEqual(stack[i - 1]!.sx + 1)
+      expect(stack[i]!.sz).toBeLessThanOrEqual(stack[i - 1]!.sz + 1)
+    }
   })
 
   it('reports games that do not fit at all', () => {

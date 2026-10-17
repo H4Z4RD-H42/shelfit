@@ -112,6 +112,18 @@ function makeState(columns: Column[], volume: number, ctx: Ctx): CubeState {
   return { columns, used, free, volume }
 }
 
+/** How much (cm) a box may exceed the one below: same-size boxes often differ by a few mm. */
+export const STACK_TOLERANCE = 1
+
+const fitsOn = (upper: Extents, lower: Extents) =>
+  upper.sx <= lower.sx + STACK_TOLERANCE && upper.sz <= lower.sz + STACK_TOLERANCE
+
+/**
+ * Two boxes can share a stack only if one fits within the footprint of the
+ * other: nobody puts a box on top of a narrower or shallower one.
+ */
+const stackable = (a: Extents, b: Extents) => fitsOn(a, b) || fitsOn(b, a)
+
 /** All the states reachable by adding `item` to `state`. */
 function expand(state: CubeState, item: Item, ctx: Ctx): CubeState[] {
   const { cube, clearance, stackHeight } = ctx
@@ -133,6 +145,7 @@ function expand(state: CubeState, item: Item, ctx: Ctx): CubeState[] {
     const itemHeight = h.sy + clearance
     state.columns.forEach((col, i) => {
       if (col.kind !== 'horizontal' || col.height + itemHeight > stackHeight + 1e-9) return
+      if (!col.entries.every((e) => stackable(h, e.ext))) return
       const width = Math.max(col.width, itemWidth)
       if (state.used - col.width + width > cube.width + 1e-9) return
       const columns = state.columns.slice()
@@ -332,7 +345,7 @@ function toPlacements(state: CubeState, ctx: Ctx): Placement[] {
         ...ext,
       })
     } else {
-      // Biggest footprint at the bottom, for a stable stack.
+      // Biggest footprint at the bottom: every box fits within the one below.
       const entries = [...col.entries].sort((p, q) => q.ext.sx * q.ext.sz - p.ext.sx * p.ext.sz)
       let y = 0
       for (const [level, { item, ext }] of entries.entries()) {

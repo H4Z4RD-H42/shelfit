@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-17
+
+### Fixed
+
+- Stacks never put a box on top of a narrower or shallower one: every box must fit within the footprint of the box below (1 cm tolerance for same-size boxes with slightly different measurements). Applies to cubes and to the top of the shelves.
+
 ## [0.4.0] - 2026-10-17
 
 ### Added
@@ -54,7 +60,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.1.0...v0.2.0
