@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import { sampleCollection } from '../data/sampleCollection'
 import { mergeGames, type ImportedGame } from '../domain/backup'
-import { DEFAULT_OPTIONS, normalizeOptions } from '../domain/defaults'
+import { DEFAULT_OPTIONS, migrateUnits, normalizeOptions, type LegacySpaceOptions } from '../domain/defaults'
 import { KALLAX_CUBE, KALLAX_FINISHES } from '../domain/kallax'
 import type { CubeSize, Game, PackOptions, ShelfUnit, Zone, ZoneRule } from '../domain/types'
 import { newZone } from '../domain/zones'
@@ -145,16 +145,27 @@ export const useAppStore = create<AppState>()(
       select: (selectedId) => setState({ selectedId }),
       edit: (editing) => setState(editing ? { editing, panel: 'collection', mobileScreen: 'panel' } : { editing }),
       restore: ({ games, units, cube, options, zones }) =>
-        setState({ games, units, cube, options: normalizeOptions(options), zones: zones ?? [], selectedId: null }),
+        setState({
+          games,
+          // Backups made before 0.13 keep the overhang and the top in the options.
+          units: migrateUnits(units, options as LegacySpaceOptions),
+          cube,
+          options: normalizeOptions(options),
+          zones: zones ?? [],
+          selectedId: null,
+        }),
     }),
     {
       name: 'shelf-planner',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => idbStorage),
       migrate: (persisted, version) => {
         const p = (persisted ?? {}) as Partial<AppState>
+        const legacy = p.options as (PackOptions & LegacySpaceOptions) | undefined
         // v2: games that fit in no cube go on top of the shelves by default.
-        if (version < 2 && p.options) p.options = { ...p.options, oversizedOnTop: true }
+        if (version < 2 && legacy) legacy.oversizedOnTop = true
+        // v3: overhang and top became settings of each unit.
+        if (version < 3 && p.units) p.units = migrateUnits(p.units, legacy ?? {})
         return p as AppState
       },
       partialize: (s) => ({

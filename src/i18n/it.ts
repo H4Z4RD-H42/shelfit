@@ -172,9 +172,9 @@ export const it = {
   'game.complexity': 'Complessità (1–5)',
   'game.rating': 'Il mio voto (1–10)',
 
-  'options.oversizedOnTop': 'Metti sopra lo scaffale i giochi che non entrano nei cubi',
-  'options.oversizedOnTopHint':
-    'Altrimenti finiscono tra i giochi senza posto. Puoi anche scegliere gioco per gioco dalla scheda del gioco.',
+  'shelves.topFree': 'Ripiano in alto libero',
+  'shelves.topFreeHint':
+    'Sopra lo scaffale vanno i giochi che non entrano nei cubi e quelli che scegli di tenere sopra dalla loro scheda. Spegnilo se sopra c’è altro, per esempio una TV.',
   'game.onTop': 'Tienilo sopra lo scaffale',
   'game.onTopShort': 'SOPRA',
   'list.top': 'Sopra {unit}',
@@ -202,7 +202,7 @@ export const it = {
   'options.section.layout': 'Disposizione',
   'options.section.order': 'Ordine',
   'options.section.sagas': 'Saghe',
-  'options.section.space': 'Spazio e misure',
+  'options.section.space': 'Margini e pile',
   'options.orientationHint':
     'In piedi come libri o sdraiate in pila. Con «Automatico» si sceglie per ogni scatola la posizione che fa entrare più giochi. Puoi anche forzarla gioco per gioco dalla sua scheda.',
   'options.longSideFront': 'Scatole sdraiate: lato lungo sul davanti',
@@ -214,13 +214,13 @@ export const it = {
     'In che ordine si riempiono i cubi: riga per riga da sinistra a destra, oppure colonna per colonna dall’alto in basso.',
   'options.clearanceShort': 'Margine (cm)',
   'options.clearanceHint': 'Spazio in più lasciato attorno a ogni scatola, per poterla sfilare senza fatica.',
-  'options.overhangShort': 'Sporgenza (cm)',
-  'options.overhangHint':
-    'Di quanto una scatola più profonda del cubo può sporgere dallo scaffale. Con 0 le scatole troppo profonde non entrano.',
-  'options.overhangSide': 'Sporgono',
-  'options.overhangSide.front': 'Davanti',
-  'options.overhangSide.back': 'Dietro',
-  'options.overhangSideHint':
+  'shelves.overhang': 'Sporgenza (cm)',
+  'shelves.overhangHint':
+    'Di quanto una scatola più profonda del cubo può sporgere da questo scaffale. Con 0 le scatole troppo profonde qui non entrano e vanno negli altri scaffali, se possono.',
+  'shelves.overhangSide': 'Sporgono',
+  'shelves.overhangSide.front': 'Davanti',
+  'shelves.overhangSide.back': 'Dietro',
+  'shelves.overhangSideHint':
     'Da che lato escono le scatole troppo profonde. «Dietro» va bene se lo scaffale ha spazio libero alle spalle: sul davanti restano tutte a filo.',
   'options.maxStackHeightShort': 'Altezza pile (cm)',
   'options.maxStackHeightHint': 'Altezza massima di una pila di scatole sdraiate. Con 0 si usa tutta l’altezza del cubo.',
@@ -234,9 +234,8 @@ export const it = {
   'options.summary.detect': 'riconosciute dal nome',
   'options.summary.keep': 'mai spezzate',
   'options.summary.keepLine': 'mai a capo',
-  'options.summary.space': 'Margine {clearance} cm · sporgenza {overhang} cm',
-  'options.summary.onTop': 'grandi sopra lo scaffale',
-  'options.summary.overhangBack': 'sporgono dietro',
+  'options.summary.space': 'Margine {clearance} cm',
+  'options.summary.stack': 'pile fino a {height} cm',
   'list.cube': 'Cubo {n}',
   'list.position': 'riga {row} · col. {column}',
   'list.empty': 'vuoto',

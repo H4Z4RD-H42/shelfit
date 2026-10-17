@@ -16,6 +16,7 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 - **0.10** — Box titles wrap onto several lines.
 - **0.11** — Sagas can be kept on one shelf row.
 - **0.12** — Zones: cubes reserved to small games, party games, games to play, tags and more, marked on the shelves.
+- **0.13** — Overhang and free top set per shelf unit.
 
 ## Planned
 

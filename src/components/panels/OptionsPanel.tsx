@@ -39,7 +39,7 @@ const SECTION_KEYS: Record<SectionId, (keyof PackOptions)[]> = {
   // Zones are not options: the reset buttons leave them alone.
   zones: [],
   sagas: ['groupSagas', 'autoDetectSagas', 'keepSagasInCube', 'keepSagasInLine'],
-  space: ['oversizedOnTop', 'overhang', 'overhangSide', 'clearance', 'maxStackHeight'],
+  space: ['clearance', 'maxStackHeight'],
 }
 
 const OPEN_KEY = 'options.openSections'
@@ -200,9 +200,8 @@ export function OptionsPanel() {
           .join(' · ')
       : t('options.summary.sagasOff'),
     space: [
-      t('options.summary.space', { clearance: num(options.clearance), overhang: num(options.overhang) }),
-      options.overhang > 0 && options.overhangSide === 'back' && t('options.summary.overhangBack'),
-      options.oversizedOnTop && t('options.summary.onTop'),
+      t('options.summary.space', { clearance: num(options.clearance) }),
+      options.maxStackHeight > 0 && t('options.summary.stack', { height: num(options.maxStackHeight) }),
     ]
       .filter(Boolean)
       .join(' · '),
@@ -393,33 +392,12 @@ export function OptionsPanel() {
           <Ruler className="size-4" />,
           t('options.section.space'),
           <>
-            <Toggle
-              label={t('options.oversizedOnTop')}
-              hint={t('options.oversizedOnTopHint')}
-              checked={options.oversizedOnTop}
-              onChange={(oversizedOnTop) => setOptions({ oversizedOnTop })}
-            />
             <div className="grid grid-cols-2 gap-3">
               <Field label={t('options.clearanceShort')} info={t('options.clearanceHint')}>
                 <NumberInput
                   step={0.1}
                   value={options.clearance}
                   onChange={(v) => setOptions({ clearance: Math.max(0, v ?? 0) })}
-                />
-              </Field>
-              <Field label={t('options.overhangShort')} info={t('options.overhangHint')}>
-                <NumberInput
-                  step={0.5}
-                  value={options.overhang}
-                  onChange={(v) => setOptions({ overhang: Math.max(0, v ?? 0) })}
-                />
-              </Field>
-              <Field label={t('options.overhangSide')} info={t('options.overhangSideHint')}>
-                <Segmented
-                  size="sm"
-                  value={options.overhangSide}
-                  onChange={(overhangSide) => setOptions({ overhangSide })}
-                  options={(['front', 'back'] as const).map((o) => ({ value: o, label: t(`options.overhangSide.${o}`) }))}
                 />
               </Field>
               <Field label={t('options.maxStackHeightShort')} info={t('options.maxStackHeightHint')}>

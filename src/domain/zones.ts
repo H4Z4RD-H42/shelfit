@@ -198,23 +198,14 @@ export function assignZones(games: Game[], zones: Zone[], ctx: ZoneContext): Rec
 }
 
 /**
- * Picks the cubes of a zone among the free ones. `free` lists slot indexes in
- * filling order; so does the result. A zone on chosen cubes keeps all of them,
- * even the ones it does not fill yet: room to grow.
+ * Free cubes in the order a zone prefers them. `free` lists slot indexes in
+ * filling order. A zone on chosen cubes gets exactly those, in filling order.
  */
-export function zoneSlots(
-  zone: Zone,
-  needed: number,
-  slots: CubeSlot[],
-  free: number[],
-  units: ShelfUnit[],
-  cube: CubeSize,
-): number[] {
+export function rankSlots(zone: Zone, slots: CubeSlot[], free: number[], units: ShelfUnit[], cube: CubeSize): number[] {
   if (zone.place === 'cubes') {
     const chosen = new Set(zone.cubes)
     return free.filter((i) => chosen.has(cubeId(slots[i]!)))
   }
-  if (needed <= 0) return []
   const unitOf = new Map(units.map((u) => [u.id, u]))
   const rank = (i: number): number => {
     const slot = slots[i]!
@@ -232,10 +223,24 @@ export function zoneSlots(
         return Math.abs(cubeOrigin(unit, slot.column, slot.row, cube).y + cube.height / 2 - EYE_HEIGHT)
     }
   }
-  return [...free]
-    .sort((a, b) => rank(a) - rank(b) || a - b)
-    .slice(0, needed)
-    .sort((a, b) => a - b)
+  return [...free].sort((a, b) => rank(a) - rank(b) || a - b)
+}
+
+/**
+ * The cubes of a zone that needs `needed` of them, in filling order. A zone on
+ * chosen cubes keeps all of them, even the ones it does not fill yet: room to grow.
+ */
+export function zoneSlots(
+  zone: Zone,
+  needed: number,
+  slots: CubeSlot[],
+  free: number[],
+  units: ShelfUnit[],
+  cube: CubeSize,
+): number[] {
+  const ranked = rankSlots(zone, slots, free, units, cube)
+  if (zone.place === 'cubes') return ranked
+  return ranked.slice(0, Math.max(0, needed)).sort((a, b) => a - b)
 }
 
 export interface ZoneRun {

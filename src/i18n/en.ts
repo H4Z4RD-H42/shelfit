@@ -172,9 +172,9 @@ export const en: Messages = {
   'game.complexity': 'Complexity (1–5)',
   'game.rating': 'My rating (1–10)',
 
-  'options.oversizedOnTop': 'Put games that fit in no cube on top of the shelves',
-  'options.oversizedOnTopHint':
-    'Otherwise they end up among the games without a spot. You can also choose game by game from its card.',
+  'shelves.topFree': 'Free top',
+  'shelves.topFreeHint':
+    'The top of the shelf holds the games that fit in no cube and the ones you choose to keep on top from their card. Turn it off when something else stands there, a TV for example.',
   'game.onTop': 'Keep it on top of the shelf',
   'game.onTopShort': 'TOP',
   'list.top': 'On top of {unit}',
@@ -201,7 +201,7 @@ export const en: Messages = {
   'options.section.layout': 'Layout',
   'options.section.order': 'Order',
   'options.section.sagas': 'Sagas',
-  'options.section.space': 'Space and sizes',
+  'options.section.space': 'Clearance and stacks',
   'options.orientationHint':
     'Standing like books or lying in stacks. “Automatic” picks, for every box, the position that fits more games. You can also force it game by game from its card.',
   'options.longSideFront': 'Lying boxes: long side at the front',
@@ -212,13 +212,13 @@ export const en: Messages = {
     'The order in which cubes are filled: row by row from left to right, or column by column from top to bottom.',
   'options.clearanceShort': 'Margin (cm)',
   'options.clearanceHint': 'Extra room left around each box, so it can be pulled out easily.',
-  'options.overhangShort': 'Overhang (cm)',
-  'options.overhangHint':
-    'How far a box deeper than the cube may stick out of the shelf. With 0, boxes that are too deep do not fit.',
-  'options.overhangSide': 'Stick out',
-  'options.overhangSide.front': 'At the front',
-  'options.overhangSide.back': 'At the back',
-  'options.overhangSideHint':
+  'shelves.overhang': 'Overhang (cm)',
+  'shelves.overhangHint':
+    'How far a box deeper than the cube may stick out of this shelf. With 0, boxes that are too deep do not fit here and go to the other shelves, when they can.',
+  'shelves.overhangSide': 'Stick out',
+  'shelves.overhangSide.front': 'At the front',
+  'shelves.overhangSide.back': 'At the back',
+  'shelves.overhangSideHint':
     'Which side too-deep boxes stick out from. “At the back” works when there is free room behind the shelf: at the front they all stay flush.',
   'options.maxStackHeightShort': 'Stack height (cm)',
   'options.maxStackHeightHint': 'Maximum height of a stack of lying boxes. With 0 the full height of the cube is used.',
@@ -232,9 +232,8 @@ export const en: Messages = {
   'options.summary.detect': 'detected from names',
   'options.summary.keep': 'never split',
   'options.summary.keepLine': 'never wrapped',
-  'options.summary.space': 'Margin {clearance} cm · overhang {overhang} cm',
-  'options.summary.onTop': 'large ones on top',
-  'options.summary.overhangBack': 'sticking out at the back',
+  'options.summary.space': 'Margin {clearance} cm',
+  'options.summary.stack': 'stacks up to {height} cm',
   'list.cube': 'Cube {n}',
   'list.position': 'row {row} · col. {column}',
   'list.empty': 'empty',

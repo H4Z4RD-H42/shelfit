@@ -1,4 +1,4 @@
-import type { CubeSize, FillOrder, ShelfUnit } from './types'
+import type { CubeSize, FillOrder, OverhangSide, ShelfUnit } from './types'
 
 /** Usable interior of a KALLAX cube, measured on the real furniture. */
 export const KALLAX_CUBE: CubeSize = { width: 33.5, height: 33.5, depth: 38.5 }
@@ -53,6 +53,10 @@ export function cubeOrigin(unit: Pick<ShelfUnit, 'rows'>, column: number, row: n
     y: FRAME.outer + (unit.rows - 1 - row) * (cube.height + FRAME.inner),
   }
 }
+
+export const unitOverhang = (unit: Pick<ShelfUnit, 'overhang'>) => Math.max(0, unit.overhang ?? 0)
+export const unitOverhangSide = (unit: Pick<ShelfUnit, 'overhangSide'>): OverhangSide => unit.overhangSide ?? 'front'
+export const isTopFree = (unit: Pick<ShelfUnit, 'topFree'>) => unit.topFree !== false
 
 /** Horizontal gap between two units placed side by side in the views. */
 export const UNIT_GAP = 12

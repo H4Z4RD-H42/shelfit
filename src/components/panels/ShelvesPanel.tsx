@@ -1,9 +1,18 @@
 import { Plus, RotateCcw, X } from 'lucide-react'
-import { KALLAX_CUBE, KALLAX_FINISHES, KALLAX_PRESETS, cubeKey, isBlocked, unitOuterSize } from '../../domain/kallax'
+import {
+  KALLAX_CUBE,
+  KALLAX_FINISHES,
+  KALLAX_PRESETS,
+  cubeKey,
+  isBlocked,
+  isTopFree,
+  unitOuterSize,
+  unitOverhangSide,
+} from '../../domain/kallax'
 import type { CubeSize } from '../../domain/types'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
-import { Button, Field, NumberInput, Section } from '../ui'
+import { Button, Field, NumberInput, Section, Segmented, Toggle } from '../ui'
 import { cx, inputClass } from '../styles'
 
 export function ShelvesPanel() {
@@ -107,6 +116,29 @@ export function ShelvesPanel() {
                 })}
               </div>
             </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label={t('shelves.overhang')} info={t('shelves.overhangHint')}>
+                <NumberInput
+                  step={0.5}
+                  value={unit.overhang ?? 0}
+                  onChange={(v) => updateUnit(unit.id, { overhang: Math.max(0, v ?? 0) })}
+                />
+              </Field>
+              <Field label={t('shelves.overhangSide')} info={t('shelves.overhangSideHint')}>
+                <Segmented
+                  size="sm"
+                  value={unitOverhangSide(unit)}
+                  onChange={(overhangSide) => updateUnit(unit.id, { overhangSide })}
+                  options={(['front', 'back'] as const).map((o) => ({ value: o, label: t(`shelves.overhangSide.${o}`) }))}
+                />
+              </Field>
+            </div>
+            <Toggle
+              label={t('shelves.topFree')}
+              hint={t('shelves.topFreeHint')}
+              checked={isTopFree(unit)}
+              onChange={(topFree) => updateUnit(unit.id, { topFree })}
+            />
             <Field label={t('shelves.finish')}>
               <div className="flex flex-wrap gap-2">
                 {KALLAX_FINISHES.map((f) => (

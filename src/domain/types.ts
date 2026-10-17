@@ -91,6 +91,12 @@ export interface ShelfUnit {
   color: string
   /** Cubes not available for games (drawers, doors, other uses), as `column:row` keys. */
   blocked?: string[]
+  /** How far (cm) a box deeper than the cubes may stick out of this unit; 0 when missing. */
+  overhang?: number
+  /** Side deep boxes stick out from: the back needs free room behind the unit. Front when missing. */
+  overhangSide?: OverhangSide
+  /** False when something else stands on the unit: no games on top of it. */
+  topFree?: boolean
 }
 
 export type SortKey = 'name' | 'year' | 'size' | 'weight' | 'color' | 'added' | 'complexity' | 'playtime' | 'rating'
@@ -134,12 +140,6 @@ export interface PackOptions {
   clearance: number
   /** Maximum height (cm) of horizontal stacks; 0 means the cube height. */
   maxStackHeight: number
-  /** How far (cm) a box may stick out of a cube. */
-  overhang: number
-  /** Whether deep boxes stick out at the front or at the back (open-backed shelves). */
-  overhangSide: OverhangSide
-  /** Put on top of the shelves the games that fit in no cube. */
-  oversizedOnTop: boolean
   align: Align
   /** Lying boxes show their long side at the front (otherwise it goes to the back). */
   longSideFront: boolean

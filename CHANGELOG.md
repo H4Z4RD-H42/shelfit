@@ -5,6 +5,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-17
+
+### Changed
+
+- Overhang, the side boxes stick out from and the use of the top are now settings of each shelf unit, in the Shelves tab, instead of options of the whole collection: a unit against the wall and one with free room behind it, or one with a TV on top, can live side by side. Existing settings are carried over to every unit.
+- A box too deep for a unit waits for the first unit it can stick out of, while the next games move up.
+- Games that fit in no cube go on top of the units with a free top ("Free top", on by default); the "put on top" option is gone.
+- The "Space and sizes" options section is now "Clearance and stacks".
+
 ## [0.12.0] - 2026-10-17
 
 ### Added
@@ -163,7 +172,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.9.0...v0.10.0

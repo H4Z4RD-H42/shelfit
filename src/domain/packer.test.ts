@@ -91,13 +91,13 @@ describe('packCollection', () => {
 
   it('lets deep boxes stick out of the front when overhang is allowed', () => {
     const deep = game('War of the Ring', 40.5, 27.5, 9)
-    expect(packCollection([deep], [unit(1, 1)], KALLAX_CUBE, opts({ oversizedOnTop: false })).unplaced).toHaveLength(1)
-    const layout = packCollection([deep], [unit(1, 1)], KALLAX_CUBE, opts({ overhang: 3 }))
+    expect(packCollection([deep], [{ ...unit(1, 1), topFree: false }], KALLAX_CUBE, opts()).unplaced).toHaveLength(1)
+    const layout = packCollection([deep], [{ ...unit(1, 1), overhang: 3 }], KALLAX_CUBE, opts())
     const p = layout.cubes[0]!.placements[0]!
     expect(p.sz).toBe(40.5)
     expect(p.z).toBeCloseTo(KALLAX_CUBE.depth - 40.5)
 
-    const back = packCollection([deep], [unit(1, 1)], KALLAX_CUBE, opts({ overhang: 3, overhangSide: 'back' }))
+    const back = packCollection([deep], [{ ...unit(1, 1), overhang: 3, overhangSide: 'back' }], KALLAX_CUBE, opts())
     const q = back.cubes[0]!.placements[0]!
     expect(q.z).toBe(0)
     expect(q.z + q.sz).toBeCloseTo(40.5)
@@ -114,8 +114,41 @@ describe('packCollection', () => {
     expect(top.every((p) => p.orientation === 'horizontal')).toBe(true)
     expect(layout.cubes[0]!.placements.map((p) => p.gameId)).toEqual([azul.id])
 
-    const strict = packCollection([crack], [unit(2, 2)], KALLAX_CUBE, opts({ oversizedOnTop: false }))
+    const strict = packCollection([crack], [{ ...unit(2, 2), topFree: false }], KALLAX_CUBE, opts())
     expect(strict.unplaced).toEqual([{ gameId: crack.id, reason: 'too-big' }])
+  })
+
+  it('lets deep boxes wait for a unit they can stick out of', () => {
+    const wall: ShelfUnit = { ...unit(2, 1), id: 'wall' }
+    const open: ShelfUnit = { ...unit(1, 1), id: 'open', overhang: 3, overhangSide: 'back' }
+    const deep = game('A deep box', 40.5, 27.5, 9)
+    const others = [game('B', 30, 30, 7), game('C', 30, 30, 7)]
+    for (const strategy of ['ordered', 'compact'] as const) {
+      const layout = packCollection([deep, ...others], [wall, open], KALLAX_CUBE, opts({ strategy }))
+      expect(layout.unplaced).toEqual([])
+      const inOpen = layout.cubes.find((c) => c.unitId === 'open')!.placements
+      expect(inOpen.map((p) => p.gameId)).toEqual([deep.id])
+      expect(inOpen[0]!.z).toBe(0)
+      const inWall = layout.cubes.filter((c) => c.unitId === 'wall').flatMap((c) => c.placements.map((p) => p.gameId))
+      expect(inWall.sort()).toEqual(others.map((g) => g.id).sort())
+    }
+  })
+
+  it('puts games only on top of the units with a free top', () => {
+    const tv: ShelfUnit = { ...unit(1, 1), id: 'tv', topFree: false }
+    const free: ShelfUnit = { ...unit(4, 1), id: 'free' }
+    const crack = game('Crack!', 48.4, 24.3, 5.1)
+    const wipper = game('Wipper', 35, 35, 8, { onTop: true })
+    const layout = packCollection([crack, wipper], [tv, free], KALLAX_CUBE, opts())
+    expect(layout.tops.map((t) => t.unitId)).toEqual(['free'])
+    expect(layout.tops[0]!.placements).toHaveLength(2)
+
+    const none = packCollection([crack, wipper], [tv], KALLAX_CUBE, opts())
+    expect(none.tops).toEqual([])
+    expect(none.unplaced).toEqual([
+      { gameId: crack.id, reason: 'too-big' },
+      { gameId: wipper.id, reason: 'no-space' },
+    ])
   })
 
   it('skips blocked cubes', () => {
@@ -159,7 +192,7 @@ describe('packCollection', () => {
 
   it('reports games that do not fit at all', () => {
     const big = game('Gloomhaven', 41.5, 30, 19)
-    const layout = packCollection([big], [unit(1, 1)], KALLAX_CUBE, opts({ oversizedOnTop: false }))
+    const layout = packCollection([big], [{ ...unit(1, 1), topFree: false }], KALLAX_CUBE, opts())
     expect(layout.unplaced).toEqual([{ gameId: big.id, reason: 'too-big' }])
   })
 
