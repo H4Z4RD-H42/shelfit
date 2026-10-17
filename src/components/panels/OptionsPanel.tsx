@@ -1,6 +1,6 @@
-import { ArrowDownAZ, ArrowUpZA, RotateCcw } from 'lucide-react'
+import { AlignCenter, AlignLeft, AlignRight, ArrowDownWideNarrow, ArrowUpNarrowWide, RotateCcw } from 'lucide-react'
 import { GROUP_KEYS } from '../../domain/grouping'
-import type { GroupKey, OrientationMode, SortKey } from '../../domain/types'
+import type { Align, GroupKey, GroupLevel, OrientationMode, SortDirection, SortKey } from '../../domain/types'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
 import { cx, inputClass } from '../styles'
@@ -10,32 +10,52 @@ import { Button, Field, NumberInput, Section, Segmented, Toggle } from '../ui'
 const SORT_KEYS: SortKey[] = ['name', 'year', 'size', 'complexity', 'playtime', 'rating', 'color', 'added']
 const ORIENTATIONS: OrientationMode[] = ['auto', 'vertical', 'horizontal']
 
+function DirectionButton({ value, onChange }: { value: SortDirection; onChange: (d: SortDirection) => void }) {
+  const t = useT()
+  const Icon = value === 'asc' ? ArrowUpNarrowWide : ArrowDownWideNarrow
+  return (
+    <Button
+      className="shrink-0 px-2.5"
+      onClick={() => onChange(value === 'asc' ? 'desc' : 'asc')}
+      title={t(`options.direction.${value}`)}
+    >
+      <Icon className="size-4" />
+      <span className="text-xs">{t(`options.direction.${value}`)}</span>
+    </Button>
+  )
+}
+
 function GroupSelect({
   value,
   exclude,
   onChange,
   label,
 }: {
-  value: GroupKey | undefined
+  value: GroupLevel | undefined
   exclude?: GroupKey
-  onChange: (key: GroupKey | undefined) => void
+  onChange: (level: GroupLevel | undefined) => void
   label: string
 }) {
   const t = useT()
   return (
     <Field label={label}>
-      <select
-        className={inputClass}
-        value={value ?? ''}
-        onChange={(e) => onChange((e.target.value || undefined) as GroupKey | undefined)}
-      >
-        <option value="">{t('group.none')}</option>
-        {GROUP_KEYS.filter((k) => k !== exclude).map((k) => (
-          <option key={k} value={k}>
-            {t(`group.${k}`)}
-          </option>
-        ))}
-      </select>
+      <div className="flex gap-2">
+        <select
+          className={inputClass}
+          value={value?.key ?? ''}
+          onChange={(e) =>
+            onChange(e.target.value ? { key: e.target.value as GroupKey, direction: value?.direction ?? 'asc' } : undefined)
+          }
+        >
+          <option value="">{t('group.none')}</option>
+          {GROUP_KEYS.filter((k) => k !== exclude).map((k) => (
+            <option key={k} value={k}>
+              {t(`group.${k}`)}
+            </option>
+          ))}
+        </select>
+        {value && <DirectionButton value={value.direction} onChange={(direction) => onChange({ ...value, direction })} />}
+      </div>
     </Field>
   )
 }
@@ -48,11 +68,11 @@ export function OptionsPanel() {
   const ordered = options.strategy === 'ordered'
   const [primary, secondary] = options.groupBy
 
-  const setGroup = (level: 0 | 1, key: GroupKey | undefined) => {
+  const setGroup = (index: 0 | 1, level: GroupLevel | undefined) => {
     const next = [primary, secondary]
-    next[level] = key
-    // Dropping the first level promotes the second one.
-    const groupBy = next.filter((k, i): k is GroupKey => !!k && next.indexOf(k) === i)
+    next[index] = level
+    // Dropping the first level promotes the second one; a key is used once.
+    const groupBy = next.filter((l, i): l is GroupLevel => !!l && next.findIndex((o) => o?.key === l.key) === i)
     setOptions({ groupBy })
   }
 
@@ -64,6 +84,19 @@ export function OptionsPanel() {
           onChange={(orientation) => setOptions({ orientation })}
           options={ORIENTATIONS.map((o) => ({ value: o, label: t(`orientation.${o}`) }))}
         />
+      </Section>
+
+      <Section title={t('options.align')}>
+        <Segmented<Align>
+          value={options.align}
+          onChange={(align) => setOptions({ align })}
+          options={[
+            { value: 'left', label: <AlignLeft className="size-4" />, title: t('options.align.left') },
+            { value: 'center', label: <AlignCenter className="size-4" />, title: t('options.align.center') },
+            { value: 'right', label: <AlignRight className="size-4" />, title: t('options.align.right') },
+          ]}
+        />
+        <p className="text-xs text-ink-faint">{t('options.alignHint')}</p>
       </Section>
 
       <Section title={t('options.strategy')}>
@@ -88,10 +121,10 @@ export function OptionsPanel() {
       <Section title={t('options.grouping')}>
         <div className={cx('space-y-3', !ordered && 'pointer-events-none opacity-40')}>
           <p className="text-xs text-ink-soft">{t('options.groupingHint')}</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             <GroupSelect label={t('options.groupBy')} value={primary} onChange={(k) => setGroup(0, k)} />
             {primary && (
-              <GroupSelect label={t('options.thenBy')} value={secondary} exclude={primary} onChange={(k) => setGroup(1, k)} />
+              <GroupSelect label={t('options.thenBy')} value={secondary} exclude={primary.key} onChange={(k) => setGroup(1, k)} />
             )}
           </div>
           <Toggle
@@ -125,13 +158,7 @@ export function OptionsPanel() {
                 </option>
               ))}
             </select>
-            <Button
-              onClick={() => setOptions({ sortDirection: options.sortDirection === 'asc' ? 'desc' : 'asc' })}
-              title={t(`options.direction.${options.sortDirection}`)}
-              aria-label={t(`options.direction.${options.sortDirection}`)}
-            >
-              {options.sortDirection === 'asc' ? <ArrowDownAZ className="size-4" /> : <ArrowUpZA className="size-4" />}
-            </Button>
+            <DirectionButton value={options.sortDirection} onChange={(sortDirection) => setOptions({ sortDirection })} />
           </div>
           <Toggle
             label={t('options.fillGaps')}

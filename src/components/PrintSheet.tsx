@@ -84,7 +84,7 @@ export function PrintSheet() {
   const t = useT()
   const units = useAppStore((s) => s.units)
   const allGames = useAppStore((s) => s.games)
-  const outer = useAppStore((s) => s.options.groupBy[0])
+  const outer = useAppStore((s) => s.options.groupBy[0]?.key)
   const layout = useLayout()
   const games = useGamesById()
   const excluded = allGames.filter((g) => g.excluded)

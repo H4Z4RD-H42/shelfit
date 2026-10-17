@@ -132,6 +132,19 @@ describe('packCollection', () => {
     }
   })
 
+  it('aligns boxes to the left, centre or right of the cube and of each stack', () => {
+    const games = [game('Big', 30, 30, 5), game('Small', 20, 20, 5)]
+    const at = (align: PackOptions['align']) => {
+      const layout = packCollection(games, [unit(1, 1)], KALLAX_CUBE, opts({ orientation: 'horizontal', align }))
+      return Object.fromEntries(layout.cubes[0]!.placements.map((p) => [p.sx, p.x]))
+    }
+    const half = DEFAULT_OPTIONS.clearance / 2
+    expect(at('left')).toEqual({ 30: half, 20: half })
+    expect(at('right')[30]! + 30).toBeCloseTo(KALLAX_CUBE.width - half)
+    expect(at('right')[20]! + 20).toBeCloseTo(KALLAX_CUBE.width - half)
+    expect(at('center')[20]! + 10).toBeCloseTo(KALLAX_CUBE.width / 2)
+  })
+
   it('reports games that do not fit at all', () => {
     const big = game('Gloomhaven', 41.5, 30, 19)
     const layout = packCollection([big], [unit(1, 1)], KALLAX_CUBE, opts())

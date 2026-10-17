@@ -4,6 +4,7 @@ import { groupOf } from './grouping'
 import { boxVolume, orderUnits } from './sorting'
 import {
   hasDims,
+  type Align,
   type BoxDimensions,
   type CubeLayout,
   type CubeSize,
@@ -69,6 +70,7 @@ interface Ctx {
   cube: CubeSize
   clearance: number
   stackHeight: number
+  align: Align
 }
 
 /** Computes the possible extents of a box in each orientation. */
@@ -329,7 +331,11 @@ function toPlacements(state: CubeState, ctx: Ctx): Placement[] {
   // Boxes deeper than the cube stick out of the front, flush with the back.
   const front = (ext: Extents) => Math.min(0, ctx.cube.depth - ext.sz)
   const placements: Placement[] = []
-  let x = 0
+  const free = ctx.cube.width - state.used
+  let x = ctx.align === 'left' ? 0 : ctx.align === 'center' ? free / 2 : free
+  // Position of a box of width `sx` inside a column of width `width`.
+  const inColumn = (width: number, sx: number) =>
+    ctx.align === 'left' ? half : ctx.align === 'center' ? (width - sx) / 2 : width - half - sx
   for (const [column, col] of state.columns.entries()) {
     if (col.kind === 'vertical') {
       const { item, ext } = col.entries[0]!
@@ -355,7 +361,7 @@ function toPlacements(state: CubeState, ctx: Ctx): Placement[] {
           order: item.order,
           column,
           level,
-          x: x + (col.width - ext.sx) / 2,
+          x: x + inColumn(col.width, ext.sx),
           y,
           z: front(ext),
           ...ext,
@@ -385,6 +391,7 @@ function packTop(
   units: ShelfUnit[],
   cube: CubeSize,
   clearance: number,
+  align: Align,
 ): { tops: TopLayout[]; leftover: Game[]; tooBig: Game[] } {
   const tops: TopLayout[] = []
   const widest = Math.max(0, ...units.map((u) => unitOuterSize(u, cube).width))
@@ -393,7 +400,7 @@ function packTop(
   for (const unit of units) {
     if (queue.length === 0) break
     const width = unitOuterSize(unit, cube).width
-    const ctx: Ctx = { cube: { width, height: TOP_HEIGHT, depth: FRAME.depth }, clearance, stackHeight: TOP_HEIGHT }
+    const ctx: Ctx = { cube: { width, height: TOP_HEIGHT, depth: FRAME.depth }, clearance, stackHeight: TOP_HEIGHT, align }
     const items: Item[] = []
     for (const [order, game] of queue.entries()) {
       const ext = topExtents(game.dims!, width, clearance)
@@ -415,6 +422,7 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
     cube,
     clearance: options.clearance,
     stackHeight: options.maxStackHeight > 0 ? Math.min(options.maxStackHeight, cube.height) : cube.height,
+    align: options.align,
   }
 
   const fitCube = { ...cube, depth: cube.depth + Math.max(0, options.overhang) }
@@ -442,6 +450,7 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
     units,
     cube,
     options.clearance,
+    options.align,
   )
   for (const g of top.tooBig) unplaced.push({ gameId: g.id, reason: 'too-big' })
   for (const g of top.leftover) unplaced.push({ gameId: g.id, reason: 'no-space' })
@@ -485,7 +494,7 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
   })
 
   const groups: Record<string, string> = {}
-  const outer = options.groupBy[0]
+  const outer = options.groupBy[0]?.key
   if (outer) {
     for (const g of shelved) {
       const value = groupOf(g, outer)

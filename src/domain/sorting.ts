@@ -88,7 +88,8 @@ export function orderUnits(
   const dir = options.sortDirection === 'asc' ? 1 : -1
   units.sort((a, b) => {
     for (let level = 0; level < options.groupBy.length; level++) {
-      const c = compareGroups(options.groupBy[level]!, a.path[level], b.path[level])
+      const { key, direction } = options.groupBy[level]!
+      const c = compareGroups(key, a.path[level], b.path[level], direction)
       if (c) return c
     }
     return dir * compareValues(a.key, b.key) || collator.compare(a.games[0]!.name, b.games[0]!.name)

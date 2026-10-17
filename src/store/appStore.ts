@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import { sampleCollection } from '../data/sampleCollection'
 import { mergeGames, type ImportedGame } from '../domain/backup'
-import { DEFAULT_OPTIONS } from '../domain/defaults'
+import { DEFAULT_OPTIONS, normalizeOptions } from '../domain/defaults'
 import { KALLAX_CUBE, KALLAX_FINISHES } from '../domain/kallax'
 import type { CubeSize, Game, PackOptions, ShelfUnit } from '../domain/types'
 import { detectLanguage, type Language } from '../i18n/language'
@@ -104,7 +104,7 @@ export const useAppStore = create<AppState>()(
       select: (selectedId) => setState({ selectedId }),
       edit: (editing) => setState(editing ? { editing, panel: 'collection' } : { editing }),
       restore: ({ games, units, cube, options }) =>
-        setState({ games, units, cube, options: { ...DEFAULT_OPTIONS, ...options }, selectedId: null }),
+        setState({ games, units, cube, options: normalizeOptions(options), selectedId: null }),
     }),
     {
       name: 'shelf-planner',
@@ -121,7 +121,7 @@ export const useAppStore = create<AppState>()(
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<AppState>
-        return { ...current, ...p, options: { ...DEFAULT_OPTIONS, ...p.options } }
+        return { ...current, ...p, options: normalizeOptions(p.options) }
       },
     },
   ),

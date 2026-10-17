@@ -80,7 +80,15 @@ export interface ShelfUnit {
 }
 
 export type SortKey = 'name' | 'year' | 'size' | 'weight' | 'color' | 'added' | 'complexity' | 'playtime' | 'rating'
-export type GroupKey = 'genre' | 'designer' | 'publisher' | 'complexity' | 'players' | 'playtime' | 'language'
+export type GroupKey = 'genre' | 'designer' | 'publisher' | 'complexity' | 'players' | 'playtime' | 'language' | 'year'
+
+export interface GroupLevel {
+  key: GroupKey
+  direction: SortDirection
+}
+
+/** Horizontal alignment of the boxes inside a cube and inside each stack. */
+export type Align = 'left' | 'center' | 'right'
 export type SortDirection = 'asc' | 'desc'
 export type Strategy = 'ordered' | 'compact'
 export type FillOrder = 'rows' | 'columns'
@@ -91,7 +99,7 @@ export interface PackOptions {
   sortBy: SortKey
   sortDirection: SortDirection
   /** Grouping levels, outermost first (at most two in the UI). */
-  groupBy: GroupKey[]
+  groupBy: GroupLevel[]
   /** Start every outermost group in a fresh cube. */
   groupStartsNewCube: boolean
   /** Keep games of the same saga next to each other. */
@@ -111,6 +119,7 @@ export interface PackOptions {
   overhang: number
   /** Put on top of the shelves the games that fit in no cube. */
   oversizedOnTop: boolean
+  align: Align
 }
 
 /** A box placed inside a cube. Coordinates are relative to the cube's

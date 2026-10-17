@@ -16,7 +16,7 @@ export function ListView() {
   const games = useGamesById()
   const boxColor = useBoxColor()
   const unitName = new Map(units.map((u) => [u.id, u.name]))
-  const outer = useAppStore((s) => s.options.groupBy[0])
+  const outer = useAppStore((s) => s.options.groupBy[0]?.key)
   const cubeGroups = (gameIds: string[]) =>
     outer ? [...new Set(gameIds.map((id) => groupLabel(t, outer, layout.groups[id])))] : []
 

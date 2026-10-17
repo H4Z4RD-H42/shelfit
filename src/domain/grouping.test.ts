@@ -50,7 +50,7 @@ describe('orderUnits with grouping', () => {
       game('Agricola', { genre: 'Strategy' }),
       game('Codenames'),
     ]
-    const units = orderUnits(games, {}, { ...DEFAULT_OPTIONS, groupBy: ['genre'] })
+    const units = orderUnits(games, {}, { ...DEFAULT_OPTIONS, groupBy: [{ key: 'genre', direction: 'asc' }] })
     expect(units.map((u) => u.games[0]!.name)).toEqual(['Azul', 'Agricola', 'Brass', 'Codenames'])
     expect(units.map((u) => u.group)).toEqual(['Abstract', 'Strategy', 'Strategy', ''])
   })
@@ -61,17 +61,46 @@ describe('orderUnits with grouping', () => {
       game('A', { genre: 'Party', maxPlayers: 2 }),
       game('C', { genre: 'Coop', maxPlayers: 4 }),
     ]
-    const units = orderUnits(games, {}, { ...DEFAULT_OPTIONS, sortBy: 'name', groupBy: ['genre', 'players'] })
+    const units = orderUnits(
+      games,
+      {},
+      {
+        ...DEFAULT_OPTIONS,
+        sortBy: 'name',
+        groupBy: [
+          { key: 'genre', direction: 'asc' },
+          { key: 'players', direction: 'asc' },
+        ],
+      },
+    )
     expect(units.map((u) => u.games[0]!.name)).toEqual(['C', 'A', 'B'])
+  })
+})
+
+describe('year and direction', () => {
+  it('groups by decade', () => {
+    expect(groupOf(game('a', { year: 2017 }), 'year')).toBe('2010')
+    expect(groupOf(game('a', { year: 1995 }), 'year')).toBe('1990')
+  })
+
+  it('orders groups in descending order, unknown values still last', () => {
+    const games = [game('Light', { complexity: 1.5 }), game('None'), game('Heavy', { complexity: 3.5 })]
+    const units = orderUnits(games, {}, { ...DEFAULT_OPTIONS, groupBy: [{ key: 'complexity', direction: 'desc' }] })
+    expect(units.map((u) => u.games[0]!.name)).toEqual(['Heavy', 'Light', 'None'])
   })
 })
 
 describe('packCollection with grouping', () => {
   it('starts each group in a new cube when asked', () => {
     const games = [game('A1', { genre: 'A' }), game('B1', { genre: 'B' }), game('B2', { genre: 'B' })]
-    const shared = packCollection(games, [unit(2, 1)], KALLAX_CUBE, opts({ groupBy: ['genre'] }))
+    const shared = packCollection(games, [unit(2, 1)], KALLAX_CUBE, opts({ groupBy: [{ key: 'genre', direction: 'asc' }] }))
     expect(shared.cubes[0]!.placements).toHaveLength(3)
-    const split = packCollection(games, [unit(2, 1)], KALLAX_CUBE, opts({ groupBy: ['genre'], groupStartsNewCube: true }))
+    const split = packCollection(
+      games,
+      [unit(2, 1)],
+      KALLAX_CUBE,
+      opts({ groupBy: [{ key: 'genre', direction: 'asc' }], groupStartsNewCube: true }),
+    )
     expect(split.cubes[0]!.placements).toHaveLength(1)
     expect(split.cubes[1]!.placements).toHaveLength(2)
     expect(split.groups).toEqual({ [games[0]!.id]: 'A', [games[1]!.id]: 'B', [games[2]!.id]: 'B' })
@@ -83,7 +112,7 @@ describe('packCollection with grouping', () => {
       game('Root: Kit del Vagabondo', { publisher: 'Leder Games; MS Edizioni', year: 2020 }),
       game('Root: The Riverfolk', { year: 2019 }),
     ]
-    const layout = packCollection(games, [unit(2, 1)], KALLAX_CUBE, opts({ groupBy: ['publisher'] }))
+    const layout = packCollection(games, [unit(2, 1)], KALLAX_CUBE, opts({ groupBy: [{ key: 'publisher', direction: 'asc' }] }))
     expect(Object.values(layout.groups)).toEqual(['MS Edizioni', 'MS Edizioni', 'MS Edizioni'])
   })
 })

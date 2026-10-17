@@ -1,42 +1,39 @@
 # Roadmap
 
-## 0.1 — Foundation ✅
+Released versions are detailed in the [changelog](../CHANGELOG.md).
 
-Packing engine, procedural 3D KALLAX, front and list views, local collection, PWA.
+## Done
 
-## 0.2 — Real collections ✅
+- **0.1** — Packing engine, procedural 3D KALLAX, front and list views, local collection, PWA.
+- **0.2** — BGG collection CSV import, games without sizes, merge on re-import, overhang.
+- **0.3** — Grouping (genre, designer, publisher, complexity, players, playing time, language), games on top of the shelves, cubes excluded from filling.
+- **0.4** — Printable step-by-step instructions; tidy stacks; validation fixes.
+- **0.5** — Grouping by decade, direction of every grouping level, box alignment.
 
-BGG collection CSV import, games without sizes, merge on re-import, overhang.
+## Planned
 
-## 0.3 — Smarter organisation ✅
-
-Grouping by genre, designer, publisher, complexity, players, playing time, language; games on top of the shelves; cubes excluded from filling.
-
-## 0.4 — Printable instructions ✅
-
-Step-by-step list to rearrange the shelves on paper.
-
-## 0.5 — BoardGameGeek API (pending the API request)
+### BoardGameGeek API (pending the API request)
 
 - Edge worker holding the BGG token, with caching and rate limiting.
-- Import a collection from a BGG username, sizes taken from the owned version.
+- Import a collection from a BGG username, sizes taken from the owned version (fallback: other editions).
 - Game search by name, thumbnails, "Powered by BGG" attribution.
-- Sagas from BGG families as an extra signal; genre and designer filled automatically.
+- Genre, designer and families filled automatically; families as an extra saga signal.
 
-## 0.6 — Better layouts
+### Better layouts
 
+- Manual sizes always win over imported ones.
 - Drag & drop to pin a game to a cube; the engine works around pinned games.
 - Expansions stored inside the base box.
 - Weight-aware stacking and shelf load warnings.
 - Run the engine in a Web Worker for very large collections.
 
-## 0.7 — Sharing
+### Sharing
 
 - Shareable read-only link to a layout.
 - Printable image of the front view.
 - Box textures from game images in the 3D view.
 
-## 1.0 — Public release
+### 1.0 — Public release
 
 - Final name and branding, public repository, hosting on a custom domain.
 - Optional cloud sync between devices.

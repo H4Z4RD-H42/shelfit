@@ -5,6 +5,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-17
+
+### Added
+
+- Grouping by year, in decades.
+- Ascending or descending order for every grouping level (games without the value always go last).
+- Box alignment: left (new default), centre or right, both for the columns in a cube and for the boxes of each stack; also on top of the shelves.
+
+### Changed
+
+- The sort direction is now a labelled button ("Ascending" / "Descending").
+- Options saved by older versions are upgraded automatically.
+
 ## [0.4.3] - 2026-10-17
 
 ### Fixed
@@ -72,7 +85,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.0...v0.4.1

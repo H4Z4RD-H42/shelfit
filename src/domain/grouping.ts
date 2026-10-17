@@ -1,4 +1,4 @@
-import type { Game, GroupKey } from './types'
+import type { Game, GroupKey, GroupLevel, SortDirection } from './types'
 
 /*
  * Grouping puts related games next to each other on the shelves. Free-text
@@ -6,7 +6,7 @@ import type { Game, GroupKey } from './types'
  * keys are split into a few buckets with a natural order.
  */
 
-export const GROUP_KEYS: GroupKey[] = ['genre', 'designer', 'publisher', 'complexity', 'players', 'playtime', 'language']
+export const GROUP_KEYS: GroupKey[] = ['genre', 'designer', 'publisher', 'year', 'complexity', 'players', 'playtime', 'language']
 
 /** Bucket ids of the numeric keys, in display order. */
 export const BUCKETS = {
@@ -37,6 +37,9 @@ export function groupOf(game: Game, key: GroupKey): string | undefined {
       return firstOf(game.publisher)
     case 'language':
       return firstOf(game.language)
+    case 'year':
+      // Decades: single years would make groups of one or two games.
+      return game.year ? String(Math.floor(game.year / 10) * 10) : undefined
     case 'complexity': {
       const w = game.complexity
       if (!w) return undefined
@@ -57,19 +60,26 @@ export function groupOf(game: Game, key: GroupKey): string | undefined {
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
 
-/** Orders two group values of the same key; unknown values go last. */
-export function compareGroups(key: GroupKey, a: string | undefined, b: string | undefined): number {
+/** Orders two group values of the same key; unknown values always go last. */
+export function compareGroups(
+  key: GroupKey,
+  a: string | undefined,
+  b: string | undefined,
+  direction: SortDirection = 'asc',
+): number {
   if (a === b) return 0
   if (a === undefined) return 1
   if (b === undefined) return -1
+  const sign = direction === 'asc' ? 1 : -1
   if (isBucketKey(key)) {
     const order: readonly string[] = BUCKETS[key]
-    return order.indexOf(a) - order.indexOf(b)
+    return sign * (order.indexOf(a) - order.indexOf(b))
   }
-  return collator.compare(a, b)
+  if (key === 'year') return sign * (Number(a) - Number(b))
+  return sign * collator.compare(a, b)
 }
 
 /** Groups of a game for each grouping level, outermost first. */
-export function groupPath(game: Game, keys: GroupKey[]): (string | undefined)[] {
-  return keys.map((k) => groupOf(game, k))
+export function groupPath(game: Game, levels: GroupLevel[]): (string | undefined)[] {
+  return levels.map((l) => groupOf(game, l.key))
 }

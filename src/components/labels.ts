@@ -9,7 +9,12 @@ export const UNPLACED_LABEL: Record<UnplacedReason, MessageKey> = {
 }
 
 /** Human-readable name of a group value. */
-export function groupLabel(t: (key: MessageKey) => string, key: GroupKey, value: string | undefined): string {
+export function groupLabel(
+  t: (key: MessageKey, params?: Record<string, string | number>) => string,
+  key: GroupKey,
+  value: string | undefined,
+): string {
   if (value === undefined || value === '') return t('group.unknown')
+  if (key === 'year') return t('bucket.decade', { decade: value })
   return isBucketKey(key) ? t(`bucket.${key}.${value}` as MessageKey) : value
 }
