@@ -100,6 +100,7 @@ function ToolbarActions() {
 /** The shelves drawn in the chosen view, with the details of the selected game. */
 function ShelfStage() {
   const view = useAppStore((s) => s.view)
+  const isDesktop = useIsDesktop()
   return (
     <div className="relative min-h-0 flex-1 bg-stage">
       {view === '3d' && (
@@ -111,7 +112,7 @@ function ShelfStage() {
       {view === 'list' && <ListView />}
       <GameDetails />
       <LensButton />
-      <LensPanel />
+      {isDesktop && <LensPanel />}
     </div>
   )
 }
@@ -205,6 +206,7 @@ function MobileLayout() {
             <StatsBar />
           </div>
           <ShelfStage />
+          <LensPanel docked />
         </main>
       ) : (
         <section className="flex min-h-0 flex-1 flex-col bg-surface-0">

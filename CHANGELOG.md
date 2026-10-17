@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-10-17
+
+### Fixed
+
+- On phones the maps and filters panel no longer covers most of the shelves: it is docked under them, so the shelves shrink but stay whole in sight, and a tap on its title folds it to one line with the legend and the number of matching games.
+
 ## [0.15.0] - 2026-10-17
 
 ### Added

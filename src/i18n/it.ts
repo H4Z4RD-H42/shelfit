@@ -342,6 +342,8 @@ export const it = {
   'lens.button': 'Mappe e filtri',
   'lens.title': 'Mappe e filtri',
   'lens.close': 'Chiudi',
+  'lens.fold': 'Riduci a una riga',
+  'lens.unfold': 'Apri il pannello',
   'lens.clear': 'Azzera',
   'lens.map': 'Colora per',
   'lens.mapHint':

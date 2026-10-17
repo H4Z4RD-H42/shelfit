@@ -93,10 +93,11 @@ export function LensButton() {
 
 /**
  * Data views of the shelves: a map paints the boxes by some data, filters fade
- * out the games that do not match. Floats over the shelves on wide screens and
- * rises from the bottom on phones, so the shelves stay in sight.
+ * out the games that do not match. Floats over the shelves on wide screens; on
+ * phones it is docked under them (`docked`), so the shelves shrink but stay
+ * whole in sight, and folds down to a one-line legend.
  */
-export function LensPanel() {
+export function LensPanel({ docked = false }: { docked?: boolean }) {
   const t = useT()
   const open = useAppStore((s) => s.lensOpen)
   const lens = useAppStore((s) => s.lens)
@@ -107,6 +108,7 @@ export function LensPanel() {
   const data = useCollectionData(games)
   const [showMapInfo, setShowMapInfo] = useState(false)
   const [showFilterInfo, setShowFilterInfo] = useState(false)
+  const [folded, setFolded] = useState(false)
   if (!open) return null
 
   const filters = activeFilters(lens)
@@ -116,14 +118,29 @@ export function LensPanel() {
   return (
     <aside
       className={cx(
-        'absolute inset-x-0 bottom-0 z-20 flex max-h-[75%] flex-col rounded-t-2xl border border-line bg-surface-0/95 shadow-2xl backdrop-blur',
-        'md:inset-x-auto md:top-3 md:right-3 md:bottom-3 md:max-h-none md:w-80 md:rounded-2xl',
+        'flex flex-col bg-surface-0',
+        docked
+          ? 'max-h-[50%] flex-none border-t border-line'
+          : 'absolute top-3 right-3 bottom-3 z-20 w-80 rounded-2xl border border-line bg-surface-0/95 shadow-2xl backdrop-blur',
       )}
       aria-label={t('lens.title')}
     >
-      <header className="flex items-center gap-2 border-b border-line py-2.5 pr-2 pl-5">
-        <Layers className="size-4 text-accent" />
-        <h2 className="flex-1 font-display text-sm font-semibold">{t('lens.title')}</h2>
+      <header className={cx('flex items-center gap-2 py-2.5 pr-2 pl-5', !(docked && folded) && 'border-b border-line')}>
+        <Layers className="size-4 shrink-0 text-accent" />
+        {docked ? (
+          <button
+            type="button"
+            onClick={() => setFolded((v) => !v)}
+            aria-expanded={!folded}
+            title={t(folded ? 'lens.unfold' : 'lens.fold')}
+            className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
+          >
+            <h2 className="font-display text-sm font-semibold">{t('lens.title')}</h2>
+            <ChevronDown className={cx('size-4 text-ink-faint transition-transform', !folded && 'rotate-180')} />
+          </button>
+        ) : (
+          <h2 className="flex-1 font-display text-sm font-semibold">{t('lens.title')}</h2>
+        )}
         {(filters > 0 || lens.heat) && (
           <Button variant="ghost" className="px-2 py-1 text-xs" onClick={clearLens}>
             <RotateCcw className="size-3.5" />
@@ -135,7 +152,9 @@ export function LensPanel() {
         </Button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      {docked && folded && <FoldedLegend scale={paint.scale} matches={paint.matches?.size} total={games.length} />}
+
+      <div className={cx('min-h-0 flex-1 overflow-y-auto', docked && folded && 'hidden')}>
         {!hasAny && <p className="px-5 py-4 text-sm text-ink-soft">{t('lens.empty')}</p>}
 
         {heatKeys.length > 0 && (
@@ -421,6 +440,42 @@ function ValueFilter({
           )}
         </div>
       </Reveal>
+    </div>
+  )
+}
+
+/** The map and the filter count in one line, for the folded panel. */
+function FoldedLegend({ scale, matches, total }: { scale: HeatScale | null; matches?: number; total: number }) {
+  const format = useFormat()
+  if (!scale && matches === undefined) return null
+  return (
+    <div className="flex items-center gap-2.5 px-5 pb-2.5 text-xs text-ink-soft tabular-nums">
+      {scale?.kind === 'number' && (
+        <>
+          <span>{format(scale.key, scale.min)}</span>
+          <div
+            className="h-2 min-w-8 flex-1 rounded-full"
+            style={{ background: `linear-gradient(to right, ${HEAT_RAMP.join(', ')})` }}
+          />
+          <span>{format(scale.key, scale.max)}</span>
+        </>
+      )}
+      {scale?.kind === 'value' && (
+        <div className="flex min-w-0 flex-1 gap-2.5 overflow-hidden">
+          {scale.entries.slice(0, 4).map((e) => (
+            <span key={e.value} className="flex min-w-0 items-center gap-1">
+              <Swatch color={e.color} />
+              <span className="truncate">{e.value}</span>
+            </span>
+          ))}
+        </div>
+      )}
+      {!scale && <span className="flex-1" />}
+      {matches !== undefined && (
+        <span className="shrink-0 font-medium text-accent">
+          {matches}/{total}
+        </span>
+      )}
     </div>
   )
 }

@@ -340,6 +340,8 @@ export const en: Messages = {
   'lens.button': 'Maps and filters',
   'lens.title': 'Maps and filters',
   'lens.close': 'Close',
+  'lens.fold': 'Fold to one line',
+  'lens.unfold': 'Open the panel',
   'lens.clear': 'Reset',
   'lens.map': 'Colour by',
   'lens.mapHint':
