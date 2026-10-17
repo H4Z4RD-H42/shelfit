@@ -115,6 +115,8 @@ export interface PackOptions {
   autoDetectSagas: boolean
   /** Prefer moving a whole saga to the next cube instead of splitting it. */
   keepSagasInCube: boolean
+  /** Start a saga on the next shelf row (or column) instead of letting it wrap. */
+  keepSagasInLine: boolean
   /** In ordered mode, let later games fill leftover gaps of earlier cubes. */
   fillGaps: boolean
   fillOrder: FillOrder

@@ -5,6 +5,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-17
+
+### Added
+
+- "Do not wrap sagas onto the next row" option: a saga taking several cubes stays on one shelf row (or column, when filling by columns). If it would wrap, it starts on the next row and the cubes left at the end of the row stay empty. Sagas longer than a row wrap anyway.
+
+### Fixed
+
+- Cubes left empty on purpose no longer count as used in the statistics.
+
 ## [0.10.0] - 2026-10-17
 
 ### Changed
@@ -139,7 +149,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.0...v0.8.1

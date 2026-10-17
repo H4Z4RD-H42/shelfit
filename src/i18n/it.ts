@@ -115,6 +115,7 @@ export const it = {
   'options.groupSagas': 'Tieni insieme le saghe',
   'options.autoDetectSagas': 'Riconosci le saghe dal nome',
   'options.keepSagasInCube': 'Non spezzare una saga tra due cubi',
+  'options.keepSagasInLine': 'Non mandare a capo le saghe',
   'options.fillGaps': 'Riempi i buchi con i giochi successivi',
   'options.fillOrder': 'Riempimento dei cubi',
   'options.fillOrder.rows': 'Per righe',
@@ -136,6 +137,8 @@ export const it = {
     'Capisce dal titolo che “Zombicide: Black Plague” e “Zombicide 2a Edizione” sono la stessa saga.',
   'options.keepSagasInCubeHint':
     'Se una saga non sta nello spazio rimasto ma sta in un cubo vuoto, la sposta tutta nel cubo successivo. Può lasciare spazio libero: attiva anche “Riempi i buchi”.',
+  'options.keepSagasInLineHint':
+    'Una saga che occupa più cubi resta tutta sulla stessa riga (o colonna, se riempi per colonne): se andrebbe a capo, comincia dalla riga successiva. I cubi rimasti in fondo alla riga restano vuoti. Le saghe più lunghe di una riga vanno comunque a capo.',
   'options.sort.complexity': 'Complessità',
   'options.sort.playtime': 'Durata',
   'options.sort.rating': 'Il mio voto',
@@ -229,6 +232,7 @@ export const it = {
   'options.summary.sagasOff': 'Non raggruppate',
   'options.summary.detect': 'riconosciute dal nome',
   'options.summary.keep': 'mai spezzate',
+  'options.summary.keepLine': 'mai a capo',
   'options.summary.space': 'Margine {clearance} cm · sporgenza {overhang} cm',
   'options.summary.onTop': 'grandi sopra lo scaffale',
   'options.summary.overhangBack': 'sporgono dietro',

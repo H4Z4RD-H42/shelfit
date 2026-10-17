@@ -10,6 +10,7 @@ export const DEFAULT_OPTIONS: PackOptions = {
   groupSagas: true,
   autoDetectSagas: true,
   keepSagasInCube: true,
+  keepSagasInLine: false,
   fillGaps: false,
   fillOrder: 'rows',
   clearance: 0.3,

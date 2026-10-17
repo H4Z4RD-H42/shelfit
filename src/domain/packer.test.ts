@@ -202,6 +202,45 @@ describe('packCollection', () => {
     expect(layout.sagas[games[2]!.id]).toBe('Zombicide')
   })
 
+  describe('keeping sagas on one shelf line', () => {
+    const saga = ['Zombicide', 'Zombicide: Black Plague', 'Zombicide: Green Horde', 'Zombicide: Invader', 'Zombicide: Undead']
+    const collection = () => [game('Azul', 30, 30, 10), game('Brass', 30, 30, 10), ...saga.map((n) => game(n, 30, 30, 10))]
+    const counts = (layout: ReturnType<typeof packCollection>) => layout.cubes.map((c) => c.placements.length)
+
+    it('lets a saga wrap onto the next row by default', () => {
+      const layout = packCollection(collection(), [unit(2, 2)], KALLAX_CUBE, opts({ orientation: 'vertical' }))
+      expect(counts(layout)).toEqual([3, 3, 1, 0])
+    })
+
+    it('starts the saga on the next row instead of wrapping', () => {
+      const games = collection()
+      const layout = packCollection(games, [unit(2, 2)], KALLAX_CUBE, opts({ orientation: 'vertical', keepSagasInLine: true }))
+      expect(counts(layout)).toEqual([2, 0, 3, 2])
+      const sagaIds = new Set(games.slice(2).map((g) => g.id))
+      expect([...layout.cubes[2]!.placements, ...layout.cubes[3]!.placements].every((p) => sagaIds.has(p.gameId))).toBe(true)
+      expect(layout.stats.usedCubes).toBe(3)
+    })
+
+    it('follows columns when cubes are filled by columns', () => {
+      const layout = packCollection(
+        collection(),
+        [unit(2, 2)],
+        KALLAX_CUBE,
+        opts({ orientation: 'vertical', keepSagasInLine: true, fillOrder: 'columns' }),
+      )
+      // Cubes are listed in filling order: down the first column, then the second.
+      expect(counts(layout)).toEqual([2, 0, 3, 2])
+      expect(layout.cubes.slice(2).map((c) => c.column)).toEqual([1, 1])
+    })
+
+    it('lets a saga longer than a line wrap anyway', () => {
+      const games = [game('Azul', 30, 30, 10), ...Array.from({ length: 7 }, (_, i) => game(`Zombicide ${i + 2}`, 30, 30, 10))]
+      const layout = packCollection(games, [unit(2, 2)], KALLAX_CUBE, opts({ orientation: 'vertical', keepSagasInLine: true }))
+      expect(layout.stats.placedGames).toBe(8)
+      expect(counts(layout)[0]).toBe(3)
+    })
+  })
+
   it('compact strategy uses no more cubes than ordered', () => {
     const games = [
       ...Array.from({ length: 6 }, (_, i) => game(`Big ${i}`, 30, 30, 10)),

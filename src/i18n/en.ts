@@ -116,6 +116,7 @@ export const en: Messages = {
   'options.groupSagas': 'Keep sagas together',
   'options.autoDetectSagas': 'Detect sagas from names',
   'options.keepSagasInCube': 'Do not split a saga across cubes',
+  'options.keepSagasInLine': 'Do not wrap sagas onto the next row',
   'options.fillGaps': 'Fill gaps with later games',
   'options.fillOrder': 'Cube filling',
   'options.fillOrder.rows': 'By rows',
@@ -136,6 +137,8 @@ export const en: Messages = {
     'Understands from the title that “Zombicide: Black Plague” and “Zombicide 2nd Edition” are the same saga.',
   'options.keepSagasInCubeHint':
     'When a saga does not fit in the room left but fits in an empty cube, the whole saga moves to the next cube. This may leave free space: enable “Fill gaps” too.',
+  'options.keepSagasInLineHint':
+    'A saga taking several cubes stays on one row (or column, when filling by columns): if it would wrap, it starts on the next row. The cubes left at the end of the row stay empty. Sagas longer than a row wrap anyway.',
   'options.sort.complexity': 'Complexity',
   'options.sort.playtime': 'Playing time',
   'options.sort.rating': 'My rating',
@@ -227,6 +230,7 @@ export const en: Messages = {
   'options.summary.sagasOff': 'Not grouped',
   'options.summary.detect': 'detected from names',
   'options.summary.keep': 'never split',
+  'options.summary.keepLine': 'never wrapped',
   'options.summary.space': 'Margin {clearance} cm · overhang {overhang} cm',
   'options.summary.onTop': 'large ones on top',
   'options.summary.overhangBack': 'sticking out at the back',

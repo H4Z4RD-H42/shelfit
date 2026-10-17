@@ -1,4 +1,4 @@
-import { FRAME, cubeSlots, unitOuterSize } from './kallax'
+import { FRAME, cubeSlots, unitOuterSize, type CubeSlot } from './kallax'
 import { detectSagas } from './saga'
 import { groupOf } from './grouping'
 import { boxVolume, orderUnits } from './sorting'
@@ -8,6 +8,7 @@ import {
   type BoxDimensions,
   type CubeLayout,
   type CubeSize,
+  type FillOrder,
   type Game,
   type Layout,
   type Orientation,
@@ -228,10 +229,41 @@ interface Packed {
 interface QueuedUnit {
   items: Item[]
   group: string
+  /** Some of its items already went into earlier cubes. */
+  started?: boolean
 }
 
-function packOrdered(units: QueuedUnit[], cubes: number, ctx: Ctx, options: PackOptions): Packed {
-  let queue = units.map((u) => ({ ...u, items: u.items.slice() }))
+/** How many empty cubes the items need, in order; Infinity if one never fits. */
+function cubesNeeded(items: Item[], ctx: Ctx): number {
+  let rest = items
+  let cubes = 0
+  while (rest.length > 0) {
+    const count = fillConsecutive(rest, ctx).length - 1
+    if (count === 0) return Infinity
+    rest = rest.slice(count)
+    cubes++
+  }
+  return cubes
+}
+
+/**
+ * Index of the first cube of the next shelf line, when the saga split at
+ * `taken` items in cube `index` would wrap onto it but fits in that line if
+ * moved there whole. `lines` holds the line of every cube.
+ */
+function wrapTarget(unit: QueuedUnit, taken: number, index: number, lines: number[], ctx: Ctx): number | undefined {
+  const line = lines[index]!
+  const next = lines.indexOf(line + 1, index)
+  if (next < 0) return undefined
+  const end = index + cubesNeeded(unit.items.slice(taken), ctx)
+  if (end < next) return undefined
+  const lineLength = lines.filter((l) => l === line + 1).length
+  return cubesNeeded(unit.items, ctx) <= lineLength ? next : undefined
+}
+
+function packOrdered(units: QueuedUnit[], lines: number[], ctx: Ctx, options: PackOptions): Packed {
+  const cubes = lines.length
+  let queue: QueuedUnit[] = units.map((u) => ({ ...u, items: u.items.slice() }))
   const states: CubeState[] = []
   const newCubePerGroup = options.groupStartsNewCube && options.groupBy.length > 0
 
@@ -259,6 +291,23 @@ function packOrdered(units: QueuedUnit[], cubes: number, ctx: Ctx, options: Pack
       }
     }
 
+    // Move a saga to the next line of the shelf instead of letting it wrap.
+    let skipTo: number | undefined
+    if (options.groupSagas && options.keepSagasInLine && count < flat.length) {
+      let start = 0
+      for (const unit of current) {
+        const stop = start + unit.items.length
+        if (count > start && count < stop) {
+          if (!unit.started && unit.items.length > 1) {
+            skipTo = wrapTarget(unit, count - start, states.length, lines, ctx)
+            if (skipTo !== undefined) count = start
+          }
+          break
+        }
+        start = stop
+      }
+    }
+
     let state = prefixes[count]!
     // Consume `count` items from the queue.
     let toTake = count
@@ -266,7 +315,7 @@ function packOrdered(units: QueuedUnit[], cubes: number, ctx: Ctx, options: Pack
     for (const unit of queue) {
       if (toTake >= unit.items.length) toTake -= unit.items.length
       else {
-        rest.push({ ...unit, items: unit.items.slice(toTake) })
+        rest.push({ ...unit, items: unit.items.slice(toTake), started: unit.started || toTake > 0 })
         toTake = 0
       }
     }
@@ -282,6 +331,8 @@ function packOrdered(units: QueuedUnit[], cubes: number, ctx: Ctx, options: Pack
       })
     }
     states.push(state)
+    // The cubes left at the end of the line stay empty.
+    while (skipTo !== undefined && states.length < skipTo) states.push(emptyState(ctx))
   }
   return { states, leftover: queue.flatMap((u) => u.items) }
 }
@@ -434,6 +485,18 @@ function packTop(
   return { tops, leftover: queue, tooBig }
 }
 
+/** Numbers the shelf lines (rows, or columns) of the cubes, in filling order. */
+function shelfLines(slots: CubeSlot[], fillOrder: FillOrder): number[] {
+  let line = -1
+  let previous = ''
+  return slots.map((s) => {
+    const key = `${s.unitId}:${fillOrder === 'rows' ? s.row : s.column}`
+    if (key !== previous) line++
+    previous = key
+    return line
+  })
+}
+
 export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize, options: PackOptions): Layout {
   const sagas = detectSagas(games, options.autoDetectSagas)
   const ctx: Ctx = {
@@ -492,7 +555,7 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
   const slots = cubeSlots(units, options.fillOrder)
   const packed =
     options.strategy === 'ordered'
-      ? packOrdered(unitsOrdered, slots.length, ctx, options)
+      ? packOrdered(unitsOrdered, shelfLines(slots, options.fillOrder), ctx, options)
       : packCompact(
           unitsOrdered.map((u) => u.items),
           slots.length,
@@ -529,6 +592,7 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
   }
 
   const placedVolume = packed.states.reduce((acc, s) => acc + s.volume, 0)
+  const usedCubes = packed.states.filter((s) => s.columns.length > 0).length
   const cubeVolume = cube.width * cube.height * cube.depth
   return {
     cubes,
@@ -540,8 +604,8 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
       totalGames: shelved.length,
       placedGames: shelved.length - unplaced.length,
       totalCubes: slots.length,
-      usedCubes: packed.states.length,
-      volumeFill: packed.states.length ? placedVolume / (packed.states.length * cubeVolume) : 0,
+      usedCubes,
+      volumeFill: usedCubes ? placedVolume / (usedCubes * cubeVolume) : 0,
     },
   }
 }

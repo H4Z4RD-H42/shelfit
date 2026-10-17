@@ -33,7 +33,7 @@ const SECTION_KEYS: Record<SectionId, (keyof PackOptions)[]> = {
   layout: ['strategy', 'orientation', 'align', 'longSideFront'],
   order: ['sortBy', 'sortDirection', 'fillGaps', 'fillOrder'],
   grouping: ['groupBy', 'groupStartsNewCube'],
-  sagas: ['groupSagas', 'autoDetectSagas', 'keepSagasInCube'],
+  sagas: ['groupSagas', 'autoDetectSagas', 'keepSagasInCube', 'keepSagasInLine'],
   space: ['oversizedOnTop', 'overhang', 'overhangSide', 'clearance', 'maxStackHeight'],
 }
 
@@ -186,6 +186,7 @@ export function OptionsPanel() {
           t('options.summary.sagasOn'),
           options.autoDetectSagas && t('options.summary.detect'),
           ordered && options.keepSagasInCube && t('options.summary.keep'),
+          ordered && options.keepSagasInLine && t('options.summary.keepLine'),
         ]
           .filter(Boolean)
           .join(' · ')
@@ -366,6 +367,13 @@ export function OptionsPanel() {
               checked={options.keepSagasInCube}
               disabled={!options.groupSagas || !ordered}
               onChange={(keepSagasInCube) => setOptions({ keepSagasInCube })}
+            />
+            <Toggle
+              label={t('options.keepSagasInLine')}
+              hint={t('options.keepSagasInLineHint')}
+              checked={options.keepSagasInLine}
+              disabled={!options.groupSagas || !ordered}
+              onChange={(keepSagasInLine) => setOptions({ keepSagasInLine })}
             />
           </div>,
         )}
