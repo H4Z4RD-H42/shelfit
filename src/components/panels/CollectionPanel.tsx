@@ -77,8 +77,9 @@ export function CollectionPanel() {
         setMessage({ text: t('collection.imported', { count: backup.games.length }) })
       } else {
         const rows = parseCsv(text)
-        const { added, updated, missing } = importGames(rows)
-        setMessage({ text: t('collection.importedCsv', { added, updated, missing }) })
+        const { added, updated, missing, keptManual } = importGames(rows)
+        const kept = keptManual ? ' ' + t('collection.keptManual', { count: keptManual }) : ''
+        setMessage({ text: t('collection.importedCsv', { added, updated, missing }) + kept })
       }
     } catch (err) {
       setMessage({ text: t('collection.importError', { error: (err as Error).message }), error: true })

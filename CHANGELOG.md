@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-17
+
+### Added
+
+- Sizes typed by hand always win: a re-import never overwrites them, and the import message says how many were kept. The editor shows where the sizes of a game come from. Deleting a game (or clearing the collection) and importing it again restores the sizes of the file.
+
 ## [0.5.0] - 2026-10-17
 
 ### Added
@@ -85,7 +91,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.1...v0.4.2

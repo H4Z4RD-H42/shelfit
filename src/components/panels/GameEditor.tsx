@@ -2,6 +2,7 @@ import { ChevronDown, ExternalLink } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { bggVersionsUrl } from '../../domain/bgg'
 import { autoColor } from '../../domain/color'
+import { dimsSourceAfterEdit } from '../../domain/sizes'
 import type { BoxDimensions, Game, GameOrientation } from '../../domain/types'
 import { validateGame, type GameError } from '../../domain/validation'
 import { useT } from '../../i18n'
@@ -70,11 +71,13 @@ export function GameEditor({
     setError(problem)
     if (problem) return
     const filled = [dims.width, dims.height, dims.depth].filter((v) => v !== undefined)
+    const newDims = filled.length === 3 ? (dims as BoxDimensions) : undefined
     onSave({
       ...draft,
       name: draft.name.trim(),
       saga: draft.saga?.trim() || undefined,
-      dims: filled.length === 3 ? (dims as BoxDimensions) : undefined,
+      dims: newDims,
+      dimsSource: dimsSourceAfterEdit(initial, newDims),
     })
   }
 
@@ -92,16 +95,19 @@ export function GameEditor({
       <Field
         label={t('game.dims')}
         hint={
-          draft.bggId && (
-            <a
-              href={bggVersionsUrl(draft.bggId)}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-accent hover:underline"
-            >
-              {t('game.findOnBgg')} <ExternalLink className="size-3" />
-            </a>
-          )
+          <>
+            {draft.dimsSource && <span className="mr-2">{t(`game.dimsSource.${draft.dimsSource}`)}</span>}
+            {draft.bggId && (
+              <a
+                href={bggVersionsUrl(draft.bggId)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-accent hover:underline"
+              >
+                {t('game.findOnBgg')} <ExternalLink className="size-3" />
+              </a>
+            )}
+          </>
         }
       >
         <div className="grid grid-cols-3 gap-2">

@@ -1,3 +1,4 @@
+import { sameDims } from './sizes'
 import { hasDims, type CubeSize, type Game, type GameOrientation, type PackOptions, type ShelfUnit } from './types'
 
 export const BACKUP_FORMAT = 'shelf-planner-backup'
@@ -177,16 +178,18 @@ const MERGED_FIELDS = [
  * Adds imported games to the collection. A game already present (same BGG id,
  * or same name when there is no id) is updated with the fields the import
  * provides, so that re-importing never wipes sizes or choices made by hand.
- * `missing` counts the imported games that are still without a size.
+ * `missing` counts the imported games that are still without a size,
+ * `keptManual` the sizes typed by hand that the import would have changed.
  */
 export function mergeGames(
   existing: Game[],
   incoming: ImportedGame[],
   makeId: () => string,
   now: number,
-): { games: Game[]; added: number; updated: number; missing: number } {
+): { games: Game[]; added: number; updated: number; missing: number; keptManual: number } {
   const games = existing.slice()
   const touched = new Set<number>()
+  let keptManual = 0
   const byBgg = new Map<number, number>()
   const byName = new Map<string, number>()
   const index = (g: Game, i: number) => {
@@ -200,7 +203,7 @@ export function mergeGames(
   incoming.forEach((row, n) => {
     const i = row.bggId ? byBgg.get(row.bggId) : byName.get(normalizeName(row.name))
     if (i === undefined) {
-      const game: Game = { ...row, id: makeId(), createdAt: now + n }
+      const game: Game = { ...row, ...(row.dims && { dimsSource: 'import' }), id: makeId(), createdAt: now + n }
       games.push(game)
       index(game, games.length - 1)
       touched.add(games.length - 1)
@@ -212,6 +215,13 @@ export function mergeGames(
     for (const key of MERGED_FIELDS) {
       if (row[key] !== undefined) Object.assign(patch, { [key]: row[key] })
     }
+    if (patch.dims) {
+      // Sizes typed by hand come from a tape measure: they beat any import.
+      if (old.dimsSource === 'manual' && hasDims(old)) {
+        delete patch.dims
+        if (!sameDims(old.dims, row.dims)) keptManual++
+      } else patch.dimsSource = 'import'
+    }
     if (row.orientation !== 'inherit') patch.orientation = row.orientation
     games[i] = { ...old, ...patch }
     index(games[i]!, i)
@@ -220,5 +230,5 @@ export function mergeGames(
   })
   // Counted on the merged games: sizes entered by hand survive a re-import.
   const missing = [...touched].filter((i) => !hasDims(games[i]!)).length
-  return { games, added, updated, missing }
+  return { games, added, updated, missing, keptManual }
 }

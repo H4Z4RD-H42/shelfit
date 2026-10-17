@@ -18,11 +18,15 @@ export interface BoxDimensions {
   depth: number
 }
 
+export type DimsSource = 'manual' | 'import'
+
 export interface Game {
   id: string
   name: string
   /** Missing until the user (or a BGG lookup) provides the box size. */
   dims?: BoxDimensions
+  /** Where the sizes come from; sizes typed by hand are never overwritten by an import. */
+  dimsSource?: DimsSource
   /** Explicit saga/series name; overrides auto-detection. */
   saga?: string
   orientation: GameOrientation

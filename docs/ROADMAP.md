@@ -9,6 +9,7 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 - **0.3** — Grouping (genre, designer, publisher, complexity, players, playing time, language), games on top of the shelves, cubes excluded from filling.
 - **0.4** — Printable step-by-step instructions; tidy stacks; validation fixes.
 - **0.5** — Grouping by decade, direction of every grouping level, box alignment.
+- **0.6** — Sizes typed by hand always win over imported ones.
 
 ## Planned
 
@@ -21,7 +22,6 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 
 ### Better layouts
 
-- Manual sizes always win over imported ones.
 - Drag & drop to pin a game to a cube; the engine works around pinned games.
 - Expansions stored inside the base box.
 - Weight-aware stacking and shelf load warnings.

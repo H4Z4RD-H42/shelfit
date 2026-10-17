@@ -91,6 +91,45 @@ describe('mergeGames', () => {
   })
 })
 
+describe('mergeGames and sizes typed by hand', () => {
+  it('never overwrites sizes typed by hand, but updates imported ones', () => {
+    const existing = [
+      {
+        id: 'a',
+        name: 'A',
+        bggId: 1,
+        dims: { width: 30, height: 30, depth: 7 },
+        dimsSource: 'manual' as const,
+        orientation: 'inherit' as const,
+        createdAt: 1,
+      },
+      {
+        id: 'b',
+        name: 'B',
+        bggId: 2,
+        dims: { width: 20, height: 20, depth: 5 },
+        dimsSource: 'import' as const,
+        orientation: 'inherit' as const,
+        createdAt: 2,
+      },
+    ]
+    const result = mergeGames(
+      existing,
+      [
+        { name: 'A', bggId: 1, dims: { width: 31, height: 31, depth: 8 }, orientation: 'inherit' },
+        { name: 'B', bggId: 2, dims: { width: 21, height: 21, depth: 6 }, orientation: 'inherit' },
+        { name: 'C', bggId: 3, dims: { width: 10, height: 10, depth: 2 }, orientation: 'inherit' },
+      ],
+      () => 'c',
+      0,
+    )
+    expect(result.games[0]!.dims).toEqual({ width: 30, height: 30, depth: 7 })
+    expect(result.games[1]).toMatchObject({ dims: { width: 21 }, dimsSource: 'import' })
+    expect(result.games[2]).toMatchObject({ dimsSource: 'import' })
+    expect(result.keptManual).toBe(1)
+  })
+})
+
 describe('backup', () => {
   it('round-trips', () => {
     const data = {
