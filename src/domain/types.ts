@@ -124,6 +124,8 @@ export interface PackOptions {
   /** Put on top of the shelves the games that fit in no cube. */
   oversizedOnTop: boolean
   align: Align
+  /** Lying boxes show their long side at the front (otherwise it goes to the back). */
+  longSideFront: boolean
 }
 
 /** A box placed inside a cube. Coordinates are relative to the cube's

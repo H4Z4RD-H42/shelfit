@@ -17,6 +17,7 @@ export const DEFAULT_OPTIONS: PackOptions = {
   overhang: 0,
   oversizedOnTop: false,
   align: 'left',
+  longSideFront: false,
 }
 
 /** Fills options saved by older versions (missing fields, groupBy as plain keys). */

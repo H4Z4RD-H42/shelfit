@@ -5,6 +5,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-17
+
+### Added
+
+- "Lying boxes: long side at the front" option, for a bookshelf look (stacks take more width).
+
+### Changed
+
+- Redesigned options panel: five collapsible sections (Layout, Order, Grouping, Sagas, Space and sizes), each with a live one-line summary of its values, a dot when it differs from the defaults and a per-section reset. Open sections are remembered.
+- Explanations are shown on demand behind an info button instead of always.
+- With "Max space", order and grouping explain why they do not apply instead of being silently greyed out.
+
 ## [0.6.0] - 2026-10-17
 
 ### Added
@@ -91,7 +103,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.2...v0.4.3

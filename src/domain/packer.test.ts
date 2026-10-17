@@ -46,6 +46,13 @@ describe('orientations', () => {
     expect(fits.vertical).toEqual({ sx: 8, sy: 27, sz: 38 })
   })
 
+  it('can show the long side of lying boxes at the front', () => {
+    const fits = orientations(game('x', 30, 22.5, 5.5).dims!, KALLAX_CUBE, 0.3, true)
+    expect(fits.horizontal).toEqual({ sx: 30, sy: 5.5, sz: 22.5 })
+    // Too long for the width: falls back to the long side towards the back.
+    expect(orientations(game('x', 36, 22, 5).dims!, KALLAX_CUBE, 0.3, true).horizontal).toEqual({ sx: 22, sy: 5, sz: 36 })
+  })
+
   it('rejects boxes larger than the cube', () => {
     const fits = orientations(game('x', 41.5, 30, 19).dims!, KALLAX_CUBE, 0.3)
     expect(fits).toEqual({})

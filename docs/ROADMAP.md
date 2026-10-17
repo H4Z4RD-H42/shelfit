@@ -10,6 +10,7 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 - **0.4** — Printable step-by-step instructions; tidy stacks; validation fixes.
 - **0.5** — Grouping by decade, direction of every grouping level, box alignment.
 - **0.6** — Sizes typed by hand always win over imported ones.
+- **0.7** — Long side at the front for lying boxes; redesigned options panel.
 
 ## Planned
 

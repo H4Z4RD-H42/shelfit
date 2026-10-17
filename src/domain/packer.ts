@@ -74,7 +74,12 @@ interface Ctx {
 }
 
 /** Computes the possible extents of a box in each orientation. */
-export function orientations(dims: BoxDimensions, cube: CubeSize, clearance: number): Partial<Record<Orientation, Extents>> {
+export function orientations(
+  dims: BoxDimensions,
+  cube: CubeSize,
+  clearance: number,
+  longSideFront = false,
+): Partial<Record<Orientation, Extents>> {
   const [a, b, c] = [dims.width, dims.height, dims.depth].sort((x, y) => y - x) as [number, number, number]
   const fits: Partial<Record<Orientation, Extents>> = {}
 
@@ -83,16 +88,19 @@ export function orientations(dims: BoxDimensions, cube: CubeSize, clearance: num
     if (a + clearance <= cube.height && b <= cube.depth) fits.vertical = { sx: c, sy: a, sz: b }
     else if (b + clearance <= cube.height && a <= cube.depth) fits.vertical = { sx: c, sy: b, sz: a }
   }
-  // Horizontal: lying flat; prefer the long side towards the back.
+  // Horizontal: lying flat. By default the long side goes towards the back,
+  // so stacks take less width; optionally it faces out, like on a bookshelf.
   if (c + clearance <= cube.height) {
-    if (a <= cube.depth && b + clearance <= cube.width) fits.horizontal = { sx: b, sy: c, sz: a }
-    else if (b <= cube.depth && a + clearance <= cube.width) fits.horizontal = { sx: a, sy: c, sz: b }
+    const longBack = a <= cube.depth && b + clearance <= cube.width ? { sx: b, sy: c, sz: a } : undefined
+    const longFront = b <= cube.depth && a + clearance <= cube.width ? { sx: a, sy: c, sz: b } : undefined
+    const flat = longSideFront ? (longFront ?? longBack) : (longBack ?? longFront)
+    if (flat) fits.horizontal = flat
   }
   return fits
 }
 
 function allowedFits(game: Game & { dims: BoxDimensions }, options: PackOptions, cube: CubeSize): Item['fits'] {
-  const fits = orientations(game.dims, cube, options.clearance)
+  const fits = orientations(game.dims, cube, options.clearance, options.longSideFront)
   const pref = game.orientation === 'inherit' ? options.orientation : game.orientation
   if (pref === 'auto') return fits
   // A forced orientation that cannot work falls back to the other one.

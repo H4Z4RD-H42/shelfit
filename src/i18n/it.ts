@@ -117,9 +117,6 @@ export const it = {
   'options.fillOrder': 'Riempimento dei cubi',
   'options.fillOrder.rows': 'Per righe',
   'options.fillOrder.columns': 'Per colonne',
-  'options.clearance': 'Margine per scatola (cm)',
-  'options.overhang': 'Sporgenza consentita (cm)',
-  'options.maxStackHeight': 'Altezza massima delle pile (cm, 0 = cubo intero)',
   'options.reset': 'Ripristina opzioni',
 
   'options.grouping': 'Raggruppamento',
@@ -169,7 +166,6 @@ export const it = {
   'game.complexity': 'Complessità (1–5)',
   'game.rating': 'Il mio voto (1–10)',
 
-  'options.top': 'Sopra lo scaffale',
   'options.oversizedOnTop': 'Metti sopra lo scaffale i giochi che non entrano nei cubi',
   'options.oversizedOnTopHint':
     'Altrimenti finiscono tra i giochi senza posto. Puoi anche scegliere gioco per gioco dalla scheda del gioco.',
@@ -194,6 +190,40 @@ export const it = {
   'options.align.right': 'A destra',
   'options.alignHint':
     'Dove stanno le scatole nel cubo e come si allineano quelle impilate: a filo con la parete sinistra, al centro o a destra.',
+  'options.info': 'Spiegazione',
+  'options.modified': 'Modificata rispetto ai valori predefiniti',
+  'options.resetSection': 'Ripristina questa sezione',
+  'options.section.layout': 'Disposizione',
+  'options.section.order': 'Ordine',
+  'options.section.sagas': 'Saghe',
+  'options.section.space': 'Spazio e misure',
+  'options.orientationHint':
+    'In piedi come libri o sdraiate in pila. Con «Automatico» si sceglie per ogni scatola la posizione che fa entrare più giochi. Puoi anche forzarla gioco per gioco dalla sua scheda.',
+  'options.longSideFront': 'Scatole sdraiate: lato lungo sul davanti',
+  'options.longSideFrontHint':
+    'Le scatole in pila mostrano il lato lungo, come i libri in libreria: più ordinato e leggibile. Ogni pila però occupa più larghezza, quindi nei cubi stanno meno giochi.',
+  'options.compactNote':
+    'Con «Massimo spazio» ordine e raggruppamenti non si applicano: conta solo far entrare più giochi possibile.',
+  'options.fillOrderHint':
+    'In che ordine si riempiono i cubi: riga per riga da sinistra a destra, oppure colonna per colonna dall’alto in basso.',
+  'options.clearanceShort': 'Margine (cm)',
+  'options.clearanceHint': 'Spazio in più lasciato attorno a ogni scatola, per poterla sfilare senza fatica.',
+  'options.overhangShort': 'Sporgenza (cm)',
+  'options.overhangHint':
+    'Di quanto una scatola più profonda del cubo può sporgere sul davanti. Con 0 le scatole troppo profonde non entrano.',
+  'options.maxStackHeightShort': 'Altezza pile (cm)',
+  'options.maxStackHeightHint': 'Altezza massima di una pila di scatole sdraiate. Con 0 si usa tutta l’altezza del cubo.',
+  'options.summary.notUsed': 'Non usato con «Massimo spazio»',
+  'options.summary.longFront': 'lato lungo davanti',
+  'options.summary.fillGaps': 'riempie i buchi',
+  'options.summary.newCube': 'un cubo per gruppo',
+  'options.summary.colored': 'colori per gruppo',
+  'options.summary.sagasOn': 'Unite',
+  'options.summary.sagasOff': 'Non raggruppate',
+  'options.summary.detect': 'riconosciute dal nome',
+  'options.summary.keep': 'mai spezzate',
+  'options.summary.space': 'Margine {clearance} cm · sporgenza {overhang} cm',
+  'options.summary.onTop': 'grandi sopra lo scaffale',
   'list.cube': 'Cubo {n}',
   'list.position': 'riga {row} · col. {column}',
   'list.empty': 'vuoto',

@@ -1,4 +1,6 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { Info } from 'lucide-react'
+import { useId, useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { useT } from '../i18n'
 import { cx, inputClass } from './styles'
 
 type ButtonVariant = 'primary' | 'ghost' | 'danger' | 'subtle'
@@ -63,6 +65,38 @@ export function Segmented<T extends string>({
   )
 }
 
+/** Small "i" button that reveals an explanation. */
+export function InfoButton({ open, onClick }: { open: boolean; onClick: () => void }) {
+  const t = useT()
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={open}
+      aria-label={t('options.info')}
+      title={t('options.info')}
+      className={cx(
+        'inline-flex size-5 shrink-0 items-center justify-center rounded-full transition-colors',
+        open ? 'bg-accent/15 text-accent' : 'text-ink-faint hover:bg-surface-2 hover:text-ink',
+      )}
+    >
+      <Info className="size-3.5" />
+    </button>
+  )
+}
+
+/** Animates the height of its content between 0 and auto. */
+export function Reveal({ open, children }: { open: boolean; children: ReactNode }) {
+  return (
+    <div
+      className={cx('grid transition-[grid-template-rows] duration-200 ease-out', open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')}
+      aria-hidden={!open}
+    >
+      <div className="overflow-hidden">{children}</div>
+    </div>
+  )
+}
+
 export function Toggle({
   checked,
   onChange,
@@ -73,46 +107,75 @@ export function Toggle({
   checked: boolean
   onChange: (v: boolean) => void
   label: ReactNode
+  /** Explanation shown on demand, behind an info button. */
   hint?: ReactNode
   disabled?: boolean
 }) {
+  const id = useId()
+  const [showHint, setShowHint] = useState(false)
   return (
-    <label
-      className={cx(
-        'flex cursor-pointer items-center justify-between gap-3 py-1.5 text-sm',
-        disabled && 'cursor-default opacity-40',
+    <div className={cx('py-1.5', disabled && 'opacity-40')}>
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex min-w-0 items-center gap-1 text-sm">
+          <label htmlFor={id} className={cx(!disabled && 'cursor-pointer')}>
+            {label}
+          </label>
+          {hint && <InfoButton open={showHint} onClick={() => setShowHint((v) => !v)} />}
+        </span>
+        <button
+          id={id}
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          disabled={disabled}
+          onClick={() => onChange(!checked)}
+          className={cx('relative h-5 w-9 shrink-0 rounded-full transition-colors', checked ? 'bg-accent' : 'bg-surface-3')}
+        >
+          <span
+            className={cx(
+              'absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform',
+              checked && 'translate-x-4',
+            )}
+          />
+        </button>
+      </div>
+      {hint && (
+        <Reveal open={showHint}>
+          <p className="pt-1 pr-12 text-xs text-ink-soft">{hint}</p>
+        </Reveal>
       )}
-    >
-      <span>
-        {label}
-        {hint && <span className="mt-0.5 block text-xs text-ink-faint">{hint}</span>}
-      </span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
-        className={cx('relative h-5 w-9 shrink-0 rounded-full transition-colors', checked ? 'bg-accent' : 'bg-surface-3')}
-      >
-        <span
-          className={cx(
-            'absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform',
-            checked && 'translate-x-4',
-          )}
-        />
-      </button>
-    </label>
+    </div>
   )
 }
 
-export function Field({ label, children, hint }: { label: ReactNode; children: ReactNode; hint?: ReactNode }) {
+export function Field({
+  label,
+  children,
+  hint,
+  info,
+}: {
+  label: ReactNode
+  children: ReactNode
+  /** Always visible note under the control. */
+  hint?: ReactNode
+  /** Explanation shown on demand, behind an info button. */
+  info?: ReactNode
+}) {
+  const [showInfo, setShowInfo] = useState(false)
   return (
-    <label className="block space-y-1.5">
-      <span className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{label}</span>
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-1">
+        <span className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{label}</span>
+        {info && <InfoButton open={showInfo} onClick={() => setShowInfo((v) => !v)} />}
+      </div>
+      {info && (
+        <Reveal open={showInfo}>
+          <p className="pb-1 text-xs text-ink-soft">{info}</p>
+        </Reveal>
+      )}
       {children}
       {hint && <p className="text-xs text-ink-faint">{hint}</p>}
-    </label>
+    </div>
   )
 }
 

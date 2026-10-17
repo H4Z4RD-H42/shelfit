@@ -118,9 +118,6 @@ export const en: Messages = {
   'options.fillOrder': 'Cube filling',
   'options.fillOrder.rows': 'By rows',
   'options.fillOrder.columns': 'By columns',
-  'options.clearance': 'Margin per box (cm)',
-  'options.overhang': 'Allowed overhang (cm)',
-  'options.maxStackHeight': 'Max stack height (cm, 0 = full cube)',
   'options.reset': 'Reset options',
 
   'options.grouping': 'Grouping',
@@ -169,7 +166,6 @@ export const en: Messages = {
   'game.complexity': 'Complexity (1–5)',
   'game.rating': 'My rating (1–10)',
 
-  'options.top': 'On top of the shelves',
   'options.oversizedOnTop': 'Put games that fit in no cube on top of the shelves',
   'options.oversizedOnTopHint':
     'Otherwise they end up among the games without a spot. You can also choose game by game from its card.',
@@ -193,6 +189,39 @@ export const en: Messages = {
   'options.align.right': 'Right',
   'options.alignHint':
     'Where the boxes sit in the cube and how stacked boxes line up: flush with the left wall, centred or on the right.',
+  'options.info': 'Explanation',
+  'options.modified': 'Changed from the defaults',
+  'options.resetSection': 'Reset this section',
+  'options.section.layout': 'Layout',
+  'options.section.order': 'Order',
+  'options.section.sagas': 'Sagas',
+  'options.section.space': 'Space and sizes',
+  'options.orientationHint':
+    'Standing like books or lying in stacks. “Automatic” picks, for every box, the position that fits more games. You can also force it game by game from its card.',
+  'options.longSideFront': 'Lying boxes: long side at the front',
+  'options.longSideFrontHint':
+    'Stacked boxes show their long side, like books on a bookshelf: tidier and easier to read. Each stack takes more width, though, so fewer games fit in the cubes.',
+  'options.compactNote': 'With “Max space” order and grouping do not apply: the only goal is to fit as many games as possible.',
+  'options.fillOrderHint':
+    'The order in which cubes are filled: row by row from left to right, or column by column from top to bottom.',
+  'options.clearanceShort': 'Margin (cm)',
+  'options.clearanceHint': 'Extra room left around each box, so it can be pulled out easily.',
+  'options.overhangShort': 'Overhang (cm)',
+  'options.overhangHint':
+    'How far a box deeper than the cube may stick out at the front. With 0, boxes that are too deep do not fit.',
+  'options.maxStackHeightShort': 'Stack height (cm)',
+  'options.maxStackHeightHint': 'Maximum height of a stack of lying boxes. With 0 the full height of the cube is used.',
+  'options.summary.notUsed': 'Not used with “Max space”',
+  'options.summary.longFront': 'long side at the front',
+  'options.summary.fillGaps': 'fills gaps',
+  'options.summary.newCube': 'one cube per group',
+  'options.summary.colored': 'coloured by group',
+  'options.summary.sagasOn': 'Together',
+  'options.summary.sagasOff': 'Not grouped',
+  'options.summary.detect': 'detected from names',
+  'options.summary.keep': 'never split',
+  'options.summary.space': 'Margin {clearance} cm · overhang {overhang} cm',
+  'options.summary.onTop': 'large ones on top',
   'list.cube': 'Cube {n}',
   'list.position': 'row {row} · col. {column}',
   'list.empty': 'empty',
