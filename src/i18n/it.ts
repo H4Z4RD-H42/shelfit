@@ -14,7 +14,9 @@ export const it = {
 
   'stats.placed': '{placed} di {total} giochi sistemati',
   'stats.cubes': '{used} di {total} cubi usati',
-  'stats.fill': 'riempimento {fill}%',
+  'stats.fill': 'cubi usati pieni al {fill}%',
+  'stats.fillHint':
+    'Volume delle scatole diviso il volume interno dei cubi che contengono almeno un gioco. Il resto è aria: sopra le pile, ai lati delle scatole in piedi, dietro quelle poco profonde. Non contano i cubi vuoti né le scatole sopra gli scaffali.',
   'stats.unplaced': '{count} giochi senza posto',
 
   'collection.search': 'Cerca un gioco…',

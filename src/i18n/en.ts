@@ -16,7 +16,9 @@ export const en: Messages = {
 
   'stats.placed': '{placed} of {total} games placed',
   'stats.cubes': '{used} of {total} cubes used',
-  'stats.fill': '{fill}% filled',
+  'stats.fill': 'used cubes {fill}% full',
+  'stats.fillHint':
+    'Volume of the boxes divided by the inner volume of the cubes holding at least one game. The rest is air: above the stacks, beside the standing boxes, behind the shallow ones. Empty cubes and boxes on top of the shelves do not count.',
   'stats.unplaced': '{count} games without a spot',
 
   'collection.search': 'Search a game…',

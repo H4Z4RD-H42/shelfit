@@ -15,7 +15,9 @@ export function StatsBar() {
         {t('stats.placed', { placed: stats.placedGames, total: stats.totalGames })}
       </span>
       <span>{t('stats.cubes', { used: stats.usedCubes, total: stats.totalCubes })}</span>
-      <span>{t('stats.fill', { fill: Math.round(stats.volumeFill * 100) })}</span>
+      <span title={t('stats.fillHint')} className="cursor-help underline decoration-dotted underline-offset-2">
+        {t('stats.fill', { fill: Math.round(stats.volumeFill * 100) })}
+      </span>
       {unplaced.length > 0 && <span className="font-medium text-danger">{t('stats.unplaced', { count: unplaced.length })}</span>}
     </div>
   )

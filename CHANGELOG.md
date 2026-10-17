@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-10-17
+
+### Changed
+
+- The fill figure in the stats bar reads "used cubes 44% full" instead of "44% filled", and explains on hover how it is measured: volume of the boxes over the inner volume of the cubes holding at least one game; empty cubes and boxes on top do not count.
+
 ## [0.15.1] - 2026-10-17
 
 ### Fixed
