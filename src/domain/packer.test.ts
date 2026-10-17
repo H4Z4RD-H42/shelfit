@@ -73,15 +73,15 @@ describe('packCollection', () => {
     const layout = packCollection(games, [unit(1, 1)], opts({ orientation: 'horizontal' }))
     const ys = layout.cubes[0]!.placements.map((p) => p.y).sort((a, b) => a - b)
     expect(ys[0]).toBe(0)
-    expect(ys[3]).toBeCloseTo(3 * 7.3)
+    expect(ys[3]).toBeCloseTo(3 * (7 + DEFAULT_OPTIONS.clearance))
     assertPhysical(layout)
   })
 
   it('mixes orientations in auto mode to fit more boxes', () => {
-    // Two thick books leave 8.9 cm: small boxes fit there only as a flat stack.
+    // With a 0.3 cm margin two thick books leave 8.9 cm: small boxes fit there only as a flat stack.
     const games = [game('A', 30, 30, 12), game('B', 30, 30, 12), ...Array.from({ length: 4 }, (_, i) => game(`S${i}`, 8, 8, 4))]
     const pack = (orientation: PackOptions['orientation']) =>
-      packCollection(games, [unit(1, 1)], opts({ sortBy: 'added', orientation }))
+      packCollection(games, [unit(1, 1)], opts({ sortBy: 'added', orientation, clearance: 0.3 }))
     expect(pack('vertical').stats.placedGames).toBe(4)
     expect(pack('horizontal').stats.placedGames).toBe(4)
     const auto = pack('auto')
