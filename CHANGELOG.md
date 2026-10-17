@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-10-18
+
+### Changed
+
+- The default margin around each box is 0.5 cm instead of 0.3 cm. Margins already set are kept.
+
 ## [0.15.2] - 2026-10-17
 
 ### Changed
@@ -208,7 +214,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.3...HEAD
+[0.15.3]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.2...v0.15.3
+[0.15.2]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.1...v0.15.2
+[0.15.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.0...v0.15.1
+[0.15.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.11.0...v0.12.0

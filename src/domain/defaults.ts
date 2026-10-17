@@ -15,7 +15,7 @@ export const DEFAULT_OPTIONS: PackOptions = {
   keepSagasInLine: false,
   fillGaps: false,
   fillOrder: 'rows',
-  clearance: 0.3,
+  clearance: 0.5,
   maxStackHeight: 0,
   align: 'left',
   longSideFront: false,
