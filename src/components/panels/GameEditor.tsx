@@ -1,12 +1,14 @@
-import { ChevronDown, ExternalLink } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { ChevronDown, ExternalLink, X } from 'lucide-react'
+import { useMemo, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { bggVersionsUrl } from '../../domain/bgg'
 import { autoColor } from '../../domain/color'
 import { dimsSourceAfterEdit } from '../../domain/sizes'
 import type { BoxDimensions, Game, GameOrientation } from '../../domain/types'
 import { validateGame, type GameError } from '../../domain/validation'
 import { useT } from '../../i18n'
-import { inputClass } from '../styles'
+import { useAppStore } from '../../store/appStore'
+import { zoneName } from '../labels'
+import { cx, inputClass } from '../styles'
 import { Button, Field, NumberInput, Segmented, Toggle } from '../ui'
 
 export type GameDraft = Omit<Game, 'id' | 'createdAt'>
@@ -39,6 +41,62 @@ function TextWithSuggestions({
   )
 }
 
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+
+/** Free labels typed one by one; Enter or a comma adds the label being typed. */
+function TagInput({ value, onChange, options }: { value: string[]; onChange: (tags: string[]) => void; options: string[] }) {
+  const t = useT()
+  const [text, setText] = useState('')
+  const add = () => {
+    const tag = text.trim().replace(/,$/, '').trim()
+    if (tag && !value.some((v) => v.toLowerCase() === tag.toLowerCase())) onChange([...value, tag])
+    setText('')
+  }
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      add()
+    } else if (e.key === 'Backspace' && !text && value.length > 0) onChange(value.slice(0, -1))
+  }
+  return (
+    <div className={cx(inputClass, 'flex flex-wrap items-center gap-1 py-1.5')}>
+      {value.map((tag) => (
+        <span key={tag} className="inline-flex items-center gap-0.5 rounded-md bg-surface-3 py-0.5 pr-0.5 pl-1.5 text-xs">
+          {tag}
+          <button
+            type="button"
+            className="rounded p-0.5 text-ink-faint hover:text-ink"
+            aria-label={t('game.removeTag', { tag })}
+            title={t('game.removeTag', { tag })}
+            onClick={() => onChange(value.filter((v) => v !== tag))}
+          >
+            <X className="size-3" />
+          </button>
+        </span>
+      ))}
+      <input
+        className="min-w-24 flex-1 bg-transparent text-sm outline-none"
+        list="tag-list"
+        placeholder={value.length === 0 ? t('game.tagsPlaceholder') : undefined}
+        aria-label={t('game.tags')}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={onKeyDown}
+        onBlur={add}
+      />
+      <datalist id="tag-list">
+        {options
+          .filter((o) => !value.includes(o))
+          .map((o) => (
+            <option key={o} value={o} />
+          ))}
+      </datalist>
+    </div>
+  )
+}
+
+type ZoneChoice = 'auto' | 'in' | 'out'
+
 function hasDetails(game?: Game): boolean {
   return !!game && [game.genre, game.designer, game.publisher, game.playTime, game.maxPlayers].some((v) => v !== undefined)
 }
@@ -59,11 +117,23 @@ export function GameEditor({
   onDelete?: () => void
 }) {
   const t = useT()
+  const zones = useAppStore((s) => s.zones)
+  const games = useAppStore((s) => s.games)
+  const tagOptions = useMemo(() => [...new Set(games.flatMap((g) => g.tags ?? []))].sort(collator.compare), [games])
   const [draft, setDraft] = useState<GameDraft>(initial ?? emptyDraft)
   const [dims, setDims] = useState<Partial<BoxDimensions>>(initial?.dims ?? {})
   const [error, setError] = useState<GameError>()
   const patch = (p: Partial<GameDraft>) => setDraft((d) => ({ ...d, ...p }))
   const setDim = (key: keyof BoxDimensions) => (v: number | undefined) => setDims((d) => ({ ...d, [key]: v }))
+  const zoneChoice = (id: string): ZoneChoice => {
+    const v = draft.zones?.[id]
+    return v === undefined ? 'auto' : v ? 'in' : 'out'
+  }
+  const setZoneChoice = (id: string, choice: ZoneChoice) => {
+    const { [id]: _, ...rest } = draft.zones ?? {}
+    const next = choice === 'auto' ? rest : { ...rest, [id]: choice === 'in' }
+    patch({ zones: Object.keys(next).length ? next : undefined })
+  }
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
@@ -180,10 +250,52 @@ export function GameEditor({
           <Field label={t('game.rating')}>
             <NumberInput step={0.5} min={1} value={draft.rating} onChange={(rating) => patch({ rating })} />
           </Field>
+          <Field label={t('game.plays')}>
+            <NumberInput step={1} value={draft.plays} onChange={(plays) => patch({ plays })} />
+          </Field>
+        </div>
+      </details>
+      <details
+        className="group rounded-lg border border-line"
+        open={!!initial?.tags?.length || Object.keys(initial?.zones ?? {}).length > 0}
+      >
+        <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 text-xs font-semibold tracking-wide text-ink-soft uppercase">
+          {t('game.zoneAndTags')}
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="space-y-3 px-3 pt-1 pb-3">
+          <Field label={t('game.tags')}>
+            <TagInput
+              value={draft.tags ?? []}
+              options={tagOptions}
+              onChange={(tags) => patch({ tags: tags.length ? tags : undefined })}
+            />
+          </Field>
+          {zones.length > 0 && (
+            <Field label={t('game.zone')} info={t('game.zonesHint')}>
+              <div className="space-y-1.5">
+                {zones.map((zone) => (
+                  <div key={zone.id} className="flex items-center gap-2">
+                    <span className="size-2.5 shrink-0 rounded-full" style={{ background: zone.color }} />
+                    <span className="min-w-0 flex-1 truncate text-sm">{zoneName(t, zone)}</span>
+                    <div className="w-40 shrink-0">
+                      <Segmented<ZoneChoice>
+                        size="sm"
+                        value={zoneChoice(zone.id)}
+                        onChange={(choice) => setZoneChoice(zone.id, choice)}
+                        options={(['auto', 'in', 'out'] as const).map((c) => ({ value: c, label: t(`game.zone.${c}`) }))}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Field>
+          )}
         </div>
       </details>
       <div>
         <Toggle label={t('game.expansion')} checked={!!draft.expansion} onChange={(expansion) => patch({ expansion })} />
+        <Toggle label={t('game.forTrade')} checked={!!draft.forTrade} onChange={(forTrade) => patch({ forTrade })} />
         <Toggle label={t('game.onTop')} checked={!!draft.onTop} onChange={(onTop) => patch({ onTop })} />
         <Toggle label={t('game.excluded')} checked={!!draft.excluded} onChange={(excluded) => patch({ excluded })} />
       </div>

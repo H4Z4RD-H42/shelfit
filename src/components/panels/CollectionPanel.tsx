@@ -4,10 +4,11 @@ import { createBackup, parseBackup, parseCsv } from '../../domain/backup'
 import { hasDims } from '../../domain/types'
 import { useLayout } from '../../hooks/useLayout'
 import { useIsDesktop } from '../../hooks/useMediaQuery'
+import { useZonesById } from '../../hooks/useZones'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
-import { UNPLACED_LABEL } from '../labels'
+import { UNPLACED_LABEL, zoneName } from '../labels'
 import { Button, Segmented } from '../ui'
 import { cx, inputClass } from '../styles'
 import { GameEditor } from './GameEditor'
@@ -44,6 +45,7 @@ export function CollectionPanel() {
   } = useAppStore.getState()
   const layout = useLayout()
   const boxColor = useBoxColor()
+  const zonesById = useZonesById()
   const isDesktop = useIsDesktop()
   const language = useAppStore((s) => s.language)
   const num = (n: number) => n.toLocaleString(language)
@@ -92,11 +94,11 @@ export function CollectionPanel() {
   }
 
   const exportBackup = () => {
-    const { games, units, cube, options } = useAppStore.getState()
+    const { games, units, cube, options, zones } = useAppStore.getState()
     const stamp = new Date().toISOString().slice(0, 10)
     download(
       `shelf-planner-${stamp}.json`,
-      JSON.stringify(createBackup({ games, units, cube, options }), null, 2),
+      JSON.stringify(createBackup({ games, units, cube, options, zones }), null, 2),
       'application/json',
     )
   }
@@ -217,6 +219,7 @@ export function CollectionPanel() {
           {visible.map((g) => {
             const reason = unplaced.get(g.id)
             const saga = layout.sagas[g.id]
+            const zone = zonesById.get(layout.zones[g.id] ?? '')
             return (
               <li
                 key={g.id}
@@ -271,6 +274,15 @@ export function CollectionPanel() {
                         >
                           <Layers className="size-3 shrink-0 text-ink-faint" />
                           <span className="truncate">{saga}</span>
+                        </span>
+                      )}
+                      {zone && (
+                        <span
+                          className="inline-flex min-w-0 items-center gap-1 rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] text-ink-soft"
+                          title={t('game.zone')}
+                        >
+                          <span className="size-2 shrink-0 rounded-full" style={{ background: zone.color }} />
+                          <span className="truncate">{zoneName(t, zone)}</span>
                         </span>
                       )}
                     </span>

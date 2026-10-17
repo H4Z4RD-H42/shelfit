@@ -5,6 +5,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-17
+
+### Added
+
+- Zones: parts of the shelves reserved to some games, taken out of the normal order (Options → Zones). Several zones can be created; when a game belongs to more than one, the first in the list wins. Each zone has:
+  - a rule: small games, large boxes, children's games, party games, solo, two-player, favourites (rated 8+), to play (no plays), for sale or trade, heavy boxes, a tag, or games chosen by hand;
+  - a place: at the end of the shelves (default), at the start, in the bottom row, at eye level (about 140 cm), or in cubes chosen by hand, which stay reserved even while empty;
+  - a strategy inside the zone: fit the boxes together, or follow the sort order.
+- "Small" and "large" have no fixed threshold: they are relative to the collection, from how many copies of each box a cube holds, split where the sizes separate most clearly. With sagas grouped, a saga follows its first chapter, so a small expansion stays next to its base game.
+- Zone marks on the shelves: the back of the cubes tinted with the zone colour and a label with the zone name on the panel under them, in the 3D and front views; zone names in the list view, the printed instructions, the collection list and the game card.
+- Game card: tags, number of plays, "for sale or trade", and per-zone Auto / Yes / No choices that override the rules.
+- The BGG collection CSV import reads the plays (`numplays`) and the games for trade (`fortrade`); a `tags` column is read too.
+- Backups include the zones (backup format version 3; older backups still load).
+
 ## [0.11.0] - 2026-10-17
 
 ### Added
@@ -149,7 +163,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.1...v0.9.0

@@ -32,6 +32,12 @@ Takeaways for the importer: prefer the owned version, fall back to the most comm
 
 The collection CSV only says whether an item is an expansion (`itemtype`), not which game it expands. `GET /xmlapi2/thing?id=<id>` lists `<link type="boardgameexpansion">` entries: on an expansion they point to the base games (marked `inbound="true"`), on a base game to its expansions. An expansion may expand several games, and usually a specific edition (e.g. a first-edition expansion while the owned base is the second edition), so match the links against the owned ids and keep every match. To be verified against a live response once the token is available.
 
+## Data used by the zones
+
+- **Plays and trade status**: the collection CSV has `numplays` (0 = never played) and `fortrade`; both are imported. The XML collection endpoint returns them too (`<numplays>`, `<status fortrade="1">`).
+- **Categories**: the children's and party zones match the BGG categories "Children's Game" and "Party Game", stored on each game as `categories`. The CSV has no categories; `thing?id` lists them as `<link type="boardgamecategory">`. To be verified against a live response once the token is available.
+- **Weight**: the heavy zone uses the box weight of the owned version (`weight`, pounds, converted to kg).
+
 ## Planned architecture
 
 ```

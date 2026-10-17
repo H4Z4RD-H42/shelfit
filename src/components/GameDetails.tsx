@@ -2,8 +2,9 @@ import { Pencil, X } from 'lucide-react'
 import type { GameOrientation } from '../domain/types'
 import { useGamesById, useLayout } from '../hooks/useLayout'
 import { useBoxColor } from '../hooks/useBoxColor'
+import { useZonesById } from '../hooks/useZones'
 import { useT } from '../i18n'
-import { UNPLACED_LABEL } from './labels'
+import { UNPLACED_LABEL, zoneName } from './labels'
 import { useAppStore } from '../store/appStore'
 import { Button, Segmented, Toggle } from './ui'
 
@@ -16,6 +17,7 @@ export function GameDetails() {
   const games = useGamesById()
   const boxColor = useBoxColor()
   const layout = useLayout()
+  const zonesById = useZonesById()
   const game = selectedId ? games.get(selectedId) : undefined
   if (!game) return null
 
@@ -26,6 +28,7 @@ export function GameDetails() {
   const unplaced = layout.unplaced.find((u) => u.gameId === game.id)
   const unit = cube && units.find((u) => u.id === cube.unitId)
   const saga = layout.sagas[game.id]
+  const zone = zonesById.get(layout.zones[game.id] ?? '')
 
   return (
     <div className="absolute right-3 bottom-3 left-3 z-10 rounded-2xl border border-line bg-surface-0/95 p-4 shadow-2xl backdrop-blur sm:left-auto sm:w-80">
@@ -53,6 +56,15 @@ export function GameDetails() {
             </dd>
             <dt className="text-ink-faint">{t('game.orientation')}</dt>
             <dd className="text-right">{t(`orientation.${placement.orientation}`)}</dd>
+          </>
+        )}
+        {zone && (
+          <>
+            <dt className="text-ink-faint">{t('game.zone')}</dt>
+            <dd className="flex items-center justify-end gap-1.5 truncate">
+              <span className="size-2 shrink-0 rounded-full" style={{ background: zone.color }} />
+              {zoneName(t, zone)}
+            </dd>
           </>
         )}
         {topUnit && <dd className="col-span-2 font-medium text-accent">{t('list.top', { unit: topUnit.name })}</dd>}

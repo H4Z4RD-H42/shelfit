@@ -6,7 +6,8 @@ import { sampleCollection } from '../data/sampleCollection'
 import { mergeGames, type ImportedGame } from '../domain/backup'
 import { DEFAULT_OPTIONS, normalizeOptions } from '../domain/defaults'
 import { KALLAX_CUBE, KALLAX_FINISHES } from '../domain/kallax'
-import type { CubeSize, Game, PackOptions, ShelfUnit } from '../domain/types'
+import type { CubeSize, Game, PackOptions, ShelfUnit, Zone, ZoneRule } from '../domain/types'
+import { newZone } from '../domain/zones'
 import { detectLanguage, type Language } from '../i18n/language'
 
 export type ViewMode = '3d' | 'front' | 'list'
@@ -20,6 +21,7 @@ export interface AppState {
   units: ShelfUnit[]
   cube: CubeSize
   options: PackOptions
+  zones: Zone[]
   language: Language
   view: ViewMode
   panel: PanelTab
@@ -42,6 +44,12 @@ export interface AppState {
   removeUnit: (id: string) => void
   setCube: (cube: CubeSize) => void
 
+  addZone: (rule?: ZoneRule) => void
+  updateZone: (id: string, patch: Partial<Omit<Zone, 'id'>>) => void
+  removeZone: (id: string) => void
+  /** Moves a zone up (-1) or down (+1) in the list: earlier zones win. */
+  moveZone: (id: string, delta: -1 | 1) => void
+
   setOptions: (patch: Partial<PackOptions>) => void
   resetOptions: () => void
   setLanguage: (language: Language) => void
@@ -53,7 +61,7 @@ export interface AppState {
   locate: (id: string) => void
   select: (id: string | null) => void
   edit: (id: string | null) => void
-  restore: (data: Pick<AppState, 'games' | 'units' | 'cube' | 'options'>) => void
+  restore: (data: Pick<AppState, 'games' | 'units' | 'cube' | 'options'> & { zones?: Zone[] }) => void
 }
 
 const idbStorage: StateStorage = {
@@ -77,6 +85,7 @@ export const useAppStore = create<AppState>()(
       units: [newUnit(1)],
       cube: KALLAX_CUBE,
       options: DEFAULT_OPTIONS,
+      zones: [],
       language: detectLanguage(),
       view: '3d',
       colorBy: 'game',
@@ -103,6 +112,28 @@ export const useAppStore = create<AppState>()(
       removeUnit: (id) => setState((s) => ({ units: s.units.length > 1 ? s.units.filter((u) => u.id !== id) : s.units })),
       setCube: (cube) => setState({ cube }),
 
+      addZone: (rule) => setState((s) => ({ zones: [...s.zones, newZone(nanoid(), s.zones, rule)] })),
+      updateZone: (id, patch) => setState((s) => ({ zones: s.zones.map((z) => (z.id === id ? { ...z, ...patch } : z)) })),
+      removeZone: (id) =>
+        setState((s) => ({
+          zones: s.zones.filter((z) => z.id !== id),
+          // Forget the choices made by hand for the zone.
+          games: s.games.map((g) => {
+            if (g.zones?.[id] === undefined) return g
+            const { [id]: _, ...rest } = g.zones
+            return { ...g, zones: Object.keys(rest).length ? rest : undefined }
+          }),
+        })),
+      moveZone: (id, delta) =>
+        setState((s) => {
+          const i = s.zones.findIndex((z) => z.id === id)
+          const j = i + delta
+          if (i < 0 || j < 0 || j >= s.zones.length) return {}
+          const zones = s.zones.slice()
+          ;[zones[i], zones[j]] = [zones[j]!, zones[i]!]
+          return { zones }
+        }),
+
       setOptions: (patch) => setState((s) => ({ options: { ...s.options, ...patch } })),
       resetOptions: () => setState({ options: DEFAULT_OPTIONS }),
       setLanguage: (language) => setState({ language }),
@@ -113,8 +144,8 @@ export const useAppStore = create<AppState>()(
       locate: (selectedId) => setState({ selectedId, mobileScreen: 'shelf' }),
       select: (selectedId) => setState({ selectedId }),
       edit: (editing) => setState(editing ? { editing, panel: 'collection', mobileScreen: 'panel' } : { editing }),
-      restore: ({ games, units, cube, options }) =>
-        setState({ games, units, cube, options: normalizeOptions(options), selectedId: null }),
+      restore: ({ games, units, cube, options, zones }) =>
+        setState({ games, units, cube, options: normalizeOptions(options), zones: zones ?? [], selectedId: null }),
     }),
     {
       name: 'shelf-planner',
@@ -131,6 +162,7 @@ export const useAppStore = create<AppState>()(
         units: s.units,
         cube: s.cube,
         options: s.options,
+        zones: s.zones,
         language: s.language,
         view: s.view,
         colorBy: s.colorBy,

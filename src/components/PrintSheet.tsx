@@ -7,7 +7,8 @@ import type { CubeLayout, Placement, ShelfUnit } from '../domain/types'
 import { useGamesById, useLayout } from '../hooks/useLayout'
 import { useT } from '../i18n'
 import { useAppStore } from '../store/appStore'
-import { UNPLACED_LABEL, groupLabel } from './labels'
+import { UNPLACED_LABEL, groupLabel, zoneName } from './labels'
+import { useZonesById } from '../hooks/useZones'
 
 /** Grid of a unit with the number of every cube, to find "cube 7" quickly. */
 function UnitMap({ unit, numbers }: { unit: ShelfUnit; numbers: Map<string, number> }) {
@@ -87,12 +88,16 @@ export function PrintSheet() {
   const outer = useAppStore((s) => s.options.groupBy[0]?.key)
   const layout = useLayout()
   const games = useGamesById()
+  const zonesById = useZonesById()
   const excluded = allGames.filter((g) => g.excluded)
   const [today] = useState(() => new Date().toLocaleDateString())
 
   const cubesOf = (unitId: string) => layout.cubes.filter((c) => c.unitId === unitId)
-  const groupsOf = (c: CubeLayout) =>
-    outer ? [...new Set(c.placements.map((p) => groupLabel(t, outer, layout.groups[p.gameId])))].join(' · ') : ''
+  const groupsOf = (c: CubeLayout) => {
+    const zone = c.zoneId ? zonesById.get(c.zoneId) : undefined
+    const groups = outer ? [...new Set(c.placements.map((p) => groupLabel(t, outer, layout.groups[p.gameId])))] : []
+    return [zone && zoneName(t, zone), ...groups].filter(Boolean).join(' · ')
+  }
 
   return createPortal(
     <div className="print-sheet" lang={document.documentElement.lang}>

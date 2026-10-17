@@ -1,8 +1,8 @@
 import type { BoxDimensions, Game } from './types'
 
-export type GameError = 'name' | 'dims' | 'players' | 'playTime' | 'complexity' | 'rating' | 'year'
+export type GameError = 'name' | 'dims' | 'players' | 'playTime' | 'complexity' | 'rating' | 'year' | 'plays'
 
-type Draft = Pick<Game, 'name' | 'minPlayers' | 'maxPlayers' | 'playTime' | 'complexity' | 'rating' | 'year'> & {
+type Draft = Pick<Game, 'name' | 'minPlayers' | 'maxPlayers' | 'playTime' | 'complexity' | 'rating' | 'year' | 'plays'> & {
   dims: Partial<BoxDimensions>
 }
 
@@ -21,5 +21,6 @@ export function validateGame(draft: Draft): GameError | undefined {
   if (!inRange(draft.complexity, 1, 5)) return 'complexity'
   if (!inRange(draft.rating, 1, 10)) return 'rating'
   if (draft.year !== undefined && !Number.isInteger(draft.year)) return 'year'
+  if (draft.plays !== undefined && !(Number.isInteger(draft.plays) && draft.plays >= 0)) return 'plays'
   return undefined
 }

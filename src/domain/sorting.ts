@@ -37,7 +37,7 @@ function compareValues(a: number | string, b: number | string): number {
 }
 
 /** Order of the chapters inside a saga: by year, then by title. */
-function compareInSaga(a: Game, b: Game): number {
+export function compareInSaga(a: Game, b: Game): number {
   const ya = a.year ?? Number.POSITIVE_INFINITY
   const yb = b.year ?? Number.POSITIVE_INFINITY
   if (ya !== yb) return ya - yb

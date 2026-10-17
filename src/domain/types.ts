@@ -56,6 +56,16 @@ export interface Game {
   complexity?: number
   /** Personal rating, 1 to 10. */
   rating?: number
+  /** Logged plays (BGG `numplays`); 0 means never played. */
+  plays?: number
+  /** Marked for trade or sale in the BGG collection. */
+  forTrade?: boolean
+  /** BGG categories, e.g. "Party Game" (filled by the BGG API). */
+  categories?: string[]
+  /** Free labels chosen by the user, used by tag zones. */
+  tags?: string[]
+  /** Zone choices made by hand: true puts the game in the zone, false keeps it out. */
+  zones?: Record<string, boolean>
   imageUrl?: string
   createdAt: number
 }
@@ -135,6 +145,33 @@ export interface PackOptions {
   longSideFront: boolean
 }
 
+/** What decides which games belong to a zone. */
+export type ZoneRule =
+  'small' | 'large' | 'heavy' | 'favorites' | 'solo' | 'duo' | 'children' | 'party' | 'unplayed' | 'forTrade' | 'tag' | 'manual'
+
+/** Where the cubes of a zone are on the shelves. */
+export type ZonePlace = 'end' | 'start' | 'bottom' | 'eye' | 'cubes'
+
+/**
+ * A part of the shelves reserved to some games (e.g. all the small boxes),
+ * taken out of the normal order and given cubes of their own.
+ */
+export interface Zone {
+  id: string
+  /** Empty: the default name of the rule. */
+  name?: string
+  rule: ZoneRule
+  /** Label matched by the `tag` rule. */
+  tag?: string
+  place: ZonePlace
+  /** Cubes chosen by hand for the `cubes` place, as `unitId:column:row` keys. */
+  cubes?: string[]
+  /** Inside the zone: fit as many boxes as possible, or follow the sort order. */
+  strategy: Strategy
+  /** CSS colour of the zone marks on the shelves. */
+  color: string
+}
+
 /** A box placed inside a cube. Coordinates are relative to the cube's
  * bottom-left-front interior corner: x to the right, y up, z towards the back. */
 export interface Placement {
@@ -170,9 +207,11 @@ export interface CubeLayout {
   placements: Placement[]
   /** Width (cm) of the cube front consumed by columns. */
   usedWidth: number
+  /** Zone the cube is reserved to. */
+  zoneId?: string
 }
 
-export type UnplacedReason = 'no-size' | 'too-big' | 'no-space'
+export type UnplacedReason = 'no-size' | 'too-big' | 'no-space' | 'zone-full'
 
 export interface UnplacedGame {
   gameId: string
@@ -196,5 +235,15 @@ export interface Layout {
   sagas: Record<string, string>
   /** Outermost group of each game id, when grouping is active. */
   groups: Record<string, string>
+  /** Zone of each game id that belongs to one. */
+  zones: Record<string, string>
+  zoneStats: Record<string, ZoneStats>
   stats: LayoutStats
+}
+
+export interface ZoneStats {
+  games: number
+  cubes: number
+  /** Games of the zone that found no room in its cubes. */
+  unplaced: number
 }

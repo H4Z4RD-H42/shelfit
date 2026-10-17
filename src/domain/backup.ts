@@ -1,8 +1,8 @@
 import { sameDims } from './sizes'
-import { hasDims, type CubeSize, type Game, type GameOrientation, type PackOptions, type ShelfUnit } from './types'
+import { hasDims, type CubeSize, type Game, type GameOrientation, type PackOptions, type ShelfUnit, type Zone } from './types'
 
 export const BACKUP_FORMAT = 'shelf-planner-backup'
-export const BACKUP_VERSION = 2
+export const BACKUP_VERSION = 3
 
 export interface Backup {
   format: typeof BACKUP_FORMAT
@@ -12,9 +12,11 @@ export interface Backup {
   units: ShelfUnit[]
   cube: CubeSize
   options: PackOptions
+  /** Added in version 3. */
+  zones?: Zone[]
 }
 
-export function createBackup(data: Pick<Backup, 'games' | 'units' | 'cube' | 'options'>): Backup {
+export function createBackup(data: Pick<Backup, 'games' | 'units' | 'cube' | 'options' | 'zones'>): Backup {
   return { format: BACKUP_FORMAT, version: BACKUP_VERSION, exportedAt: new Date().toISOString(), ...data }
 }
 
@@ -25,6 +27,11 @@ function isGame(value: unknown): value is Game {
   return typeof g?.id === 'string' && typeof g.name === 'string' && (g.dims === undefined || hasDims(g))
 }
 
+function isZone(value: unknown): value is Zone {
+  const z = value as Zone
+  return typeof z?.id === 'string' && typeof z.rule === 'string' && typeof z.place === 'string'
+}
+
 export function parseBackup(text: string): Backup {
   const data = JSON.parse(text) as Partial<Backup>
   if (data.format !== BACKUP_FORMAT) throw new Error('unknown format')
@@ -33,6 +40,7 @@ export function parseBackup(text: string): Backup {
   if (!Array.isArray(data.units) || data.units.length === 0) throw new Error('invalid shelves')
   if (!data.cube || !isPositive(data.cube.width) || !isPositive(data.cube.height) || !isPositive(data.cube.depth))
     throw new Error('invalid cube size')
+  if (data.zones !== undefined && !(Array.isArray(data.zones) && data.zones.every(isZone))) throw new Error('invalid zones')
   return data as Backup
 }
 
@@ -78,6 +86,9 @@ const HEADERS = {
   playTime: ['playingtime', 'playtime', 'durata'],
   complexity: ['avgweight', 'complexity', 'complessita', 'complessità'],
   rating: ['rating', 'voto'],
+  plays: ['numplays', 'plays', 'partite'],
+  forTrade: ['fortrade'],
+  tags: ['tags', 'etichette'],
   own: ['own'],
   itemType: ['itemtype'],
   versionName: ['version_nickname'],
@@ -140,6 +151,15 @@ export function parseCsv(text: string): ImportedGame[] {
     if (Number.isInteger(bggId) && bggId > 0) game.bggId = bggId
     if (version) game.version = version
     if (at('itemType')) game.expansion = at('itemType') === 'expansion'
+    // Unlike the other numbers, 0 plays is meaningful: never played.
+    const plays = num(at('plays'))
+    if (at('plays') !== undefined && Number.isInteger(plays) && plays >= 0) game.plays = plays
+    if (idx.forTrade >= 0) game.forTrade = at('forTrade') === '1'
+    const tags = at('tags')
+      ?.split(/[;,]/)
+      .map((t) => t.trim())
+      .filter(Boolean)
+    if (tags?.length) game.tags = tags
     for (const key of ['genre', 'designer', 'publisher', 'language'] as const) {
       const value = at(key)
       if (value) game[key] = value
@@ -172,6 +192,10 @@ const MERGED_FIELDS = [
   'playTime',
   'complexity',
   'rating',
+  'plays',
+  'forTrade',
+  'categories',
+  'tags',
 ] as const satisfies readonly (keyof ImportedGame)[]
 
 /**

@@ -25,7 +25,8 @@ export function OptionSection({
   onToggle: () => void
   /** Some value differs from the defaults. */
   modified: boolean
-  onReset: () => void
+  /** Restores the defaults; without it the section has no reset button. */
+  onReset?: () => void
   children: ReactNode
 }) {
   const t = useT()
@@ -57,7 +58,7 @@ export function OptionSection({
           </span>
           <ChevronDown className={cx('size-4 shrink-0 text-ink-faint transition-transform', open && 'rotate-180')} />
         </button>
-        {modified && open && (
+        {modified && open && onReset && (
           <button
             type="button"
             onClick={onReset}

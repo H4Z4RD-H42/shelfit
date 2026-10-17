@@ -7,6 +7,7 @@ import {
   Info,
   Layers,
   LayoutPanelLeft,
+  LayoutGrid,
   ListOrdered,
   Ruler,
   RotateCcw,
@@ -18,21 +19,25 @@ import { GROUP_KEYS } from '../../domain/grouping'
 import type { Align, GroupKey, GroupLevel, OrientationMode, PackOptions, SortDirection, SortKey } from '../../domain/types'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
+import { zoneName } from '../labels'
 import { cx, inputClass } from '../styles'
 import { Button, Field, NumberInput, Segmented, Toggle } from '../ui'
 import { OptionSection } from './OptionSection'
+import { ZonesSection } from './ZonesSection'
 
 // 'weight' becomes selectable once weights can be imported from BGG.
 const SORT_KEYS: SortKey[] = ['name', 'year', 'size', 'complexity', 'playtime', 'rating', 'color', 'added']
 const ORIENTATIONS: OrientationMode[] = ['auto', 'vertical', 'horizontal']
 
-type SectionId = 'layout' | 'order' | 'grouping' | 'sagas' | 'space'
+type SectionId = 'layout' | 'order' | 'grouping' | 'zones' | 'sagas' | 'space'
 
 /** Options belonging to each section, used for the "modified" dot and the reset. */
 const SECTION_KEYS: Record<SectionId, (keyof PackOptions)[]> = {
   layout: ['strategy', 'orientation', 'align', 'longSideFront'],
   order: ['sortBy', 'sortDirection', 'fillGaps', 'fillOrder'],
   grouping: ['groupBy', 'groupStartsNewCube'],
+  // Zones are not options: the reset buttons leave them alone.
+  zones: [],
   sagas: ['groupSagas', 'autoDetectSagas', 'keepSagasInCube', 'keepSagasInLine'],
   space: ['oversizedOnTop', 'overhang', 'overhangSide', 'clearance', 'maxStackHeight'],
 }
@@ -128,6 +133,7 @@ export function OptionsPanel() {
   const language = useAppStore((s) => s.language)
   const options = useAppStore((s) => s.options)
   const colorBy = useAppStore((s) => s.colorBy)
+  const zones = useAppStore((s) => s.zones)
   const { setOptions, resetOptions, setColorBy } = useAppStore.getState()
   const { isOpen, toggle } = useOpenSections()
   const ordered = options.strategy === 'ordered'
@@ -136,7 +142,8 @@ export function OptionsPanel() {
 
   const isModified = (id: SectionId) =>
     SECTION_KEYS[id].some((k) => JSON.stringify(options[k]) !== JSON.stringify(DEFAULT_OPTIONS[k])) ||
-    (id === 'grouping' && colorBy !== 'game')
+    (id === 'grouping' && colorBy !== 'game') ||
+    (id === 'zones' && zones.length > 0)
   const resetSection = (id: SectionId) => {
     setOptions(Object.fromEntries(SECTION_KEYS[id].map((k) => [k, DEFAULT_OPTIONS[k]])) as Partial<PackOptions>)
     if (id === 'grouping') setColorBy('game')
@@ -181,6 +188,7 @@ export function OptionsPanel() {
           ]
             .filter(Boolean)
             .join(' · '),
+    zones: zones.length > 0 ? zones.map((z) => zoneName(t, z)).join(' · ') : t('zones.summary.none'),
     sagas: options.groupSagas
       ? [
           t('options.summary.sagasOn'),
@@ -208,7 +216,7 @@ export function OptionsPanel() {
       open={isOpen(id)}
       onToggle={() => toggle(id)}
       modified={isModified(id)}
-      onReset={() => resetSection(id)}
+      onReset={id === 'zones' ? undefined : () => resetSection(id)}
     >
       {children}
     </OptionSection>
@@ -343,6 +351,8 @@ export function OptionsPanel() {
             </div>
           </>,
         )}
+
+        {section('zones', <LayoutGrid className="size-4" />, t('options.section.zones'), <ZonesSection />)}
 
         {section(
           'sagas',

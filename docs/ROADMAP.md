@@ -15,6 +15,7 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 - **0.9** — Deep boxes can stick out at the back; games that fit in no cube go on top by default.
 - **0.10** — Box titles wrap onto several lines.
 - **0.11** — Sagas can be kept on one shelf row.
+- **0.12** — Zones: cubes reserved to small games, party games, games to play, tags and more, marked on the shelves.
 
 ## Planned
 
@@ -24,6 +25,7 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 - Import a collection from a BGG username, sizes taken from the owned version (fallback: other editions).
 - Game search by name, thumbnails, "Powered by BGG" attribution.
 - Genre, designer and families filled automatically; families as an extra saga signal.
+- Categories (children's and party zones), plays, trade status and box weights (heavy zone) filled automatically.
 - Expansion → base game links (by BGG id): each expansion placed right after the game it expands, and the base game's box shown when locating an expansion stored inside it.
 
 ### Better layouts

@@ -18,5 +18,7 @@ describe('validateGame', () => {
     expect(validateGame({ ...base, complexity: 6 })).toBe('complexity')
     expect(validateGame({ ...base, rating: 0.5 })).toBe('rating')
     expect(validateGame({ ...base, year: 2018.5 })).toBe('year')
+    expect(validateGame({ ...base, plays: 1.5 })).toBe('plays')
+    expect(validateGame({ ...base, plays: 0 })).toBeUndefined()
   })
 })

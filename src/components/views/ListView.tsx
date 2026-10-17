@@ -1,8 +1,9 @@
 import { RectangleHorizontal, RectangleVertical } from 'lucide-react'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
 import { useBoxColor } from '../../hooks/useBoxColor'
+import { useZonesById } from '../../hooks/useZones'
 import { useT } from '../../i18n'
-import { UNPLACED_LABEL, groupLabel } from '../labels'
+import { UNPLACED_LABEL, groupLabel, zoneName } from '../labels'
 import { useAppStore } from '../../store/appStore'
 import { cx } from '../styles'
 
@@ -15,6 +16,7 @@ export function ListView() {
   const layout = useLayout()
   const games = useGamesById()
   const boxColor = useBoxColor()
+  const zonesById = useZonesById()
   const unitName = new Map(units.map((u) => [u.id, u.name]))
   const outer = useAppStore((s) => s.options.groupBy[0]?.key)
   const cubeGroups = (gameIds: string[]) =>
@@ -55,14 +57,25 @@ export function ListView() {
         ))}
         {layout.cubes.map((c) => {
           const fill = Math.round((c.usedWidth / cube.width) * 100)
+          const zone = c.zoneId ? zonesById.get(c.zoneId) : undefined
           return (
-            <article key={c.index} className="rounded-xl border border-line bg-surface-0 p-3">
+            <article
+              key={c.index}
+              className="rounded-xl border border-line bg-surface-0 p-3"
+              style={zone && { borderColor: zone.color, boxShadow: `inset 3px 0 0 ${zone.color}` }}
+            >
               <header className="mb-2 flex items-baseline justify-between gap-2">
                 <h3 className="font-display text-sm font-semibold">{t('list.cube', { n: c.index + 1 })}</h3>
                 <span className="truncate text-xs text-ink-faint">
                   {unitName.get(c.unitId)} · {t('list.position', { row: c.row + 1, column: c.column + 1 })}
                 </span>
               </header>
+              {zone && (
+                <p className="mb-1.5 flex items-center gap-1.5 truncate text-xs font-medium">
+                  <span className="size-2 shrink-0 rounded-full" style={{ background: zone.color }} />
+                  {zoneName(t, zone)}
+                </p>
+              )}
               {cubeGroups(c.placements.map((p) => p.gameId)).length > 0 && (
                 <p className="mb-1.5 truncate text-xs font-medium text-accent">
                   {cubeGroups(c.placements.map((p) => p.gameId)).join(' · ')}

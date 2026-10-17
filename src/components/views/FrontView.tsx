@@ -1,12 +1,16 @@
 import { useMemo } from 'react'
 import { contrastText } from '../../domain/color'
 import { LINE_HEIGHT } from '../../domain/label'
-import { cubeOrigin, isBlocked, unitOffsets, unitOuterSize } from '../../domain/kallax'
-import type { Placement } from '../../domain/types'
+import { FRAME, cubeOrigin, isBlocked, unitOffsets, unitOuterSize } from '../../domain/kallax'
+import type { Placement, ShelfUnit, Zone } from '../../domain/types'
+import { cubeId, zoneRuns } from '../../domain/zones'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
+import { useZonesById } from '../../hooks/useZones'
 import { useAppStore } from '../../store/appStore'
 import { fitBoxLabel, LABEL_WEIGHT } from '../boxLabel'
+import { zoneName } from '../labels'
+import { useT } from '../../i18n'
 
 const PAD = 6
 
@@ -19,6 +23,9 @@ export function FrontView() {
   const layout = useLayout()
   const games = useGamesById()
   const boxColor = useBoxColor()
+  const zonesById = useZonesById()
+  const cubeZone = new Map(layout.cubes.flatMap((c) => (c.zoneId ? [[cubeId(c), zonesById.get(c.zoneId)] as const] : [])))
+  const runs = zoneRuns(layout.cubes)
 
   const offsets = useMemo(() => unitOffsets(units, cube), [units, cube])
   const sizes = units.map((u) => unitOuterSize(u, cube))
@@ -64,7 +71,18 @@ export function FrontView() {
                 const o = cubeOrigin(unit, column, row, cube)
                 const y = size.height - o.y - cube.height
                 if (isBlocked(unit, column, row)) return <DrawerInsert key={k} x={o.x} y={y} size={cube.width} />
-                return <rect key={k} x={o.x} y={y} width={cube.width} height={cube.height} fill="rgba(0,0,0,.28)" />
+                const zone = cubeZone.get(cubeId({ unitId: unit.id, column, row }))
+                return (
+                  <g key={k}>
+                    <rect x={o.x} y={y} width={cube.width} height={cube.height} fill="rgba(0,0,0,.28)" />
+                    {zone && <rect x={o.x} y={y} width={cube.width} height={cube.height} fill={zone.color} opacity={0.3} />}
+                  </g>
+                )
+              })}
+              {runs.map((run) => {
+                const zone = zonesById.get(run.zoneId)
+                if (run.unitId !== unit.id || !zone) return null
+                return <ZoneLabel key={`${run.row}:${run.first}`} unit={unit} run={run} zone={zone} unitHeight={size.height} />
               })}
               <text x={size.width / 2} y={size.height + 4.5} textAnchor="middle" fontSize={2.6} className="fill-ink-soft">
                 {unit.name}
@@ -121,6 +139,45 @@ export function FrontView() {
         })}
       </svg>
     </div>
+  )
+}
+
+/** Label of a zone on the panel under its cubes, like a label-maker strip. */
+function ZoneLabel({
+  unit,
+  run,
+  zone,
+  unitHeight,
+}: {
+  unit: ShelfUnit
+  run: { row: number; first: number; last: number }
+  zone: Zone
+  unitHeight: number
+}) {
+  const t = useT()
+  const cube = useAppStore((s) => s.cube)
+  const first = cubeOrigin(unit, run.first, run.row, cube)
+  const last = cubeOrigin(unit, run.last, run.row, cube)
+  const panel = run.row === unit.rows - 1 ? FRAME.outer : FRAME.inner
+  const height = Math.min(panel, 2)
+  const width = last.x + cube.width - first.x
+  const y = unitHeight - first.y + (panel - height) / 2
+  return (
+    <g style={{ pointerEvents: 'none' }}>
+      <rect x={first.x} y={y} width={width} height={height} rx={0.2} fill={zone.color} />
+      <text
+        x={first.x + width / 2}
+        y={y + height / 2}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={height * 0.7}
+        fontWeight={LABEL_WEIGHT}
+        fill={contrastText(zone.color)}
+        style={{ fontFamily: 'var(--font-display)' }}
+      >
+        {zoneName(t, zone)}
+      </text>
+    </g>
   )
 }
 

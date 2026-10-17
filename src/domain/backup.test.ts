@@ -55,6 +55,18 @@ describe('parseCsv', () => {
   })
 })
 
+describe('parseCsv with plays and trades', () => {
+  it('reads the plays, the games for trade and the tags', () => {
+    const csv = ['objectname,own,numplays,fortrade,tags', '"Azul","1","0","0","family; Natale"', '"Root","1","12","1",""'].join(
+      '\n',
+    )
+    expect(parseCsv(csv)).toEqual([
+      { name: 'Azul', plays: 0, forTrade: false, tags: ['family', 'Natale'], orientation: 'inherit' },
+      { name: 'Root', plays: 12, forTrade: true, orientation: 'inherit' },
+    ])
+  })
+})
+
 describe('mergeGames', () => {
   let n = 0
   const id = () => `new${++n}`
@@ -137,8 +149,23 @@ describe('backup', () => {
       units: [{ id: 'u', name: 'U', columns: 2, rows: 2, color: '#fff' }],
       cube: KALLAX_CUBE,
       options: DEFAULT_OPTIONS,
+      zones: [{ id: 'z', rule: 'small' as const, place: 'end' as const, strategy: 'compact' as const, color: '#e07a5f' }],
     }
     expect(parseBackup(JSON.stringify(createBackup(data)))).toMatchObject(data)
+  })
+
+  it('reads backups made before zones existed', () => {
+    const old = {
+      ...createBackup({
+        games: [],
+        units: [{ id: 'u', name: 'U', columns: 1, rows: 1, color: '#fff' }],
+        cube: KALLAX_CUBE,
+        options: DEFAULT_OPTIONS,
+      }),
+      version: 2,
+    }
+    expect(parseBackup(JSON.stringify(old)).zones).toBeUndefined()
+    expect(() => parseBackup(JSON.stringify({ ...old, zones: [{ id: 1 }] }))).toThrow(/zones/)
   })
 
   it('rejects foreign files', () => {

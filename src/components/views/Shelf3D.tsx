@@ -6,11 +6,15 @@ import { contrastText } from '../../domain/color'
 import { LINE_HEIGHT } from '../../domain/label'
 import { FRAME, cubeOrigin, isBlocked, unitOffsets, unitOuterSize } from '../../domain/kallax'
 import { TOP_HEIGHT } from '../../domain/packer'
-import type { CubeSize, Game, Placement, ShelfUnit } from '../../domain/types'
+import type { CubeSize, Game, Placement, ShelfUnit, Zone } from '../../domain/types'
+import { zoneRuns, type ZoneRun } from '../../domain/zones'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
+import { useZonesById } from '../../hooks/useZones'
+import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
 import { fitBoxLabel, LABEL_FONT, LABEL_WEIGHT } from '../boxLabel'
+import { zoneName } from '../labels'
 
 /*
  * Scene units are centimetres. The shelves stand on y = 0 with their front
@@ -82,6 +86,66 @@ function DrawerInsert({ x, y, cube, color }: { x: number; y: number; cube: CubeS
 }
 
 const PX_PER_CM = 14
+const STRIP_PX_PER_CM = 24
+
+/** Back of a cube reserved to a zone, tinted with the zone colour. */
+function ZoneBack({
+  unit,
+  column,
+  row,
+  zone,
+  cube,
+}: {
+  unit: ShelfUnit
+  column: number
+  row: number
+  zone: Zone
+  cube: CubeSize
+}) {
+  const o = cubeOrigin(unit, column, row, cube)
+  const color = useMemo(() => new THREE.Color(unit.color).lerp(new THREE.Color(zone.color), 0.6), [unit.color, zone.color])
+  return (
+    <mesh position={[o.x + cube.width / 2, o.y + cube.height / 2, -FRAME.depth + 0.05]} receiveShadow>
+      <planeGeometry args={[cube.width, cube.height]} />
+      <meshStandardMaterial color={color} roughness={0.8} />
+    </mesh>
+  )
+}
+
+/** Label of a zone on the front edge of the panel under its cubes, like a label-maker strip. */
+function ZoneStrip({ unit, run, zone, cube }: { unit: ShelfUnit; run: ZoneRun; zone: Zone; cube: CubeSize }) {
+  const t = useT()
+  const text = zoneName(t, zone)
+  const first = cubeOrigin(unit, run.first, run.row, cube)
+  const last = cubeOrigin(unit, run.last, run.row, cube)
+  const panel = run.row === unit.rows - 1 ? FRAME.outer : FRAME.inner
+  const height = Math.min(panel, 2)
+  const width = last.x + cube.width - first.x
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(width * STRIP_PX_PER_CM)
+    canvas.height = Math.round(height * STRIP_PX_PER_CM)
+    const ctx = canvas.getContext('2d')!
+    ctx.fillStyle = zone.color
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = contrastText(zone.color)
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.font = `${LABEL_WEIGHT} ${canvas.height * 0.7}px ${LABEL_FONT}`
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2, canvas.width * 0.95)
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.colorSpace = THREE.SRGBColorSpace
+    tex.anisotropy = 4
+    return tex
+  }, [text, zone.color, width, height])
+  useEffect(() => () => texture.dispose(), [texture])
+  return (
+    <mesh position={[first.x + width / 2, first.y - panel / 2, 0.03]}>
+      <planeGeometry args={[width, height]} />
+      <meshStandardMaterial map={texture} roughness={0.5} />
+    </mesh>
+  )
+}
 
 /** Draws the visible face of a box: background colour and title. */
 function useLabelTexture(name: string, color: string, faceW: number, faceH: number, vertical: boolean) {
@@ -209,6 +273,8 @@ export function Shelf3D() {
   const layout = useLayout()
   const games = useGamesById()
   const boxColor = useBoxColor()
+  const zonesById = useZonesById()
+  const runs = zoneRuns(layout.cubes)
   const [hovered, setHovered] = useState<string | null>(null)
 
   const offsets = useMemo(() => unitOffsets(units, cube), [units, cube])
@@ -253,6 +319,14 @@ export function Shelf3D() {
         {units.map((unit, i) => (
           <group key={unit.id} position={[offsets[i]!, 0, 0]}>
             <KallaxFrame unit={unit} cube={cube} />
+            {layout.cubes.map((c) => {
+              const zone = c.zoneId && c.unitId === unit.id ? zonesById.get(c.zoneId) : undefined
+              return zone ? <ZoneBack key={c.index} unit={unit} column={c.column} row={c.row} zone={zone} cube={cube} /> : null
+            })}
+            {runs.map((run) => {
+              const zone = run.unitId === unit.id ? zonesById.get(run.zoneId) : undefined
+              return zone ? <ZoneStrip key={`${run.row}:${run.first}`} unit={unit} run={run} zone={zone} cube={cube} /> : null
+            })}
           </group>
         ))}
 
