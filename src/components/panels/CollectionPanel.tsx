@@ -2,12 +2,16 @@ import { Download, Plus, Search, Sparkles, Trash2, Upload } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { createBackup, parseBackup, parseCsv } from '../../domain/backup'
 import { gameColor } from '../../domain/color'
+import { hasDims } from '../../domain/types'
 import { useLayout } from '../../hooks/useLayout'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
-import { Button } from '../ui'
+import { UNPLACED_LABEL } from '../labels'
+import { Button, Segmented } from '../ui'
 import { cx, inputClass } from '../styles'
 import { GameEditor } from './GameEditor'
+
+type Filter = 'all' | 'missing' | 'unplaced'
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
 
@@ -29,7 +33,7 @@ export function CollectionPanel() {
     addGame,
     updateGame,
     removeGame,
-    addGames,
+    importGames,
     loadSample,
     clearGames,
     select,
@@ -38,6 +42,7 @@ export function CollectionPanel() {
   } = useAppStore.getState()
   const layout = useLayout()
   const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState<Filter>('all')
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -47,8 +52,10 @@ export function CollectionPanel() {
     const q = query.trim().toLowerCase()
     return games
       .filter((g) => !q || g.name.toLowerCase().includes(q) || layout.sagas[g.id]?.toLowerCase().includes(q))
+      .filter((g) => filter === 'all' || (filter === 'missing' ? !hasDims(g) : unplaced.has(g.id)))
       .sort((a, b) => collator.compare(a.name, b.name))
-  }, [games, query, layout.sagas])
+  }, [games, query, filter, layout.sagas, unplaced])
+  const missingCount = useMemo(() => games.filter((g) => !hasDims(g)).length, [games])
 
   const importFile = async (file: File) => {
     try {
@@ -59,8 +66,9 @@ export function CollectionPanel() {
         setMessage({ text: t('collection.imported', { count: backup.games.length }) })
       } else {
         const rows = parseCsv(text)
-        addGames(rows)
-        setMessage({ text: t('collection.imported', { count: rows.length }) })
+        const { added, updated } = importGames(rows)
+        const missing = rows.filter((r) => !r.dims).length
+        setMessage({ text: t('collection.importedCsv', { added, updated, missing }) })
       }
     } catch (err) {
       setMessage({ text: t('collection.importError', { error: (err as Error).message }), error: true })
@@ -138,6 +146,21 @@ export function CollectionPanel() {
         )}
       </div>
 
+      {games.length > 0 && (
+        <div className="border-b border-line px-5 py-2.5">
+          <Segmented<Filter>
+            size="sm"
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: 'all', label: t('collection.filter.all') },
+              { value: 'missing', label: `${t('collection.filter.missing')} (${missingCount})` },
+              { value: 'unplaced', label: `${t('collection.filter.unplaced')} (${layout.unplaced.length})` },
+            ]}
+          />
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto px-3 py-3">
         {editing && (
           <div className="mb-3">
@@ -188,20 +211,41 @@ export function CollectionPanel() {
                     g.id === selectedId ? 'bg-accent/15 ring-1 ring-accent/50' : 'hover:bg-surface-2',
                   )}
                 >
-                  <span className="h-8 w-2.5 shrink-0 rounded-sm" style={{ background: gameColor(g) }} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{g.name}</span>
+                  <span
+                    className={cx('h-8 w-2.5 shrink-0 rounded-sm', g.excluded && 'opacity-30')}
+                    style={{ background: gameColor(g) }}
+                  />
+                  <span className={cx('min-w-0 flex-1', g.excluded && 'opacity-50')}>
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate text-sm font-medium">{g.name}</span>
+                      {g.expansion && (
+                        <span className="shrink-0 rounded bg-surface-3 px-1 text-[10px] font-semibold text-ink-soft">
+                          {t('game.expansionShort')}
+                        </span>
+                      )}
+                    </span>
                     <span className="flex gap-2 text-xs text-ink-faint">
-                      <span className="tabular-nums">
-                        {g.dims.width} × {g.dims.height} × {g.dims.depth}
-                      </span>
+                      {g.dims ? (
+                        <span className="tabular-nums">
+                          {g.dims.width} × {g.dims.height} × {g.dims.depth}
+                        </span>
+                      ) : (
+                        <span className="text-warn">{t('game.noSize')}</span>
+                      )}
                       {saga && <span className="truncate text-ink-soft">· {saga}</span>}
                     </span>
                   </span>
-                  {reason && (
-                    <span className="shrink-0 rounded-full bg-danger/15 px-2 py-0.5 text-[10px] font-semibold text-danger">
-                      {t(reason === 'too-big' ? 'game.tooBig' : 'game.noSpace')}
+                  {g.excluded ? (
+                    <span className="shrink-0 rounded-full bg-surface-3 px-2 py-0.5 text-[10px] font-semibold text-ink-soft">
+                      {t('game.excludedShort')}
                     </span>
+                  ) : (
+                    reason &&
+                    reason !== 'no-size' && (
+                      <span className="shrink-0 rounded-full bg-danger/15 px-2 py-0.5 text-[10px] font-semibold text-danger">
+                        {t(UNPLACED_LABEL[reason])}
+                      </span>
+                    )
                   )}
                   <span
                     role="button"

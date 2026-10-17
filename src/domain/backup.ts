@@ -1,7 +1,7 @@
-import type { CubeSize, Game, GameOrientation, PackOptions, ShelfUnit } from './types'
+import { hasDims, type CubeSize, type Game, type GameOrientation, type PackOptions, type ShelfUnit } from './types'
 
 export const BACKUP_FORMAT = 'shelf-planner-backup'
-export const BACKUP_VERSION = 1
+export const BACKUP_VERSION = 2
 
 export interface Backup {
   format: typeof BACKUP_FORMAT
@@ -21,13 +21,7 @@ const isPositive = (n: unknown): n is number => typeof n === 'number' && Number.
 
 function isGame(value: unknown): value is Game {
   const g = value as Game
-  return (
-    typeof g?.id === 'string' &&
-    typeof g.name === 'string' &&
-    isPositive(g.dims?.width) &&
-    isPositive(g.dims?.height) &&
-    isPositive(g.dims?.depth)
-  )
+  return typeof g?.id === 'string' && typeof g.name === 'string' && (g.dims === undefined || hasDims(g))
 }
 
 export function parseBackup(text: string): Backup {
@@ -64,15 +58,23 @@ function splitCsvLine(line: string, separator: string): string[] {
   return cells
 }
 
-const HEADERS: Record<string, string[]> = {
+/** Accepted header names for each field, in order of preference. */
+const HEADERS = {
   name: ['name', 'nome', 'objectname', 'title', 'titolo'],
+  bggId: ['bggid', 'bgg_id', 'objectid'],
   width: ['width', 'larghezza', 'w'],
   height: ['height', 'altezza', 'length', 'lunghezza', 'h'],
   depth: ['depth', 'spessore', 'profondita', 'profondità', 'd'],
   saga: ['saga', 'series', 'serie'],
-  year: ['year', 'anno', 'yearpublished'],
+  year: ['yearpublished', 'year', 'anno'],
   orientation: ['orientation', 'orientamento'],
-}
+  own: ['own'],
+  itemType: ['itemtype'],
+  versionName: ['version_nickname'],
+  versionPublishers: ['version_publishers'],
+} as const
+
+type Column = keyof typeof HEADERS
 
 const ORIENTATIONS: Record<string, GameOrientation> = {
   vertical: 'vertical',
@@ -82,39 +84,98 @@ const ORIENTATIONS: Record<string, GameOrientation> = {
   auto: 'auto',
 }
 
+export type ImportedGame = Omit<Game, 'id' | 'createdAt'>
+
 /**
  * Imports games from a CSV with a header row. Recognised columns: name, width,
- * height, depth (cm, decimal comma allowed), saga, year, orientation.
+ * height, depth (cm, decimal comma allowed), saga, year, orientation, bggId.
+ * A BoardGameGeek collection export is recognised too: only owned items are
+ * kept and, since BGG exports no box sizes, games come without dimensions.
  */
-export function parseCsv(text: string): Omit<Game, 'id' | 'createdAt'>[] {
+export function parseCsv(text: string): ImportedGame[] {
   const lines = text
-    .replace(/^﻿/, '')
+    .replace(/^\uFEFF/, '')
     .split(/\r?\n/)
     .filter((l) => l.trim())
   if (lines.length < 2) throw new Error('no rows')
   const first = lines[0]!
   const separator = [';', ',', '\t'].sort((a, b) => first.split(b).length - first.split(a).length)[0]!
   const header = splitCsvLine(first, separator).map((h) => h.toLowerCase())
-  const col = (key: string) => header.findIndex((h) => HEADERS[key]!.includes(h))
-  const idx = Object.fromEntries(Object.keys(HEADERS).map((k) => [k, col(k)]))
-  for (const key of ['name', 'width', 'height', 'depth']) if (idx[key]! < 0) throw new Error(`missing column "${key}"`)
+  const idx = {} as Record<Column, number>
+  for (const key of Object.keys(HEADERS) as Column[]) {
+    const alias = HEADERS[key].find((a) => header.includes(a))
+    idx[key] = alias ? header.indexOf(alias) : -1
+  }
+  if (idx.name < 0) throw new Error('missing column "name"')
 
   const num = (v: string | undefined) => Number((v ?? '').replace(',', '.'))
   return lines.slice(1).flatMap((line) => {
     const cells = splitCsvLine(line, separator)
-    const at = (key: string) => (idx[key]! >= 0 ? cells[idx[key]!] : undefined)
+    const at = (key: Column) => (idx[key] >= 0 ? cells[idx[key]] || undefined : undefined)
     const name = at('name')
+    if (!name) return []
+    if (idx.own >= 0 && at('own') !== '1') return []
+
     const dims = { width: num(at('width')), height: num(at('height')), depth: num(at('depth')) }
-    if (!name || !isPositive(dims.width) || !isPositive(dims.height) || !isPositive(dims.depth)) return []
     const year = num(at('year'))
-    return [
-      {
-        name,
-        dims,
-        saga: at('saga') || undefined,
-        year: Number.isInteger(year) && year > 0 ? year : undefined,
-        orientation: ORIENTATIONS[(at('orientation') ?? '').toLowerCase()] ?? 'inherit',
-      },
-    ]
+    const bggId = num(at('bggId'))
+    const version = [at('versionName'), at('versionPublishers')].filter(Boolean).join(' · ')
+    const game: ImportedGame = {
+      name,
+      orientation: ORIENTATIONS[(at('orientation') ?? '').toLowerCase()] ?? 'inherit',
+    }
+    if (hasDims({ dims })) game.dims = dims
+    if (at('saga')) game.saga = at('saga')
+    if (Number.isInteger(year) && year > 0) game.year = year
+    if (Number.isInteger(bggId) && bggId > 0) game.bggId = bggId
+    if (version) game.version = version
+    if (at('itemType')) game.expansion = at('itemType') === 'expansion'
+    return [game]
   })
+}
+
+const normalizeName = (name: string) => name.trim().toLowerCase()
+
+/**
+ * Adds imported games to the collection. A game already present (same BGG id,
+ * or same name when there is no id) is updated with the fields the import
+ * provides, so that re-importing never wipes sizes or choices made by hand.
+ */
+export function mergeGames(
+  existing: Game[],
+  incoming: ImportedGame[],
+  makeId: () => string,
+  now: number,
+): { games: Game[]; added: number; updated: number } {
+  const games = existing.slice()
+  const byBgg = new Map<number, number>()
+  const byName = new Map<string, number>()
+  const index = (g: Game, i: number) => {
+    if (g.bggId) byBgg.set(g.bggId, i)
+    byName.set(normalizeName(g.name), i)
+  }
+  games.forEach(index)
+
+  let added = 0
+  let updated = 0
+  incoming.forEach((row, n) => {
+    const i = row.bggId ? byBgg.get(row.bggId) : byName.get(normalizeName(row.name))
+    if (i === undefined) {
+      const game: Game = { ...row, id: makeId(), createdAt: now + n }
+      games.push(game)
+      index(game, games.length - 1)
+      added++
+      return
+    }
+    const old = games[i]!
+    const patch: Partial<Game> = {}
+    for (const key of ['dims', 'saga', 'year', 'bggId', 'version', 'expansion'] as const) {
+      if (row[key] !== undefined) Object.assign(patch, { [key]: row[key] })
+    }
+    if (row.orientation !== 'inherit') patch.orientation = row.orientation
+    games[i] = { ...old, ...patch }
+    index(games[i]!, i)
+    updated++
+  })
+  return { games, added, updated }
 }

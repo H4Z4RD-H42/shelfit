@@ -2,6 +2,7 @@ import { RectangleHorizontal, RectangleVertical } from 'lucide-react'
 import { gameColor } from '../../domain/color'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
 import { useT } from '../../i18n'
+import { UNPLACED_LABEL } from '../labels'
 import { useAppStore } from '../../store/appStore'
 import { cx } from '../styles'
 
@@ -71,7 +72,7 @@ export function ListView() {
           <ul className="flex flex-wrap gap-2">
             {layout.unplaced.map((u) => (
               <li key={u.gameId} className="rounded-full border border-danger/30 bg-danger/10 px-3 py-1 text-xs">
-                {games.get(u.gameId)?.name} · {t(u.reason === 'too-big' ? 'game.tooBig' : 'game.noSpace')}
+                {games.get(u.gameId)?.name} · {t(UNPLACED_LABEL[u.reason])}
               </li>
             ))}
           </ul>

@@ -1,17 +1,15 @@
+import { ExternalLink } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { bggVersionsUrl } from '../../domain/bgg'
 import { autoColor } from '../../domain/color'
-import type { Game, GameOrientation } from '../../domain/types'
+import type { BoxDimensions, Game, GameOrientation } from '../../domain/types'
 import { useT } from '../../i18n'
-import { Button, Field, NumberInput, Segmented } from '../ui'
 import { inputClass } from '../styles'
+import { Button, Field, NumberInput, Segmented, Toggle } from '../ui'
 
 export type GameDraft = Omit<Game, 'id' | 'createdAt'>
 
-const emptyDraft: GameDraft = {
-  name: '',
-  dims: { width: 0, height: 0, depth: 0 },
-  orientation: 'inherit',
-}
+const emptyDraft: GameDraft = { name: '', orientation: 'inherit' }
 
 export function GameEditor({
   initial,
@@ -28,19 +26,27 @@ export function GameEditor({
 }) {
   const t = useT()
   const [draft, setDraft] = useState<GameDraft>(initial ?? emptyDraft)
+  const [dims, setDims] = useState<Partial<BoxDimensions>>(initial?.dims ?? {})
   const [error, setError] = useState(false)
   const patch = (p: Partial<GameDraft>) => setDraft((d) => ({ ...d, ...p }))
-  const setDim = (key: keyof GameDraft['dims']) => (v: number | undefined) =>
-    setDraft((d) => ({ ...d, dims: { ...d.dims, [key]: v ?? 0 } }))
+  const setDim = (key: keyof BoxDimensions) => (v: number | undefined) => setDims((d) => ({ ...d, [key]: v }))
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    const { width, height, depth } = draft.dims
-    if (!draft.name.trim() || !(width > 0 && height > 0 && depth > 0)) {
+    const values = [dims.width, dims.height, dims.depth]
+    const filled = values.filter((v) => v !== undefined)
+    // Sizes are optional, but when given they must be complete and positive.
+    const dimsValid = filled.length === 0 || (filled.length === 3 && values.every((v) => v! > 0))
+    if (!draft.name.trim() || !dimsValid) {
       setError(true)
       return
     }
-    onSave({ ...draft, name: draft.name.trim(), saga: draft.saga?.trim() || undefined })
+    onSave({
+      ...draft,
+      name: draft.name.trim(),
+      saga: draft.saga?.trim() || undefined,
+      dims: filled.length === 3 ? (dims as BoxDimensions) : undefined,
+    })
   }
 
   const orientations: GameOrientation[] = ['inherit', 'vertical', 'horizontal']
@@ -51,26 +57,31 @@ export function GameEditor({
       <Field label={t('game.name')}>
         <input autoFocus className={inputClass} value={draft.name} onChange={(e) => patch({ name: e.target.value })} />
       </Field>
-      <Field label={t('game.dims')}>
+      {draft.version && <p className="-mt-2 text-xs text-ink-soft">{draft.version}</p>}
+      <Field
+        label={t('game.dims')}
+        hint={
+          draft.bggId && (
+            <a
+              href={bggVersionsUrl(draft.bggId)}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-accent hover:underline"
+            >
+              {t('game.findOnBgg')} <ExternalLink className="size-3" />
+            </a>
+          )
+        }
+      >
         <div className="grid grid-cols-3 gap-2">
-          <NumberInput
-            aria-label={t('game.width')}
-            placeholder={t('game.width')}
-            value={draft.dims.width || undefined}
-            onChange={setDim('width')}
-          />
+          <NumberInput aria-label={t('game.width')} placeholder={t('game.width')} value={dims.width} onChange={setDim('width')} />
           <NumberInput
             aria-label={t('game.height')}
             placeholder={t('game.height')}
-            value={draft.dims.height || undefined}
+            value={dims.height}
             onChange={setDim('height')}
           />
-          <NumberInput
-            aria-label={t('game.depth')}
-            placeholder={t('game.depth')}
-            value={draft.dims.depth || undefined}
-            onChange={setDim('depth')}
-          />
+          <NumberInput aria-label={t('game.depth')} placeholder={t('game.depth')} value={dims.depth} onChange={setDim('depth')} />
         </div>
       </Field>
       <div className="grid grid-cols-2 gap-3">
@@ -100,6 +111,10 @@ export function GameEditor({
           options={orientations.map((o) => ({ value: o, label: t(`orientation.${o}`) }))}
         />
       </Field>
+      <div>
+        <Toggle label={t('game.expansion')} checked={!!draft.expansion} onChange={(expansion) => patch({ expansion })} />
+        <Toggle label={t('game.excluded')} checked={!!draft.excluded} onChange={(excluded) => patch({ excluded })} />
+      </div>
       <Field label={t('game.color')}>
         <div className="flex items-center gap-3">
           <input

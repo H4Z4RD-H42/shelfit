@@ -5,6 +5,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-17
+
+### Added
+
+- Import of the BoardGameGeek collection CSV export: owned items only, BGG id, year, owned edition and expansion flag.
+- Re-importing merges into the collection (matched by BGG id or name) instead of duplicating games, keeping sizes and choices made by hand.
+- Games without a box size: flagged as "size missing", with a link to the BGG versions page of the game.
+- Collection filters: all, without size, without a spot.
+- Expansion flag and "keep off the shelves" option per game (e.g. expansions stored in the base box).
+- Allowed overhang option: boxes deeper than the cube may stick out of the front.
+
+### Changed
+
+- Box sizes are optional; CSV files only require a name column.
+- Backup format version 2 (games may have no size).
+
 ## [0.1.0] - 2026-10-17
 
 ### Added
@@ -20,5 +36,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/H4Z4RD-H42/kallax/releases/tag/v0.1.0

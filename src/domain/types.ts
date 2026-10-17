@@ -21,7 +21,8 @@ export interface BoxDimensions {
 export interface Game {
   id: string
   name: string
-  dims: BoxDimensions
+  /** Missing until the user (or a BGG lookup) provides the box size. */
+  dims?: BoxDimensions
   /** Explicit saga/series name; overrides auto-detection. */
   saga?: string
   orientation: GameOrientation
@@ -30,8 +31,18 @@ export interface Game {
   year?: number
   weightKg?: number
   bggId?: number
+  /** Edition owned, e.g. "Italian edition · Ghenos Games". */
+  version?: string
+  expansion?: boolean
+  /** Kept off the shelves (e.g. an expansion stored in its base box). */
+  excluded?: boolean
   imageUrl?: string
   createdAt: number
+}
+
+export function hasDims(game: Pick<Game, 'dims'>): game is { dims: BoxDimensions } {
+  const d = game.dims
+  return !!d && d.width > 0 && d.height > 0 && d.depth > 0
 }
 
 /** Interior size of a single cube (compartment). */
@@ -73,6 +84,8 @@ export interface PackOptions {
   clearance: number
   /** Maximum height (cm) of horizontal stacks; 0 means the cube height. */
   maxStackHeight: number
+  /** How far (cm) a box may stick out of the front of a cube. */
+  overhang: number
 }
 
 /** A box placed inside a cube. Coordinates are relative to the cube's
@@ -102,7 +115,7 @@ export interface CubeLayout {
   usedWidth: number
 }
 
-export type UnplacedReason = 'too-big' | 'no-space'
+export type UnplacedReason = 'no-size' | 'too-big' | 'no-space'
 
 export interface UnplacedGame {
   gameId: string

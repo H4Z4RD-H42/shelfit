@@ -12,4 +12,5 @@ export const DEFAULT_OPTIONS: PackOptions = {
   fillOrder: 'rows',
   clearance: 0.3,
   maxStackHeight: 0,
+  overhang: 0,
 }

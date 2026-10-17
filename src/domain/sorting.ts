@@ -4,7 +4,7 @@ import type { Game, PackOptions, SortKey } from './types'
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
 
 export function boxVolume(game: Game): number {
-  return game.dims.width * game.dims.height * game.dims.depth
+  return game.dims ? game.dims.width * game.dims.height * game.dims.depth : 0
 }
 
 function sortValue(game: Game, key: SortKey): number | string {

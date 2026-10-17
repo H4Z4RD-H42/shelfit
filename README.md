@@ -28,7 +28,9 @@ npm run build      # production build in dist/
 
 ### CSV import
 
-A header row is required. Recognised columns (English or Italian names): `name`, `width`, `height`, `depth` (cm, decimal comma allowed), and optionally `saga`, `year`, `orientation` (`vertical`, `horizontal`, `auto`).
+A header row is required. Recognised columns (English or Italian names): `name` (required), `width`, `height`, `depth` (cm, decimal comma allowed), `saga`, `year`, `orientation` (`vertical`, `horizontal`, `auto`), `bggid`.
+
+The **BoardGameGeek collection export** (_Collection → Export_) is recognised as is: owned games are imported with their BGG id, year, edition and expansion flag. BGG does not export box sizes, so those games are flagged as _size missing_ until you add the sizes (each game links to its BGG versions page) or import a CSV with the `width`, `height`, `depth` columns. Importing again updates the existing games instead of duplicating them.
 
 ```csv
 name;width;height;depth;saga;year

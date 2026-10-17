@@ -14,7 +14,19 @@ Sources: [Using the XML API](https://boardgamegeek.com/using_the_xml_api), [XML 
 
 ## Where the box sizes are
 
-Dimensions live on **versions** (editions), not on games: `GET /xmlapi2/thing?id=<id>&versions=1` returns `<version>` items with `width`, `length`, `depth` (inches) and `weight` (pounds). Many versions have no dimensions, so manual entry and a community-maintained size database remain necessary fallbacks. To be verified against a live response once the token is available.
+Dimensions live on **versions** (editions), not on games: `GET /xmlapi2/thing?id=<id>&versions=1` returns `<version>` items with `width`, `length`, `depth` (inches) and `weight` (pounds). To be verified against a live response once the token is available.
+
+The **collection CSV export** contains no sizes and no version id: only `version_nickname`, `version_publishers`, `version_languages`, `version_yearpublished`. The XML collection endpoint with `version=1` should return the version id.
+
+### Field test (2026-10-17, a real 54-item Italian collection)
+
+Sizes were read from the public versions pages (`/boardgame/<id>/<slug>/versions?pageid=1&language=<id>`; Italian = 2193, English = 2184, German = 2188). The page marks the owned edition with "Own".
+
+- 19 items: the owned edition has a size.
+- 30 items: the owned edition has no size, but another edition of the same game does (usually identical boxes) → good fallback.
+- 5 items: no edition has a size → manual entry.
+
+Takeaways for the importer: prefer the owned version, fall back to the most common size among the other editions, flag the source (`own` / `alt`) so the user knows which sizes to double-check, and keep manual entry first-class.
 
 ## Planned architecture
 

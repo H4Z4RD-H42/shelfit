@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid'
 import { create } from 'zustand'
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import { sampleCollection } from '../data/sampleCollection'
+import { mergeGames, type ImportedGame } from '../domain/backup'
 import { DEFAULT_OPTIONS } from '../domain/defaults'
 import { KALLAX_CUBE, KALLAX_FINISHES } from '../domain/kallax'
 import type { CubeSize, Game, PackOptions, ShelfUnit } from '../domain/types'
@@ -26,7 +27,8 @@ export interface AppState {
   addGame: (game: Omit<Game, 'id' | 'createdAt'>) => void
   updateGame: (id: string, patch: Partial<Omit<Game, 'id'>>) => void
   removeGame: (id: string) => void
-  addGames: (games: Omit<Game, 'id' | 'createdAt'>[]) => void
+  /** Merges imported games into the collection. */
+  importGames: (games: ImportedGame[]) => { added: number; updated: number }
   loadSample: () => void
   clearGames: () => void
 
@@ -61,7 +63,7 @@ const newUnit = (n: number): ShelfUnit => ({
 
 export const useAppStore = create<AppState>()(
   persist(
-    (setState) => ({
+    (setState, getState) => ({
       games: [],
       units: [newUnit(1)],
       cube: KALLAX_CUBE,
@@ -76,11 +78,11 @@ export const useAppStore = create<AppState>()(
       updateGame: (id, patch) => setState((s) => ({ games: s.games.map((g) => (g.id === id ? { ...g, ...patch } : g)) })),
       removeGame: (id) =>
         setState((s) => ({ games: s.games.filter((g) => g.id !== id), selectedId: s.selectedId === id ? null : s.selectedId })),
-      addGames: (games) =>
-        setState((s) => {
-          const now = Date.now()
-          return { games: [...s.games, ...games.map((g, i) => ({ ...g, id: nanoid(), createdAt: now + i }))] }
-        }),
+      importGames: (rows) => {
+        const result = mergeGames(getState().games, rows, nanoid, Date.now())
+        setState({ games: result.games })
+        return { added: result.added, updated: result.updated }
+      },
       loadSample: () => setState((s) => ({ games: [...s.games, ...sampleCollection(nanoid)] })),
       clearGames: () => setState({ games: [], selectedId: null }),
 

@@ -102,6 +102,9 @@ export function OptionsPanel() {
           <Field label={t('options.clearance')}>
             <NumberInput step={0.1} value={options.clearance} onChange={(v) => setOptions({ clearance: Math.max(0, v ?? 0) })} />
           </Field>
+          <Field label={t('options.overhang')}>
+            <NumberInput step={0.5} value={options.overhang} onChange={(v) => setOptions({ overhang: Math.max(0, v ?? 0) })} />
+          </Field>
           <Field label={t('options.maxStackHeight')}>
             <NumberInput
               step={1}

@@ -27,7 +27,7 @@ function assertPhysical(layout: ReturnType<typeof packCollection>) {
       expect(p.x).toBeGreaterThanOrEqual(0)
       expect(p.x + p.sx).toBeLessThanOrEqual(KALLAX_CUBE.width + 1e-6)
       expect(p.y + p.sy).toBeLessThanOrEqual(KALLAX_CUBE.height + 1e-6)
-      expect(p.sz).toBeLessThanOrEqual(KALLAX_CUBE.depth + 1e-6)
+      expect(p.z + p.sz).toBeLessThanOrEqual(KALLAX_CUBE.depth + 1e-6)
     }
     for (let i = 0; i < cube.placements.length; i++)
       for (let j = i + 1; j < cube.placements.length; j++) expect(overlaps(cube.placements[i]!, cube.placements[j]!)).toBe(false)
@@ -36,18 +36,18 @@ function assertPhysical(layout: ReturnType<typeof packCollection>) {
 
 describe('orientations', () => {
   it('computes vertical and horizontal extents of a standard box', () => {
-    const fits = orientations(game('x', 30, 30, 7), KALLAX_CUBE, 0.3)
+    const fits = orientations(game('x', 30, 30, 7).dims!, KALLAX_CUBE, 0.3)
     expect(fits.vertical).toEqual({ sx: 7, sy: 30, sz: 30 })
     expect(fits.horizontal).toEqual({ sx: 30, sy: 7, sz: 30 })
   })
 
   it('rotates a deep box so that it still fits', () => {
-    const fits = orientations(game('x', 38, 27, 8), KALLAX_CUBE, 0.3)
+    const fits = orientations(game('x', 38, 27, 8).dims!, KALLAX_CUBE, 0.3)
     expect(fits.vertical).toEqual({ sx: 8, sy: 27, sz: 38 })
   })
 
   it('rejects boxes larger than the cube', () => {
-    const fits = orientations(game('x', 41.5, 30, 19), KALLAX_CUBE, 0.3)
+    const fits = orientations(game('x', 41.5, 30, 19).dims!, KALLAX_CUBE, 0.3)
     expect(fits).toEqual({})
   })
 })
@@ -82,10 +82,28 @@ describe('packCollection', () => {
     assertPhysical(auto)
   })
 
+  it('lets deep boxes stick out of the front when overhang is allowed', () => {
+    const deep = game('War of the Ring', 40.5, 27.5, 9)
+    expect(packCollection([deep], [unit(1, 1)], KALLAX_CUBE, opts()).unplaced).toHaveLength(1)
+    const layout = packCollection([deep], [unit(1, 1)], KALLAX_CUBE, opts({ overhang: 3 }))
+    const p = layout.cubes[0]!.placements[0]!
+    expect(p.sz).toBe(40.5)
+    expect(p.z).toBeCloseTo(KALLAX_CUBE.depth - 40.5)
+  })
+
   it('reports games that do not fit at all', () => {
     const big = game('Gloomhaven', 41.5, 30, 19)
     const layout = packCollection([big], [unit(1, 1)], KALLAX_CUBE, opts())
     expect(layout.unplaced).toEqual([{ gameId: big.id, reason: 'too-big' }])
+  })
+
+  it('reports games without a size and skips excluded ones', () => {
+    const noSize = { ...game('Unknown', 1, 1, 1), dims: undefined }
+    const excluded = game('Stored in base box', 10, 10, 3, { excluded: true })
+    const layout = packCollection([noSize, excluded], [unit(1, 1)], KALLAX_CUBE, opts())
+    expect(layout.unplaced).toEqual([{ gameId: noSize.id, reason: 'no-size' }])
+    expect(layout.stats.totalGames).toBe(1)
+    expect(layout.cubes[0]!.placements).toHaveLength(0)
   })
 
   it('reports games left out when shelves are full', () => {

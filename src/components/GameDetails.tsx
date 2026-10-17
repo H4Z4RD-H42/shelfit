@@ -3,6 +3,7 @@ import { gameColor } from '../domain/color'
 import type { GameOrientation } from '../domain/types'
 import { useGamesById, useLayout } from '../hooks/useLayout'
 import { useT } from '../i18n'
+import { UNPLACED_LABEL } from './labels'
 import { useAppStore } from '../store/appStore'
 import { Button, Segmented } from './ui'
 
@@ -38,8 +39,9 @@ export function GameDetails() {
       <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
         <dt className="text-ink-faint">{t('game.dims')}</dt>
         <dd className="text-right tabular-nums">
-          {game.dims.width} × {game.dims.height} × {game.dims.depth}
+          {game.dims ? `${game.dims.width} × ${game.dims.height} × ${game.dims.depth}` : '—'}
         </dd>
+        {game.version && <dd className="col-span-2 truncate text-ink-soft">{game.version}</dd>}
         {cube && unit && placement && (
           <>
             <dt className="text-ink-faint">{t('list.cube', { n: cube.index + 1 })}</dt>
@@ -50,11 +52,7 @@ export function GameDetails() {
             <dd className="text-right">{t(`orientation.${placement.orientation}`)}</dd>
           </>
         )}
-        {unplaced && (
-          <dd className="col-span-2 font-medium text-danger">
-            {t(unplaced.reason === 'too-big' ? 'game.tooBig' : 'game.noSpace')}
-          </dd>
-        )}
+        {unplaced && <dd className="col-span-2 font-medium text-danger">{t(UNPLACED_LABEL[unplaced.reason])}</dd>}
       </dl>
       <div className="mt-3 flex items-center gap-2">
         <div className="flex-1">

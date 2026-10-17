@@ -1,7 +1,19 @@
 import { cubeSlots } from './kallax'
 import { detectSagas } from './saga'
 import { boxVolume, orderUnits } from './sorting'
-import type { CubeLayout, CubeSize, Game, Layout, Orientation, PackOptions, Placement, ShelfUnit, UnplacedGame } from './types'
+import {
+  hasDims,
+  type BoxDimensions,
+  type CubeLayout,
+  type CubeSize,
+  type Game,
+  type Layout,
+  type Orientation,
+  type PackOptions,
+  type Placement,
+  type ShelfUnit,
+  type UnplacedGame,
+} from './types'
 
 /*
  * Packing model
@@ -58,8 +70,8 @@ interface Ctx {
 }
 
 /** Computes the possible extents of a box in each orientation. */
-export function orientations(game: Game, cube: CubeSize, clearance: number): Partial<Record<Orientation, Extents>> {
-  const [a, b, c] = [game.dims.width, game.dims.height, game.dims.depth].sort((x, y) => y - x) as [number, number, number]
+export function orientations(dims: BoxDimensions, cube: CubeSize, clearance: number): Partial<Record<Orientation, Extents>> {
+  const [a, b, c] = [dims.width, dims.height, dims.depth].sort((x, y) => y - x) as [number, number, number]
   const fits: Partial<Record<Orientation, Extents>> = {}
 
   // Vertical: thinnest side along the width; prefer standing as tall as possible.
@@ -75,8 +87,8 @@ export function orientations(game: Game, cube: CubeSize, clearance: number): Par
   return fits
 }
 
-function allowedFits(game: Game, options: PackOptions, cube: CubeSize): Item['fits'] {
-  const fits = orientations(game, cube, options.clearance)
+function allowedFits(game: Game & { dims: BoxDimensions }, options: PackOptions, cube: CubeSize): Item['fits'] {
+  const fits = orientations(game.dims, cube, options.clearance)
   const pref = game.orientation === 'inherit' ? options.orientation : game.orientation
   if (pref === 'auto') return fits
   // A forced orientation that cannot work falls back to the other one.
@@ -290,12 +302,22 @@ function sum(unit: Item[]): number {
 /** Converts the abstract columns of a cube into absolute placements. */
 function toPlacements(state: CubeState, ctx: Ctx): Placement[] {
   const half = ctx.clearance / 2
+  // Boxes deeper than the cube stick out of the front, flush with the back.
+  const front = (ext: Extents) => Math.min(0, ctx.cube.depth - ext.sz)
   const placements: Placement[] = []
   let x = 0
   for (const col of state.columns) {
     if (col.kind === 'vertical') {
       const { item, ext } = col.entries[0]!
-      placements.push({ gameId: item.game.id, orientation: 'vertical', order: item.order, x: x + half, y: 0, z: 0, ...ext })
+      placements.push({
+        gameId: item.game.id,
+        orientation: 'vertical',
+        order: item.order,
+        x: x + half,
+        y: 0,
+        z: front(ext),
+        ...ext,
+      })
     } else {
       // Biggest footprint at the bottom, for a stable stack.
       const entries = [...col.entries].sort((p, q) => q.ext.sx * q.ext.sz - p.ext.sx * p.ext.sz)
@@ -307,7 +329,7 @@ function toPlacements(state: CubeState, ctx: Ctx): Placement[] {
           order: item.order,
           x: x + (col.width - ext.sx) / 2,
           y,
-          z: 0,
+          z: front(ext),
           ...ext,
         })
         y += ext.sy + ctx.clearance
@@ -326,17 +348,23 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
     stackHeight: options.maxStackHeight > 0 ? Math.min(options.maxStackHeight, cube.height) : cube.height,
   }
 
+  const fitCube = { ...cube, depth: cube.depth + Math.max(0, options.overhang) }
+  const shelved = games.filter((g) => !g.excluded)
   const unplaced: UnplacedGame[] = []
   const itemOf = new Map<string, Item>()
-  for (const game of games) {
-    const fits = allowedFits(game, options, cube)
+  for (const game of shelved) {
+    if (!hasDims(game)) {
+      unplaced.push({ gameId: game.id, reason: 'no-size' })
+      continue
+    }
+    const fits = allowedFits(game, options, fitCube)
     if (!fits.vertical && !fits.horizontal) unplaced.push({ gameId: game.id, reason: 'too-big' })
     else itemOf.set(game.id, { game, order: 0, volume: boxVolume(game), fits })
   }
 
   let order = 0
   const unitsOrdered = orderUnits(
-    games.filter((g) => itemOf.has(g.id)),
+    shelved.filter((g) => itemOf.has(g.id)),
     sagas,
     options,
   ).map((u) =>
@@ -374,8 +402,8 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
     unplaced,
     sagas,
     stats: {
-      totalGames: games.length,
-      placedGames: games.length - unplaced.length,
+      totalGames: shelved.length,
+      placedGames: shelved.length - unplaced.length,
       totalCubes: slots.length,
       usedCubes: packed.states.length,
       volumeFill: packed.states.length ? placedVolume / (packed.states.length * cubeVolume) : 0,

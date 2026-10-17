@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createBackup, parseBackup, parseCsv } from './backup'
+import { createBackup, mergeGames, parseBackup, parseCsv } from './backup'
 import { DEFAULT_OPTIONS } from './defaults'
 import { KALLAX_CUBE } from './kallax'
 
@@ -19,9 +19,71 @@ describe('parseCsv', () => {
     ])
   })
 
-  it('skips rows without valid sizes and fails without required columns', () => {
-    expect(parseCsv('name,width,height,depth\nGood,1,2,3\nBad,0,2,3')).toHaveLength(1)
-    expect(() => parseCsv('name,width\nA,1')).toThrow(/height/)
+  it('keeps games without a valid size and fails without a name column', () => {
+    const rows = parseCsv('name,width,height,depth\nGood,1,2,3\nNo size,0,2,3')
+    expect(rows.map((r) => r.dims)).toEqual([{ width: 1, height: 2, depth: 3 }, undefined])
+    expect(() => parseCsv('title2,width\nA,1')).toThrow(/name/)
+  })
+
+  it('reads a BoardGameGeek collection export', () => {
+    const csv = [
+      'objectname,objectid,rating,own,itemtype,yearpublished,year,version_publishers,version_nickname',
+      '"Azul","230802","0","1","standalone","2018","","Ghenos Games","Italian edition"',
+      '"Root: Kit del Vagabondo","309977","0","1","expansion","2020","","Leder Games; MS Edizioni",""',
+      '"Wishlist only","1","0","0","standalone","2020","","",""',
+    ].join('\n')
+    expect(parseCsv(csv)).toEqual([
+      {
+        name: 'Azul',
+        bggId: 230802,
+        year: 2018,
+        expansion: false,
+        version: 'Italian edition · Ghenos Games',
+        orientation: 'inherit',
+      },
+      {
+        name: 'Root: Kit del Vagabondo',
+        bggId: 309977,
+        year: 2020,
+        expansion: true,
+        version: 'Leder Games; MS Edizioni',
+        orientation: 'inherit',
+      },
+    ])
+  })
+})
+
+describe('mergeGames', () => {
+  let n = 0
+  const id = () => `new${++n}`
+
+  it('updates existing games without losing manual data', () => {
+    const existing = [
+      {
+        id: 'a',
+        name: 'Azul',
+        bggId: 230802,
+        dims: { width: 26, height: 26, depth: 7 },
+        orientation: 'vertical' as const,
+        createdAt: 1,
+      },
+      { id: 'b', name: 'Catan', orientation: 'inherit' as const, createdAt: 2 },
+    ]
+    const result = mergeGames(
+      existing,
+      [
+        { name: 'Azul (IT)', bggId: 230802, year: 2018, orientation: 'inherit' },
+        { name: 'catan', dims: { width: 29, height: 29, depth: 7 }, orientation: 'inherit' },
+        { name: 'Root', bggId: 237182, orientation: 'inherit' },
+      ],
+      id,
+      100,
+    )
+    expect(result.added).toBe(1)
+    expect(result.updated).toBe(2)
+    expect(result.games[0]).toMatchObject({ name: 'Azul', year: 2018, orientation: 'vertical', dims: { width: 26 } })
+    expect(result.games[1]!.dims).toEqual({ width: 29, height: 29, depth: 7 })
+    expect(result.games[2]).toMatchObject({ id: 'new1', name: 'Root', bggId: 237182, createdAt: 102 })
   })
 })
 
