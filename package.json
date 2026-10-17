@@ -44,7 +44,8 @@
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
     "vite-plugin-pwa": "^2.0.0",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "wrangler": "^4.151.1"
   },
   "description": "Plan the best layout of your board game collection on IKEA KALLAX shelves",
   "license": "MIT"

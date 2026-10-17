@@ -32,6 +32,8 @@ npm run check      # typecheck, lint, format check and tests
 npm run build      # production build in dist/
 ```
 
+The app is published on Cloudflare Workers, privately until 1.0: see [docs/HOSTING.md](docs/HOSTING.md).
+
 ### CSV import
 
 A header row is required. Recognised columns (English or Italian names): `name` (required), `width`, `height`, `depth` (cm, decimal comma allowed), `saga`, `year`, `orientation` (`vertical`, `horizontal`, `auto`), `bggid`.

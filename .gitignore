@@ -30,3 +30,6 @@ dev-dist
 .env
 .env.*
 !.env.example
+
+# Cloudflare Wrangler
+.wrangler

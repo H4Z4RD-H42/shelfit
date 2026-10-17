@@ -18,6 +18,8 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      // The site sits behind Cloudflare Access: the manifest request must carry its cookie.
+      useCredentials: true,
       includeAssets: ['favicon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
         name: 'Shelf Planner',
