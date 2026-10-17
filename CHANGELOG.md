@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-17
+
+### Changed
+
+- Long titles on the boxes wrap onto up to three lines instead of shrinking or being cut, in the 3D and front views. Lines break where the text can be largest, preferably at a subtitle (after ":" or at a dash, which is dropped) and never right after a short word such as "La" or "of".
+
 ## [0.9.0] - 2026-10-17
 
 ### Added
@@ -133,7 +139,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.7.1...v0.8.0

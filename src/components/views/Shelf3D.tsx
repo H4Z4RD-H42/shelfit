@@ -3,12 +3,14 @@ import { Canvas, useThree, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useMemo, useState } from 'react'
 import * as THREE from 'three'
 import { contrastText } from '../../domain/color'
+import { LINE_HEIGHT } from '../../domain/label'
 import { FRAME, cubeOrigin, isBlocked, unitOffsets, unitOuterSize } from '../../domain/kallax'
 import { TOP_HEIGHT } from '../../domain/packer'
 import type { CubeSize, Game, Placement, ShelfUnit } from '../../domain/types'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
 import { useAppStore } from '../../store/appStore'
+import { fitBoxLabel, LABEL_FONT, LABEL_WEIGHT } from '../boxLabel'
 
 /*
  * Scene units are centimetres. The shelves stand on y = 0 with their front
@@ -97,26 +99,22 @@ function useLabelTexture(name: string, color: string, faceW: number, faceH: numb
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    const along = vertical ? canvas.height : canvas.width
-    const across = vertical ? canvas.width : canvas.height
-    let fontSize = Math.min(across * 0.5, 2.6 * PX_PER_CM)
-    ctx.save()
-    ctx.translate(canvas.width / 2, canvas.height / 2)
-    if (vertical) ctx.rotate(-Math.PI / 2)
-    ctx.fillStyle = contrastText(color)
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    const font = (size: number) => `600 ${size}px "Space Grotesk Variable", "Inter Variable", sans-serif`
-    ctx.font = font(fontSize)
-    const maxWidth = along * 0.9
-    while (fontSize > 8 && ctx.measureText(name).width > maxWidth) {
-      fontSize -= 1
-      ctx.font = font(fontSize)
+    const along = vertical ? faceH : faceW
+    const across = vertical ? faceW : faceH
+    const label = fitBoxLabel(name, { width: along * 0.9, height: across, maxFont: 2.6, minFont: 8 / PX_PER_CM })
+    if (label) {
+      const fontSize = label.fontSize * PX_PER_CM
+      ctx.save()
+      ctx.translate(canvas.width / 2, canvas.height / 2)
+      if (vertical) ctx.rotate(-Math.PI / 2)
+      ctx.fillStyle = contrastText(color)
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.font = `${LABEL_WEIGHT} ${fontSize}px ${LABEL_FONT}`
+      const first = -((label.lines.length - 1) / 2) * LINE_HEIGHT * fontSize
+      label.lines.forEach((line, i) => ctx.fillText(line, 0, first + i * LINE_HEIGHT * fontSize))
+      ctx.restore()
     }
-    let label = name
-    while (label.length > 1 && ctx.measureText(label).width > maxWidth) label = label.slice(0, -2) + '…'
-    ctx.fillText(label, 0, 0)
-    ctx.restore()
 
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace

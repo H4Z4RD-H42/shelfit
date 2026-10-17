@@ -1,10 +1,12 @@
 import { useMemo } from 'react'
 import { contrastText } from '../../domain/color'
+import { LINE_HEIGHT } from '../../domain/label'
 import { cubeOrigin, isBlocked, unitOffsets, unitOuterSize } from '../../domain/kallax'
 import type { Placement } from '../../domain/types'
 import { useBoxColor } from '../../hooks/useBoxColor'
 import { useGamesById, useLayout } from '../../hooks/useLayout'
 import { useAppStore } from '../../store/appStore'
+import { fitBoxLabel, LABEL_WEIGHT } from '../boxLabel'
 
 const PAD = 6
 
@@ -167,9 +169,10 @@ function BoxRect({
   const vertical = p.orientation === 'vertical'
   const along = vertical ? p.sy : p.sx
   const across = vertical ? p.sx : p.sy
-  const fontSize = Math.min(across * 0.5, 2.4)
-  const maxChars = Math.floor((along - 1.5) / (fontSize * 0.56))
-  const label = name.length > maxChars ? `${name.slice(0, Math.max(0, maxChars - 1))}…` : name
+  const label = useMemo(
+    () => fitBoxLabel(name, { width: along - 1.5, height: across, maxFont: 2.4, minFont: 0.9 }),
+    [name, along, across],
+  )
   const cx = x + p.sx / 2
   const cy = y + p.sy / 2
 
@@ -193,19 +196,26 @@ function BoxRect({
         stroke={selected ? 'var(--accent)' : 'rgba(0,0,0,.35)'}
         strokeWidth={selected ? 0.6 : 0.12}
       />
-      {fontSize >= 0.9 && maxChars >= 3 && (
+      {label && (
         <text
-          x={cx}
-          y={cy}
-          fontSize={fontSize}
-          fontWeight={600}
+          fontSize={label.fontSize}
+          fontWeight={LABEL_WEIGHT}
           fill={contrastText(color)}
           textAnchor="middle"
           dominantBaseline="central"
           transform={vertical ? `rotate(-90 ${cx} ${cy})` : undefined}
           style={{ pointerEvents: 'none', fontFamily: 'var(--font-display)' }}
         >
-          {label}
+          {label.lines.map((line, i) => (
+            <tspan
+              key={i}
+              x={cx}
+              y={cy + (i - (label.lines.length - 1) / 2) * LINE_HEIGHT * label.fontSize}
+              dominantBaseline="central"
+            >
+              {line}
+            </tspan>
+          ))}
         </text>
       )}
     </g>

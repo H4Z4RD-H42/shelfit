@@ -13,6 +13,7 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 - **0.7** — Long side at the front for lying boxes; redesigned options panel.
 - **0.8** — Phone layout with bottom navigation; 3D camera fitted to the screen.
 - **0.9** — Deep boxes can stick out at the back; games that fit in no cube go on top by default.
+- **0.10** — Box titles wrap onto several lines.
 
 ## Planned
 
