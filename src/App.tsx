@@ -1,6 +1,7 @@
-import { Box, LayoutGrid, List, Settings2, Library, Rows3 } from 'lucide-react'
+import { Box, LayoutGrid, Library, List, Printer, Rows3, Settings2 } from 'lucide-react'
 import { Suspense, lazy, type ReactNode } from 'react'
 import { GameDetails } from './components/GameDetails'
+import { PrintSheet } from './components/PrintSheet'
 import { Logo } from './components/Logo'
 import { CollectionPanel } from './components/panels/CollectionPanel'
 import { OptionsPanel } from './components/panels/OptionsPanel'
@@ -114,6 +115,10 @@ export default function App() {
             <StatsBar />
           </div>
           <span className="flex-1 lg:hidden" />
+          <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => window.print()} title={t('print.button')}>
+            <Printer className="size-4" />
+            <span className="hidden sm:inline">{t('print.button')}</span>
+          </Button>
           <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => setLanguage(language === 'it' ? 'en' : 'it')}>
             {t('lang.switch')}
           </Button>
@@ -132,6 +137,7 @@ export default function App() {
           <GameDetails />
         </div>
       </main>
+      <PrintSheet />
     </div>
   )
 }

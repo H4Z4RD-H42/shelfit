@@ -120,6 +120,10 @@ export interface Placement {
   orientation: Orientation
   /** Position of the game in the packing sequence (reading order). */
   order: number
+  /** Column of the cube the box is in, from the left (0-based). */
+  column: number
+  /** Position in a stack, from the bottom (0-based); 0 for standing boxes. */
+  level: number
   x: number
   y: number
   z: number

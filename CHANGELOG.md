@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-17
+
+### Added
+
+- Printable instructions (Print button, or the browser's print / save as PDF): a numbered map of each unit, then cube by cube the games to place from left to right, stacks from the bottom up, with a tick box for every game; what goes on top of the shelves and what stays off them.
+
 ## [0.3.0] - 2026-10-17
 
 ### Added
@@ -48,7 +54,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/H4Z4RD-H42/kallax/releases/tag/v0.1.0

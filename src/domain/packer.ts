@@ -317,13 +317,15 @@ function toPlacements(state: CubeState, ctx: Ctx): Placement[] {
   const front = (ext: Extents) => Math.min(0, ctx.cube.depth - ext.sz)
   const placements: Placement[] = []
   let x = 0
-  for (const col of state.columns) {
+  for (const [column, col] of state.columns.entries()) {
     if (col.kind === 'vertical') {
       const { item, ext } = col.entries[0]!
       placements.push({
         gameId: item.game.id,
         orientation: 'vertical',
         order: item.order,
+        column,
+        level: 0,
         x: x + half,
         y: 0,
         z: front(ext),
@@ -333,11 +335,13 @@ function toPlacements(state: CubeState, ctx: Ctx): Placement[] {
       // Biggest footprint at the bottom, for a stable stack.
       const entries = [...col.entries].sort((p, q) => q.ext.sx * q.ext.sz - p.ext.sx * p.ext.sz)
       let y = 0
-      for (const { item, ext } of entries) {
+      for (const [level, { item, ext }] of entries.entries()) {
         placements.push({
           gameId: item.game.id,
           orientation: 'horizontal',
           order: item.order,
+          column,
+          level,
           x: x + (col.width - ext.sx) / 2,
           y,
           z: front(ext),

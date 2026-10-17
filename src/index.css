@@ -79,3 +79,131 @@ body {
   scrollbar-width: thin;
   scrollbar-color: var(--surface-3) transparent;
 }
+
+/* Printable instructions (PrintSheet): hidden on screen, the only thing printed. */
+.print-sheet {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  #root {
+    display: none !important;
+  }
+
+  .print-sheet {
+    display: block;
+    color: #000;
+    font: 10pt/1.35 var(--font-sans);
+  }
+
+  .print-sheet h1 {
+    font: 700 16pt var(--font-display);
+    margin: 0 0 2pt;
+  }
+
+  .print-sheet h2 {
+    font: 700 13pt var(--font-display);
+    margin: 0;
+  }
+
+  .print-sheet h3 {
+    font: 700 10.5pt var(--font-display);
+    margin: 0 0 3pt;
+  }
+
+  .print-sheet p {
+    margin: 0 0 2pt;
+  }
+
+  .print-sheet .how {
+    color: #555;
+    font-size: 8.5pt;
+    font-weight: 400;
+  }
+
+  .print-sheet header {
+    border-bottom: 1.5pt solid #000;
+    padding-bottom: 6pt;
+    margin-bottom: 10pt;
+  }
+
+  .print-sheet .unit {
+    margin-bottom: 14pt;
+  }
+
+  .print-sheet .unit-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12pt;
+    margin-bottom: 8pt;
+    break-inside: avoid;
+  }
+
+  .print-sheet .unit-map {
+    flex: none;
+    max-width: 45%;
+    height: auto;
+  }
+
+  .print-sheet .cubes {
+    columns: 2;
+    column-gap: 14pt;
+  }
+
+  .print-sheet .cube {
+    break-inside: avoid;
+    border: 0.75pt solid #999;
+    border-radius: 4pt;
+    padding: 5pt 7pt;
+    margin-bottom: 8pt;
+  }
+
+  .print-sheet .group {
+    font-size: 8.5pt;
+    font-style: italic;
+  }
+
+  .print-sheet .steps {
+    list-style: decimal;
+    margin: 0;
+    padding-left: 14pt;
+  }
+
+  .print-sheet .steps li::marker {
+    font-weight: 700;
+  }
+
+  .print-sheet .steps ul {
+    list-style: none;
+    margin: 1pt 0 2pt;
+    padding-left: 4pt;
+  }
+
+  .print-sheet .steps li {
+    margin: 1.5pt 0;
+  }
+
+  .print-sheet .box {
+    display: inline-block;
+    width: 8pt;
+    height: 8pt;
+    border: 0.75pt solid #000;
+    border-radius: 1.5pt;
+    vertical-align: -1pt;
+    margin-right: 2pt;
+  }
+
+  .print-sheet .empty {
+    color: #777;
+    font-style: italic;
+  }
+}
