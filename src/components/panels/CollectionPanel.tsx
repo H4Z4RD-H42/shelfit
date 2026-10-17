@@ -1,4 +1,4 @@
-import { Download, Plus, Search, Sparkles, Trash2, Upload } from 'lucide-react'
+import { Download, Layers, Plus, RulerDimensionLine, Search, Sparkles, Trash2, Upload } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { createBackup, parseBackup, parseCsv } from '../../domain/backup'
 import { hasDims } from '../../domain/types'
@@ -42,6 +42,8 @@ export function CollectionPanel() {
   } = useAppStore.getState()
   const layout = useLayout()
   const boxColor = useBoxColor()
+  const language = useAppStore((s) => s.language)
+  const num = (n: number) => n.toLocaleString(language)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null)
@@ -241,15 +243,30 @@ export function CollectionPanel() {
                         </span>
                       )}
                     </span>
-                    <span className="flex gap-2 text-xs text-ink-faint">
+                    <span className="mt-1 flex min-w-0 items-center gap-1.5">
                       {g.dims ? (
-                        <span className="tabular-nums">
-                          {g.dims.width} × {g.dims.height} × {g.dims.depth}
+                        <span
+                          className="inline-flex shrink-0 items-center gap-1 rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] text-ink-soft tabular-nums"
+                          title={t('game.dims')}
+                        >
+                          <RulerDimensionLine className="size-3.5 text-ink-faint" />
+                          {[g.dims.width, g.dims.height, g.dims.depth].map(num).join(' × ')}
                         </span>
                       ) : (
-                        <span className="text-warn">{t('game.noSize')}</span>
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-warn/15 px-1.5 py-0.5 text-[11px] font-medium text-warn">
+                          <RulerDimensionLine className="size-3.5" />
+                          {t('game.noSize')}
+                        </span>
                       )}
-                      {saga && <span className="truncate text-ink-soft">· {saga}</span>}
+                      {saga && (
+                        <span
+                          className="inline-flex min-w-0 items-center gap-1 rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] text-ink-soft"
+                          title={t('game.saga')}
+                        >
+                          <Layers className="size-3 shrink-0 text-ink-faint" />
+                          <span className="truncate">{saga}</span>
+                        </span>
+                      )}
                     </span>
                   </span>
                   {g.excluded ? (

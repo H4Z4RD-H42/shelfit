@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-17
+
+### Changed
+
+- Collection list: box sizes and sagas are shown as badges with an icon (ruler, layers); sizes use the decimal separator of the interface language; missing sizes get a warning badge.
+
 ## [0.7.0] - 2026-10-17
 
 ### Added
@@ -103,7 +109,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.3...v0.5.0
