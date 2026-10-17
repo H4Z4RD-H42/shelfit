@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { bggVersionsUrl } from '../../domain/bgg'
 import { autoColor } from '../../domain/color'
 import type { BoxDimensions, Game, GameOrientation } from '../../domain/types'
+import { validateGame, type GameError } from '../../domain/validation'
 import { useT } from '../../i18n'
 import { inputClass } from '../styles'
 import { Button, Field, NumberInput, Segmented, Toggle } from '../ui'
@@ -59,20 +60,16 @@ export function GameEditor({
   const t = useT()
   const [draft, setDraft] = useState<GameDraft>(initial ?? emptyDraft)
   const [dims, setDims] = useState<Partial<BoxDimensions>>(initial?.dims ?? {})
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<GameError>()
   const patch = (p: Partial<GameDraft>) => setDraft((d) => ({ ...d, ...p }))
   const setDim = (key: keyof BoxDimensions) => (v: number | undefined) => setDims((d) => ({ ...d, [key]: v }))
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    const values = [dims.width, dims.height, dims.depth]
-    const filled = values.filter((v) => v !== undefined)
-    // Sizes are optional, but when given they must be complete and positive.
-    const dimsValid = filled.length === 0 || (filled.length === 3 && values.every((v) => v! > 0))
-    if (!draft.name.trim() || !dimsValid) {
-      setError(true)
-      return
-    }
+    const problem = validateGame({ ...draft, dims })
+    setError(problem)
+    if (problem) return
+    const filled = [dims.width, dims.height, dims.depth].filter((v) => v !== undefined)
     onSave({
       ...draft,
       name: draft.name.trim(),
@@ -84,7 +81,9 @@ export function GameEditor({
   const orientations: GameOrientation[] = ['inherit', 'vertical', 'horizontal']
 
   return (
-    <form onSubmit={submit} className="space-y-4 rounded-xl border border-line bg-surface-1 p-4">
+    // noValidate: the browser would reject decimals that are not a multiple of `step`,
+    // which only sets the increment of the arrow keys; validateGame checks the values.
+    <form noValidate onSubmit={submit} className="space-y-4 rounded-xl border border-line bg-surface-1 p-4">
       <h3 className="font-display text-sm font-semibold">{initial ? t('game.edit') : t('game.new')}</h3>
       <Field label={t('game.name')}>
         <input autoFocus className={inputClass} value={draft.name} onChange={(e) => patch({ name: e.target.value })} />
@@ -197,7 +196,11 @@ export function GameEditor({
           )}
         </div>
       </Field>
-      {error && <p className="text-sm text-danger">{t('game.invalid')}</p>}
+      {error && (
+        <p className="text-sm text-danger" role="alert">
+          {t(`game.error.${error}`)}
+        </p>
+      )}
       <div className="flex items-center gap-2 pt-1">
         {onDelete && (
           <Button variant="danger" onClick={onDelete}>

@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-17
+
+### Fixed
+
+- Editing a game no longer rejects decimal values (e.g. 30.7 cm, complexity 2.26): the browser treated the arrow-key increment as a validity rule. Values are now checked by the app, with clear messages (complexity 1–5, rating 1–10, min players ≤ max players, complete positive sizes).
+
 ## [0.4.1] - 2026-10-17
 
 ### Fixed
@@ -60,7 +66,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.2.0...v0.3.0
