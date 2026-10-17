@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-17
+
+### Added
+
+- "Stick out" option next to the overhang: boxes deeper than a cube can stick out at the back instead of the front, for shelves with free room behind them. At the front they then stay flush.
+
 ## [0.8.1] - 2026-10-17
 
 ### Changed
@@ -127,7 +133,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.7.0...v0.7.1

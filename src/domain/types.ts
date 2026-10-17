@@ -91,6 +91,9 @@ export interface GroupLevel {
   direction: SortDirection
 }
 
+/** Side of the shelf a box deeper than the cube sticks out from. */
+export type OverhangSide = 'front' | 'back'
+
 /** Horizontal alignment of the boxes inside a cube and inside each stack. */
 export type Align = 'left' | 'center' | 'right'
 export type SortDirection = 'asc' | 'desc'
@@ -119,8 +122,10 @@ export interface PackOptions {
   clearance: number
   /** Maximum height (cm) of horizontal stacks; 0 means the cube height. */
   maxStackHeight: number
-  /** How far (cm) a box may stick out of the front of a cube. */
+  /** How far (cm) a box may stick out of a cube. */
   overhang: number
+  /** Whether deep boxes stick out at the front or at the back (open-backed shelves). */
+  overhangSide: OverhangSide
   /** Put on top of the shelves the games that fit in no cube. */
   oversizedOnTop: boolean
   align: Align

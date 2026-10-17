@@ -212,7 +212,12 @@ export const it = {
   'options.clearanceHint': 'Spazio in più lasciato attorno a ogni scatola, per poterla sfilare senza fatica.',
   'options.overhangShort': 'Sporgenza (cm)',
   'options.overhangHint':
-    'Di quanto una scatola più profonda del cubo può sporgere sul davanti. Con 0 le scatole troppo profonde non entrano.',
+    'Di quanto una scatola più profonda del cubo può sporgere dallo scaffale. Con 0 le scatole troppo profonde non entrano.',
+  'options.overhangSide': 'Sporgono',
+  'options.overhangSide.front': 'Davanti',
+  'options.overhangSide.back': 'Dietro',
+  'options.overhangSideHint':
+    'Da che lato escono le scatole troppo profonde. «Dietro» va bene se lo scaffale ha spazio libero alle spalle: sul davanti restano tutte a filo.',
   'options.maxStackHeightShort': 'Altezza pile (cm)',
   'options.maxStackHeightHint': 'Altezza massima di una pila di scatole sdraiate. Con 0 si usa tutta l’altezza del cubo.',
   'options.summary.notUsed': 'Non usato con «Massimo spazio»',
@@ -226,6 +231,7 @@ export const it = {
   'options.summary.keep': 'mai spezzate',
   'options.summary.space': 'Margine {clearance} cm · sporgenza {overhang} cm',
   'options.summary.onTop': 'grandi sopra lo scaffale',
+  'options.summary.overhangBack': 'sporgono dietro',
   'list.cube': 'Cubo {n}',
   'list.position': 'riga {row} · col. {column}',
   'list.empty': 'vuoto',

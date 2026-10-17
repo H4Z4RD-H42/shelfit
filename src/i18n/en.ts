@@ -210,7 +210,12 @@ export const en: Messages = {
   'options.clearanceHint': 'Extra room left around each box, so it can be pulled out easily.',
   'options.overhangShort': 'Overhang (cm)',
   'options.overhangHint':
-    'How far a box deeper than the cube may stick out at the front. With 0, boxes that are too deep do not fit.',
+    'How far a box deeper than the cube may stick out of the shelf. With 0, boxes that are too deep do not fit.',
+  'options.overhangSide': 'Stick out',
+  'options.overhangSide.front': 'At the front',
+  'options.overhangSide.back': 'At the back',
+  'options.overhangSideHint':
+    'Which side too-deep boxes stick out from. “At the back” works when there is free room behind the shelf: at the front they all stay flush.',
   'options.maxStackHeightShort': 'Stack height (cm)',
   'options.maxStackHeightHint': 'Maximum height of a stack of lying boxes. With 0 the full height of the cube is used.',
   'options.summary.notUsed': 'Not used with “Max space”',
@@ -224,6 +229,7 @@ export const en: Messages = {
   'options.summary.keep': 'never split',
   'options.summary.space': 'Margin {clearance} cm · overhang {overhang} cm',
   'options.summary.onTop': 'large ones on top',
+  'options.summary.overhangBack': 'sticking out at the back',
   'list.cube': 'Cube {n}',
   'list.position': 'row {row} · col. {column}',
   'list.empty': 'empty',

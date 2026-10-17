@@ -34,7 +34,7 @@ const SECTION_KEYS: Record<SectionId, (keyof PackOptions)[]> = {
   order: ['sortBy', 'sortDirection', 'fillGaps', 'fillOrder'],
   grouping: ['groupBy', 'groupStartsNewCube'],
   sagas: ['groupSagas', 'autoDetectSagas', 'keepSagasInCube'],
-  space: ['oversizedOnTop', 'overhang', 'clearance', 'maxStackHeight'],
+  space: ['oversizedOnTop', 'overhang', 'overhangSide', 'clearance', 'maxStackHeight'],
 }
 
 const OPEN_KEY = 'options.openSections'
@@ -192,6 +192,7 @@ export function OptionsPanel() {
       : t('options.summary.sagasOff'),
     space: [
       t('options.summary.space', { clearance: num(options.clearance), overhang: num(options.overhang) }),
+      options.overhang > 0 && options.overhangSide === 'back' && t('options.summary.overhangBack'),
       options.oversizedOnTop && t('options.summary.onTop'),
     ]
       .filter(Boolean)
@@ -393,6 +394,14 @@ export function OptionsPanel() {
                   step={0.5}
                   value={options.overhang}
                   onChange={(v) => setOptions({ overhang: Math.max(0, v ?? 0) })}
+                />
+              </Field>
+              <Field label={t('options.overhangSide')} info={t('options.overhangSideHint')}>
+                <Segmented
+                  size="sm"
+                  value={options.overhangSide}
+                  onChange={(overhangSide) => setOptions({ overhangSide })}
+                  options={(['front', 'back'] as const).map((o) => ({ value: o, label: t(`options.overhangSide.${o}`) }))}
                 />
               </Field>
               <Field label={t('options.maxStackHeightShort')} info={t('options.maxStackHeightHint')}>

@@ -96,6 +96,11 @@ describe('packCollection', () => {
     const p = layout.cubes[0]!.placements[0]!
     expect(p.sz).toBe(40.5)
     expect(p.z).toBeCloseTo(KALLAX_CUBE.depth - 40.5)
+
+    const back = packCollection([deep], [unit(1, 1)], KALLAX_CUBE, opts({ overhang: 3, overhangSide: 'back' }))
+    const q = back.cubes[0]!.placements[0]!
+    expect(q.z).toBe(0)
+    expect(q.z + q.sz).toBeCloseTo(40.5)
   })
 
   it('puts games on top of the shelf when asked or, by default, when they fit nowhere', () => {

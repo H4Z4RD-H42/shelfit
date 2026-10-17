@@ -11,6 +11,7 @@ import {
   type Game,
   type Layout,
   type Orientation,
+  type OverhangSide,
   type PackOptions,
   type Placement,
   type ShelfUnit,
@@ -71,6 +72,7 @@ interface Ctx {
   clearance: number
   stackHeight: number
   align: Align
+  overhangSide: OverhangSide
 }
 
 /** Computes the possible extents of a box in each orientation. */
@@ -336,8 +338,9 @@ function sum(unit: Item[]): number {
 /** Converts the abstract columns of a cube into absolute placements. */
 function toPlacements(state: CubeState, ctx: Ctx): Placement[] {
   const half = ctx.clearance / 2
-  // Boxes deeper than the cube stick out of the front, flush with the back.
-  const front = (ext: Extents) => Math.min(0, ctx.cube.depth - ext.sz)
+  // Boxes deeper than the cube stick out of the front, flush with the back,
+  // or out of the back, flush with the front.
+  const front = (ext: Extents) => (ctx.overhangSide === 'back' ? 0 : Math.min(0, ctx.cube.depth - ext.sz))
   const placements: Placement[] = []
   const free = ctx.cube.width - state.used
   let x = ctx.align === 'left' ? 0 : ctx.align === 'center' ? free / 2 : free
@@ -400,6 +403,7 @@ function packTop(
   cube: CubeSize,
   clearance: number,
   align: Align,
+  overhangSide: OverhangSide,
 ): { tops: TopLayout[]; leftover: Game[]; tooBig: Game[] } {
   const tops: TopLayout[] = []
   const widest = Math.max(0, ...units.map((u) => unitOuterSize(u, cube).width))
@@ -408,7 +412,13 @@ function packTop(
   for (const unit of units) {
     if (queue.length === 0) break
     const width = unitOuterSize(unit, cube).width
-    const ctx: Ctx = { cube: { width, height: TOP_HEIGHT, depth: FRAME.depth }, clearance, stackHeight: TOP_HEIGHT, align }
+    const ctx: Ctx = {
+      cube: { width, height: TOP_HEIGHT, depth: FRAME.depth },
+      clearance,
+      stackHeight: TOP_HEIGHT,
+      align,
+      overhangSide,
+    }
     const items: Item[] = []
     for (const [order, game] of queue.entries()) {
       const ext = topExtents(game.dims!, width, clearance)
@@ -431,6 +441,7 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
     clearance: options.clearance,
     stackHeight: options.maxStackHeight > 0 ? Math.min(options.maxStackHeight, cube.height) : cube.height,
     align: options.align,
+    overhangSide: options.overhangSide,
   }
 
   const fitCube = { ...cube, depth: cube.depth + Math.max(0, options.overhang) }
@@ -459,6 +470,7 @@ export function packCollection(games: Game[], units: ShelfUnit[], cube: CubeSize
     cube,
     options.clearance,
     options.align,
+    options.overhangSide,
   )
   for (const g of top.tooBig) unplaced.push({ gameId: g.id, reason: 'too-big' })
   for (const g of top.leftover) unplaced.push({ gameId: g.id, reason: 'no-space' })
