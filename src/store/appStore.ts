@@ -34,6 +34,8 @@ export interface AppState {
   /** Filters and map painted on the shelves; not saved, like the data views of a game. */
   lens: Lens
   lensOpen: boolean
+  /** Section of the options panel to open and bring into sight; cleared once shown. */
+  optionsFocus: string | null
 
   addGame: (game: Omit<Game, 'id' | 'createdAt'>) => void
   updateGame: (id: string, patch: Partial<Omit<Game, 'id'>>) => void
@@ -69,6 +71,7 @@ export interface AppState {
   setLens: (update: (lens: Lens) => Lens) => void
   clearLens: () => void
   setLensOpen: (open: boolean) => void
+  focusOptions: (section: string | null) => void
   restore: (data: Pick<AppState, 'games' | 'units' | 'options'> & { cube?: CubeSize; zones?: Zone[] }) => void
 }
 
@@ -102,6 +105,7 @@ export const useAppStore = create<AppState>()(
       editing: null,
       lens: EMPTY_LENS,
       lensOpen: false,
+      optionsFocus: null,
 
       addGame: (game) => setState((s) => ({ games: [...s.games, { ...game, id: nanoid(), createdAt: Date.now() }] })),
       updateGame: (id, patch) => setState((s) => ({ games: s.games.map((g) => (g.id === id ? { ...g, ...patch } : g)) })),
@@ -165,6 +169,8 @@ export const useAppStore = create<AppState>()(
       setLens: (update) => setState((s) => ({ lens: update(s.lens) })),
       clearLens: () => setState({ lens: EMPTY_LENS }),
       setLensOpen: (lensOpen) => setState({ lensOpen }),
+      focusOptions: (optionsFocus) =>
+        setState(optionsFocus ? { optionsFocus, panel: 'options', mobileScreen: 'panel' } : { optionsFocus }),
       restore: ({ games, units, cube, options, zones }) =>
         setState({
           games,

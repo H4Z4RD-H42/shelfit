@@ -4,42 +4,53 @@ import {
   AlignRight,
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
+  Box,
   Info,
   Layers,
-  LayoutPanelLeft,
   LayoutGrid,
   ListOrdered,
-  Ruler,
   RotateCcw,
-  Shapes,
+  Scale,
 } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { DEFAULT_OPTIONS } from '../../domain/defaults'
 import { GROUP_KEYS } from '../../domain/grouping'
-import type { Align, GroupKey, GroupLevel, OrientationMode, PackOptions, SortDirection, SortKey } from '../../domain/types'
+import { missing, negotiable } from '../../domain/rules'
+import type {
+  Align,
+  GroupKey,
+  GroupLevel,
+  OrientationMode,
+  PackOptions,
+  RuleId,
+  SortDirection,
+  SortKey,
+} from '../../domain/types'
+import { useInsights, useLayout } from '../../hooks/useLayout'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
-import { zoneName } from '../labels'
+import { ruleName, zoneName } from '../labels'
 import { cx, inputClass } from '../styles'
 import { Button, Field, NumberInput, Segmented, Toggle } from '../ui'
 import { OptionSection } from './OptionSection'
+import { PrioritiesSection } from './PrioritiesSection'
 import { ZonesSection } from './ZonesSection'
 
 // 'weight' becomes selectable once weights can be imported from BGG.
 const SORT_KEYS: SortKey[] = ['name', 'year', 'size', 'complexity', 'playtime', 'rating', 'color', 'added']
 const ORIENTATIONS: OrientationMode[] = ['auto', 'vertical', 'horizontal']
 
-type SectionId = 'layout' | 'order' | 'grouping' | 'zones' | 'sagas' | 'space'
+type SectionId = 'order' | 'sagas' | 'zones' | 'priorities' | 'boxes'
+const SECTIONS: SectionId[] = ['order', 'sagas', 'zones', 'priorities', 'boxes']
 
 /** Options belonging to each section, used for the "modified" dot and the reset. */
 const SECTION_KEYS: Record<SectionId, (keyof PackOptions)[]> = {
-  layout: ['strategy', 'orientation', 'align', 'longSideFront'],
-  order: ['sortBy', 'sortDirection', 'fillGaps', 'fillOrder'],
-  grouping: ['groupBy', 'groupStartsNewCube'],
+  order: ['sortBy', 'sortDirection', 'groupBy', 'groupStartsNewCube', 'fillGaps', 'fillOrder'],
+  sagas: ['groupSagas', 'autoDetectSagas', 'keepSagasInCube', 'keepSagasInLine'],
   // Zones are not options: the reset buttons leave them alone.
   zones: [],
-  sagas: ['groupSagas', 'autoDetectSagas', 'keepSagasInCube', 'keepSagasInLine'],
-  space: ['clearance', 'maxStackHeight'],
+  priorities: ['priorities'],
+  boxes: ['orientation', 'longSideFront', 'align', 'clearance', 'maxStackHeight'],
 }
 
 const OPEN_KEY = 'options.openSections'
@@ -49,23 +60,32 @@ function useOpenSections() {
   const [open, setOpen] = useState<SectionId[]>(() => {
     try {
       const saved = localStorage.getItem(OPEN_KEY)
-      if (saved) return JSON.parse(saved) as SectionId[]
+      // Sections of older versions are dropped.
+      if (saved) return (JSON.parse(saved) as SectionId[]).filter((s) => SECTIONS.includes(s))
     } catch {
       // Private mode or blocked storage: fall back to the default.
     }
-    return ['layout']
+    return ['order']
   })
-  const toggle = (id: SectionId) =>
-    setOpen((current) => {
-      const next = current.includes(id) ? current.filter((s) => s !== id) : [...current, id]
-      try {
-        localStorage.setItem(OPEN_KEY, JSON.stringify(next))
-      } catch {
-        // Not saved: the panel still works.
-      }
-      return next
-    })
-  return { isOpen: (id: SectionId) => open.includes(id), toggle }
+  const update = useCallback(
+    (change: (current: SectionId[]) => SectionId[]) =>
+      setOpen((current) => {
+        const next = change(current)
+        try {
+          localStorage.setItem(OPEN_KEY, JSON.stringify(next))
+        } catch {
+          // Not saved: the panel still works.
+        }
+        return next
+      }),
+    [],
+  )
+  const show = useCallback((id: SectionId) => update((c) => (c.includes(id) ? c : [...c, id])), [update])
+  return {
+    isOpen: (id: SectionId) => open.includes(id),
+    toggle: (id: SectionId) => update((c) => (c.includes(id) ? c.filter((s) => s !== id) : [...c, id])),
+    show,
+  }
 }
 
 function DirectionButton({ value, onChange }: { value: SortDirection; onChange: (d: SortDirection) => void }) {
@@ -128,25 +148,85 @@ function Note({ children }: { children: ReactNode }) {
   )
 }
 
+/** The main choice, order or room, with what the other one would give. */
+function Goal() {
+  const t = useT()
+  const strategy = useAppStore((s) => s.options.strategy)
+  const setOptions = useAppStore((s) => s.setOptions)
+  const layout = useLayout()
+  const { other } = useInsights()
+  const used = layout.stats.usedCubes
+  const out = missing(layout)
+
+  let comparison: string
+  if (strategy === 'ordered') {
+    if (other.missing < out) comparison = t('options.goal.compactFits', { count: out - other.missing })
+    else if (other.usedCubes < used) comparison = t('options.goal.compactSaves', { other: other.usedCubes, used })
+    else comparison = t('options.goal.orderFree')
+  } else {
+    if (other.missing > out) comparison = t('options.goal.orderLeavesOut', { count: other.missing - out })
+    else if (other.usedCubes > used) comparison = t('options.goal.orderCosts', { other: other.usedCubes, used })
+    else comparison = t('options.goal.orderFree')
+  }
+
+  return (
+    <div className="space-y-2 border-b border-line px-5 py-4">
+      <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{t('options.goal')}</p>
+      <div className="grid grid-cols-2 gap-2">
+        {(['ordered', 'compact'] as const).map((s) => (
+          <button
+            key={s}
+            type="button"
+            aria-pressed={strategy === s}
+            onClick={() => setOptions({ strategy: s })}
+            className={cx(
+              'rounded-xl border p-3 text-left transition-colors',
+              strategy === s ? 'border-accent bg-accent/10' : 'border-line hover:border-ink-faint',
+            )}
+          >
+            <span className="block text-sm font-semibold">{t(`options.strategy.${s}`)}</span>
+            <span className="mt-1 block text-xs text-ink-soft">{t(`options.strategy.${s}Hint`)}</span>
+          </button>
+        ))}
+      </div>
+      <p className="flex gap-2 text-xs text-ink-soft">
+        <Scale className="mt-px size-3.5 shrink-0" />
+        <span>{comparison}</span>
+      </p>
+    </div>
+  )
+}
+
 export function OptionsPanel() {
   const t = useT()
   const language = useAppStore((s) => s.language)
   const options = useAppStore((s) => s.options)
   const colorBy = useAppStore((s) => s.colorBy)
   const zones = useAppStore((s) => s.zones)
-  const { setOptions, resetOptions, setColorBy } = useAppStore.getState()
-  const { isOpen, toggle } = useOpenSections()
+  const focus = useAppStore((s) => s.optionsFocus)
+  const { setOptions, resetOptions, setColorBy, focusOptions } = useAppStore.getState()
+  const layout = useLayout()
+  const { isOpen, toggle, show } = useOpenSections()
+  const sectionRefs = useRef<Partial<Record<SectionId, HTMLDivElement | null>>>({})
   const ordered = options.strategy === 'ordered'
   const [primary, secondary] = options.groupBy
   const num = (n: number) => n.toLocaleString(language)
 
+  // Opened from elsewhere (the stats bar): show the section asked for, once.
+  useEffect(() => {
+    if (!focus) return
+    show(focus as SectionId)
+    sectionRefs.current[focus as SectionId]?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    focusOptions(null)
+  }, [focus, show, focusOptions])
+
   const isModified = (id: SectionId) =>
     SECTION_KEYS[id].some((k) => JSON.stringify(options[k]) !== JSON.stringify(DEFAULT_OPTIONS[k])) ||
-    (id === 'grouping' && colorBy !== 'game') ||
+    (id === 'order' && colorBy !== 'game') ||
     (id === 'zones' && zones.length > 0)
   const resetSection = (id: SectionId) => {
     setOptions(Object.fromEntries(SECTION_KEYS[id].map((k) => [k, DEFAULT_OPTIONS[k]])) as Partial<PackOptions>)
-    if (id === 'grouping') setColorBy('game')
+    if (id === 'order') setColorBy('game')
   }
 
   const setGroup = (index: 0 | 1, level: GroupLevel | undefined) => {
@@ -157,38 +237,33 @@ export function OptionsPanel() {
     setOptions({ groupBy })
   }
 
+  /** Label of a rule's switch, marked when the layout had to give the rule up. */
+  const ruleLabel = (text: string, rule: RuleId) => (
+    <>
+      {text}
+      {layout.relaxed.includes(rule) && (
+        <span className="ml-1.5 rounded bg-warn/15 px-1.5 py-px text-[10px] font-semibold text-warn uppercase">
+          {t('rule.relaxedBadge')}
+        </span>
+      )}
+    </>
+  )
+
   const notUsed = t('options.summary.notUsed')
   const groupSummary = (l: GroupLevel) => `${t(`group.${l.key}`)} ${l.direction === 'asc' ? '↑' : '↓'}`
+  const relaxedCount = layout.relaxed.length
   const summaries: Record<SectionId, string> = {
-    layout: [
-      t(`options.strategy.${options.strategy}`),
-      t(`orientation.${options.orientation}`),
-      t(`options.align.${options.align}`),
-      options.longSideFront && t('options.summary.longFront'),
-    ]
-      .filter(Boolean)
-      .join(' · '),
     order: ordered
       ? [
           `${t(`options.sort.${options.sortBy}`)} ${options.sortDirection === 'asc' ? '↑' : '↓'}`,
+          options.groupBy.length > 0 && options.groupBy.map(groupSummary).join(' → '),
+          options.groupBy.length > 0 && options.groupStartsNewCube && t('options.summary.newCube'),
           t(`options.fillOrder.${options.fillOrder}`),
           options.fillGaps && t('options.summary.fillGaps'),
         ]
           .filter(Boolean)
           .join(' · ')
       : notUsed,
-    grouping: !ordered
-      ? notUsed
-      : options.groupBy.length === 0
-        ? t('group.none')
-        : [
-            options.groupBy.map(groupSummary).join(' → '),
-            options.groupStartsNewCube && t('options.summary.newCube'),
-            colorBy === 'group' && t('options.summary.colored'),
-          ]
-            .filter(Boolean)
-            .join(' · '),
-    zones: zones.length > 0 ? zones.map((z) => zoneName(t, z)).join(' · ') : t('zones.summary.none'),
     sagas: options.groupSagas
       ? [
           t('options.summary.sagasOn'),
@@ -199,7 +274,19 @@ export function OptionsPanel() {
           .filter(Boolean)
           .join(' · ')
       : t('options.summary.sagasOff'),
-    space: [
+    zones: zones.length > 0 ? zones.map((z) => zoneName(t, z)).join(' · ') : t('zones.summary.none'),
+    priorities:
+      relaxedCount > 0
+        ? t(relaxedCount === 1 ? 'priorities.summary.relaxed.one' : 'priorities.summary.relaxed.other', {
+            count: relaxedCount,
+            rules: layout.relaxed.map((r) => ruleName(t, r, options)).join(', '),
+          })
+        : negotiable(options).length > 0
+          ? t('priorities.summary.kept')
+          : t('priorities.summary.none'),
+    boxes: [
+      t(`orientation.${options.orientation}`),
+      options.longSideFront && t('options.summary.longFront'),
       t('options.summary.space', { clearance: num(options.clearance) }),
       options.maxStackHeight > 0 && t('options.summary.stack', { height: num(options.maxStackHeight) }),
     ]
@@ -208,70 +295,29 @@ export function OptionsPanel() {
   }
 
   const section = (id: SectionId, icon: ReactNode, title: string, children: ReactNode) => (
-    <OptionSection
-      icon={icon}
-      title={title}
-      summary={summaries[id]}
-      open={isOpen(id)}
-      onToggle={() => toggle(id)}
-      modified={isModified(id)}
-      onReset={id === 'zones' ? undefined : () => resetSection(id)}
+    <div
+      ref={(el) => {
+        sectionRefs.current[id] = el
+      }}
     >
-      {children}
-    </OptionSection>
+      <OptionSection
+        icon={icon}
+        title={title}
+        summary={summaries[id]}
+        open={isOpen(id)}
+        onToggle={() => toggle(id)}
+        modified={isModified(id)}
+        onReset={id === 'zones' ? undefined : () => resetSection(id)}
+      >
+        {children}
+      </OptionSection>
+    </div>
   )
 
   return (
     <div className="flex h-full flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {section(
-          'layout',
-          <LayoutPanelLeft className="size-4" />,
-          t('options.section.layout'),
-          <>
-            <div className="grid grid-cols-2 gap-2">
-              {(['ordered', 'compact'] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  aria-pressed={options.strategy === s}
-                  onClick={() => setOptions({ strategy: s })}
-                  className={cx(
-                    'rounded-xl border p-3 text-left transition-colors',
-                    options.strategy === s ? 'border-accent bg-accent/10' : 'border-line hover:border-ink-faint',
-                  )}
-                >
-                  <span className="block text-sm font-semibold">{t(`options.strategy.${s}`)}</span>
-                  <span className="mt-1 block text-xs text-ink-soft">{t(`options.strategy.${s}Hint`)}</span>
-                </button>
-              ))}
-            </div>
-            <Field label={t('options.orientation')} info={t('options.orientationHint')}>
-              <Segmented
-                value={options.orientation}
-                onChange={(orientation) => setOptions({ orientation })}
-                options={ORIENTATIONS.map((o) => ({ value: o, label: t(`orientation.${o}`) }))}
-              />
-            </Field>
-            <Field label={t('options.align')} info={t('options.alignHint')}>
-              <Segmented<Align>
-                value={options.align}
-                onChange={(align) => setOptions({ align })}
-                options={[
-                  { value: 'left', label: <AlignLeft className="size-4" />, title: t('options.align.left') },
-                  { value: 'center', label: <AlignCenter className="size-4" />, title: t('options.align.center') },
-                  { value: 'right', label: <AlignRight className="size-4" />, title: t('options.align.right') },
-                ]}
-              />
-            </Field>
-            <Toggle
-              label={t('options.longSideFront')}
-              hint={t('options.longSideFrontHint')}
-              checked={options.longSideFront}
-              onChange={(longSideFront) => setOptions({ longSideFront })}
-            />
-          </>,
-        )}
+        <Goal />
 
         {section(
           'order',
@@ -296,32 +342,6 @@ export function OptionsPanel() {
                   <DirectionButton value={options.sortDirection} onChange={(sortDirection) => setOptions({ sortDirection })} />
                 </div>
               </Field>
-              <Field label={t('options.fillOrder')} info={t('options.fillOrderHint')}>
-                <Segmented
-                  size="sm"
-                  value={options.fillOrder}
-                  onChange={(fillOrder) => setOptions({ fillOrder })}
-                  options={(['rows', 'columns'] as const).map((o) => ({ value: o, label: t(`options.fillOrder.${o}`) }))}
-                />
-              </Field>
-              <Toggle
-                label={t('options.fillGaps')}
-                hint={t('options.fillGapsHint')}
-                checked={options.fillGaps}
-                onChange={(fillGaps) => setOptions({ fillGaps })}
-              />
-            </div>
-          </>,
-        )}
-
-        {section(
-          'grouping',
-          <Shapes className="size-4" />,
-          t('options.grouping'),
-          <>
-            {!ordered && <Note>{t('options.compactNote')}</Note>}
-            <div className={cx('space-y-4', !ordered && 'pointer-events-none opacity-40')}>
-              <p className="text-xs text-ink-soft">{t('options.groupingHint')}</p>
               <GroupSelect label={t('options.groupBy')} value={primary} onChange={(k) => setGroup(0, k)} />
               {primary && (
                 <GroupSelect
@@ -331,27 +351,42 @@ export function OptionsPanel() {
                   onChange={(k) => setGroup(1, k)}
                 />
               )}
-              {primary && (
-                <div>
-                  <Toggle
-                    label={t('options.groupStartsNewCube')}
-                    hint={t('options.groupStartsNewCubeHint')}
-                    checked={options.groupStartsNewCube}
-                    onChange={(groupStartsNewCube) => setOptions({ groupStartsNewCube })}
-                  />
-                  <Toggle
-                    label={t('options.colorByGroup')}
-                    hint={t('options.colorByGroupHint')}
-                    checked={colorBy === 'group'}
-                    onChange={(v) => setColorBy(v ? 'group' : 'game')}
-                  />
-                </div>
-              )}
+              {!primary && <p className="-mt-2 text-xs text-ink-faint">{t('options.groupingHint')}</p>}
+              <Field label={t('options.fillOrder')} info={t('options.fillOrderHint')}>
+                <Segmented
+                  size="sm"
+                  value={options.fillOrder}
+                  onChange={(fillOrder) => setOptions({ fillOrder })}
+                  options={(['rows', 'columns'] as const).map((o) => ({ value: o, label: t(`options.fillOrder.${o}`) }))}
+                />
+              </Field>
+              <div>
+                <Toggle
+                  label={ruleLabel(t('options.strictOrder'), 'strictOrder')}
+                  hint={t('options.strictOrderHint')}
+                  checked={!options.fillGaps}
+                  onChange={(strict) => setOptions({ fillGaps: !strict })}
+                />
+                {primary && (
+                  <>
+                    <Toggle
+                      label={ruleLabel(t('options.groupStartsNewCube'), 'groupCube')}
+                      hint={t('options.groupStartsNewCubeHint')}
+                      checked={options.groupStartsNewCube}
+                      onChange={(groupStartsNewCube) => setOptions({ groupStartsNewCube })}
+                    />
+                    <Toggle
+                      label={t('options.colorByGroup')}
+                      hint={t('options.colorByGroupHint')}
+                      checked={colorBy === 'group'}
+                      onChange={(v) => setColorBy(v ? 'group' : 'game')}
+                    />
+                  </>
+                )}
+              </div>
             </div>
           </>,
         )}
-
-        {section('zones', <LayoutGrid className="size-4" />, t('options.section.zones'), <ZonesSection />)}
 
         {section(
           'sagas',
@@ -371,14 +406,14 @@ export function OptionsPanel() {
               onChange={(autoDetectSagas) => setOptions({ autoDetectSagas })}
             />
             <Toggle
-              label={t('options.keepSagasInCube')}
+              label={ruleLabel(t('options.keepSagasInCube'), 'sagaInCube')}
               hint={t('options.keepSagasInCubeHint')}
               checked={options.keepSagasInCube}
               disabled={!options.groupSagas || !ordered}
               onChange={(keepSagasInCube) => setOptions({ keepSagasInCube })}
             />
             <Toggle
-              label={t('options.keepSagasInLine')}
+              label={ruleLabel(t('options.keepSagasInLine'), 'sagaInLine')}
               hint={t('options.keepSagasInLineHint')}
               checked={options.keepSagasInLine}
               disabled={!options.groupSagas || !ordered}
@@ -387,11 +422,39 @@ export function OptionsPanel() {
           </div>,
         )}
 
+        {section('zones', <LayoutGrid className="size-4" />, t('options.section.zones'), <ZonesSection />)}
+
+        {section('priorities', <Scale className="size-4" />, t('options.section.priorities'), <PrioritiesSection />)}
+
         {section(
-          'space',
-          <Ruler className="size-4" />,
-          t('options.section.space'),
+          'boxes',
+          <Box className="size-4" />,
+          t('options.section.boxes'),
           <>
+            <Field label={ruleLabel(t('options.orientation'), 'orientation')} info={t('options.orientationHint')}>
+              <Segmented
+                value={options.orientation}
+                onChange={(orientation) => setOptions({ orientation })}
+                options={ORIENTATIONS.map((o) => ({ value: o, label: t(`orientation.${o}`) }))}
+              />
+            </Field>
+            <Toggle
+              label={ruleLabel(t('options.longSideFront'), 'longSideFront')}
+              hint={t('options.longSideFrontHint')}
+              checked={options.longSideFront}
+              onChange={(longSideFront) => setOptions({ longSideFront })}
+            />
+            <Field label={t('options.align')} info={t('options.alignHint')}>
+              <Segmented<Align>
+                value={options.align}
+                onChange={(align) => setOptions({ align })}
+                options={[
+                  { value: 'left', label: <AlignLeft className="size-4" />, title: t('options.align.left') },
+                  { value: 'center', label: <AlignCenter className="size-4" />, title: t('options.align.center') },
+                  { value: 'right', label: <AlignRight className="size-4" />, title: t('options.align.right') },
+                ]}
+              />
+            </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label={t('options.clearanceShort')} info={t('options.clearanceHint')}>
                 <NumberInput
@@ -400,7 +463,7 @@ export function OptionsPanel() {
                   onChange={(v) => setOptions({ clearance: Math.max(0, v ?? 0) })}
                 />
               </Field>
-              <Field label={t('options.maxStackHeightShort')} info={t('options.maxStackHeightHint')}>
+              <Field label={ruleLabel(t('options.maxStackHeightShort'), 'stackHeight')} info={t('options.maxStackHeightHint')}>
                 <NumberInput
                   step={1}
                   value={options.maxStackHeight}

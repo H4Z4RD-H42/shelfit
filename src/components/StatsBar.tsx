@@ -1,9 +1,15 @@
+import { Scale } from 'lucide-react'
 import { useLayout } from '../hooks/useLayout'
 import { useT } from '../i18n'
+import { useAppStore } from '../store/appStore'
+import { ruleName } from './labels'
 
 export function StatsBar() {
   const t = useT()
-  const { stats, unplaced } = useLayout()
+  const layout = useLayout()
+  const options = useAppStore((s) => s.options)
+  const focusOptions = useAppStore((s) => s.focusOptions)
+  const { stats, unplaced, relaxed } = layout
   const placedRatio = stats.totalGames ? stats.placedGames / stats.totalGames : 0
 
   return (
@@ -19,6 +25,17 @@ export function StatsBar() {
         {t('stats.fill', { fill: Math.round(stats.volumeFill * 100) })}
       </span>
       {unplaced.length > 0 && <span className="font-medium text-danger">{t('stats.unplaced', { count: unplaced.length })}</span>}
+      {relaxed.length > 0 && (
+        <button
+          type="button"
+          onClick={() => focusOptions('priorities')}
+          title={t('stats.relaxedHint', { rules: relaxed.map((r) => ruleName(t, r, options)).join(', ') })}
+          className="flex items-center gap-1.5 rounded-full bg-warn/15 px-2 py-0.5 font-medium text-warn hover:bg-warn/25"
+        >
+          <Scale className="size-3.5" />
+          {t(relaxed.length === 1 ? 'stats.relaxed.one' : 'stats.relaxed.other', { count: relaxed.length })}
+        </button>
+      )}
     </div>
   )
 }

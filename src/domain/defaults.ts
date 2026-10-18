@@ -1,6 +1,28 @@
 import { isCustom, kallaxShape } from './geometry'
 import { KALLAX_CUBE } from './kallax'
-import type { CubeSize, GroupKey, GroupLevel, OverhangSide, PackOptions, ShelfUnit } from './types'
+import type { CubeSize, GroupKey, GroupLevel, OverhangSide, PackOptions, RuleId, ShelfUnit } from './types'
+
+/**
+ * Default order of importance. Every game on the shelves comes first; the
+ * last rules are given up first: a game moved into a gap costs less order
+ * than a saga split or a box laid differently.
+ */
+export const RULES: RuleId[] = [
+  'allIn',
+  'stackHeight',
+  'orientation',
+  'longSideFront',
+  'groupCube',
+  'sagaInLine',
+  'sagaInCube',
+  'strictOrder',
+]
+
+/** Keeps the known rules once each; rules missing from an older list go last. */
+export function normalizePriorities(list: readonly RuleId[] | undefined): RuleId[] {
+  const known = (list ?? []).filter((r, i, all) => RULES.includes(r) && all.indexOf(r) === i)
+  return [...known, ...RULES.filter((r) => !known.includes(r))]
+}
 
 export const DEFAULT_OPTIONS: PackOptions = {
   orientation: 'auto',
@@ -19,6 +41,7 @@ export const DEFAULT_OPTIONS: PackOptions = {
   maxStackHeight: 0,
   align: 'left',
   longSideFront: false,
+  priorities: RULES,
 }
 
 /** Options of the whole collection that became settings of each unit in 0.13. */
@@ -62,5 +85,5 @@ export function normalizeOptions(options: Partial<PackOptions> | undefined): Pac
   const levels = (merged.groupBy as (GroupLevel | GroupKey)[]).map((g): GroupLevel =>
     typeof g === 'string' ? { key: g, direction: 'asc' } : g,
   )
-  return { ...merged, groupBy: levels }
+  return { ...merged, groupBy: levels, priorities: normalizePriorities(merged.priorities) }
 }

@@ -1,6 +1,6 @@
 import { isCustom } from '../domain/geometry'
 import { isBucketKey } from '../domain/grouping'
-import type { GroupKey, ShelfUnit, UnplacedReason, Zone } from '../domain/types'
+import type { GroupKey, PackOptions, RuleId, ShelfUnit, UnplacedReason, Zone } from '../domain/types'
 import type { MessageKey } from '../i18n'
 
 type Translate = (key: MessageKey, params?: Record<string, string | number>) => string
@@ -24,6 +24,14 @@ export function cubePosition(t: Translate, unit: Pick<ShelfUnit, 'kind'> | undef
   return unit && isCustom(unit)
     ? t('list.positionCustom', { column: column + 1, n: row + 1 })
     : t('list.position', { row: row + 1, column: column + 1 })
+}
+
+/** Name of a layout rule, with the values it holds (orientation, stack height). */
+export function ruleName(t: Translate, rule: RuleId, options: PackOptions): string {
+  if (rule === 'orientation')
+    return t(options.orientation === 'horizontal' ? 'rule.orientation.horizontal' : 'rule.orientation.vertical')
+  if (rule === 'stackHeight') return t('rule.stackHeight', { height: options.maxStackHeight })
+  return t(`rule.${rule}`)
 }
 
 /** Name of a zone: the one given by the user, or the tag, or the name of its rule. */

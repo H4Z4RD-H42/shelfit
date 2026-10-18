@@ -142,6 +142,14 @@ export type SortDirection = 'asc' | 'desc'
 export type Strategy = 'ordered' | 'compact'
 export type FillOrder = 'rows' | 'columns'
 
+/**
+ * Rules of the layout the engine may give up to fit every game, and `allIn`,
+ * the wish to fit every game, which marks the line: rules listed above it are
+ * never given up.
+ */
+export type RuleId =
+  'allIn' | 'stackHeight' | 'orientation' | 'longSideFront' | 'groupCube' | 'sagaInLine' | 'sagaInCube' | 'strictOrder'
+
 export interface PackOptions {
   orientation: OrientationMode
   strategy: Strategy
@@ -169,6 +177,8 @@ export interface PackOptions {
   align: Align
   /** Lying boxes show their long side at the front (otherwise it goes to the back). */
   longSideFront: boolean
+  /** Every rule, most important first; when room runs out the last ones below `allIn` are given up. */
+  priorities: RuleId[]
 }
 
 /** What decides which games belong to a zone. */
@@ -265,6 +275,8 @@ export interface Layout {
   zones: Record<string, string>
   zoneStats: Record<string, ZoneStats>
   stats: LayoutStats
+  /** Rules given up to fit more games, most important first. */
+  relaxed: RuleId[]
 }
 
 export interface ZoneStats {

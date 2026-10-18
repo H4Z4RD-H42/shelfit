@@ -758,5 +758,6 @@ export function packCollection(games: Game[], units: ShelfUnit[], options: PackO
       usedCubes,
       volumeFill: usedVolume ? placedVolume / usedVolume : 0,
     },
+    relaxed: [],
   }
 }
