@@ -8,7 +8,8 @@
 
 - **Smart packing engine** — every cube is split into columns of standing boxes ("books") and stacks of flat boxes. A beam search explores all the combinations and picks the one that wastes less room.
 - **Orientation control** — vertical, horizontal or automatic, globally or per game.
-- **Two strategies** — _Ordered_ keeps your order (name, year, size, colour, date added) cube after cube; _Max space_ ignores the order to fit as many games as possible.
+- **Two strategies** — _Ordered_ keeps your order (name, year, size, colour, date added) cube after cube; _Max space_ ignores the order to fit as many games as possible. The options panel tells how many cubes the other strategy would take.
+- **Priorities instead of trial and error** — the layout rules (strict order, whole sagas in a cube, sagas on one row, a cube per group, forced orientation, long side at the front, stack height) sit in a list with "every game on the shelves". When room runs out, the engine gives up the least important rules, only as many as needed, and says which; rules placed above "every game on the shelves" are never given up. Each rule shows what it costs in cubes or games left out.
 - **Grouping** — keep together games of the same genre, designer, publisher, complexity, player count, playing time or language, on one or two levels, optionally starting each group in a new cube and colouring boxes by group.
 - **On top and blocked cubes** — boxes that fit in no cube can be stored on top of the shelves; cubes used for drawers or other things can be excluded.
 - **Sagas** — chapters of the same series (Zombicide, Pandemic Legacy, Ticket to Ride…) are detected from their names and kept together, even avoiding splitting them across two cubes.
