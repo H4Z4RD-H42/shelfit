@@ -9,7 +9,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Changed
 
-- The repository is named shelfit; the app links to its new address.
+- The repository is named shelfit (github.com/H4Z4RD-H42/shelfit).
 
 ## [0.17.3] - 2026-10-18
 
@@ -280,7 +280,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.17.2...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.17.4...HEAD
+[0.17.4]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.17.3...v0.17.4
+[0.17.3]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.17.2...v0.17.3
 [0.17.2]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.17.1...v0.17.2
 [0.17.1]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.16.0...v0.17.0

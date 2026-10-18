@@ -6,20 +6,21 @@
 
 - **Automatic placement**: it works out how to fit the boxes on the shelves, standing or lying flat.
 - **Shelf layouts**: the IKEA KALLAX is the first option, and you can set up your own shelves.
-- **Sorting and grouping**: by name, year, genre, players, playing time and more, with reserved areas for groups such as party games.
-- **Manual control**: you can change any result by hand, including the orientation and size of each game.
+- **Sorting and grouping**: by name, year, genre, players, playing time and more, with reserved areas for groups such as small games or games not played yet.
+- **Manual control**: you can set the orientation and the box size of each game, choose the cubes for a group, and keep a game on top of the shelves or off them.
 - **Views and printing**: 3D, front and list views, colour maps, and printable step-by-step instructions.
 - **Your device, your data**: it runs in the browser on phone or computer, in Italian and English, and your collection stays on your device.
 
 ## BoardGameGeek data
 
-- Data is taken from [BoardGameGeek](https://boardgamegeek.com) and used only to size and sort the boxes in the user's own plan.
-- The data is not changed, not resold, not shared with other services and not used to train AI models.
-- The app credits BGG as the source of the data.
-- The API token is kept on the server and is never shown to users or included in the public code.
-- The app is built to make as few requests as possible: results are stored and reused, and requests are spaced out.
+Today games come from the [BoardGameGeek](https://boardgamegeek.com) collection export or are added by hand. The app does not use the BGG XML API yet; when it does:
 
-The app is still in development and does not yet use the BGG API. Development notes are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) and the plans in [docs/ROADMAP.md](docs/ROADMAP.md).
+- the data will be used only to size and sort the boxes in the user's own plan;
+- it will not be changed, resold, shared with other services or used to train AI models;
+- the API token will stay on a small server of this project, never shown to users and never in this repository;
+- requests will be kept to a minimum: results stored and reused, requests spaced out.
+
+The app already credits BGG as the source of the game data. Development notes are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) and the plans in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Changes
 
@@ -29,4 +30,4 @@ See the [changelog](CHANGELOG.md).
 
 KALLAX is a trademark of Inter IKEA Systems B.V. This project is not affiliated with, endorsed or sponsored by IKEA.
 
-Licence: to be decided before the public release.
+Released under the [MIT License](LICENSE).

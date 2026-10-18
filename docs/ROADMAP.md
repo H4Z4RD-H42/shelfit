@@ -62,6 +62,6 @@ A public `/stats` page in the spirit of a service status page, fed by anonymous 
 
 ### 1.0 — Public release
 
-- Final branding, public repository, hosting on the custom domain shelfit.to.
+- Final branding, hosting on a custom domain (shelfit.to, if available).
 - Optional cloud sync between devices.
 - Community database of box sizes.
