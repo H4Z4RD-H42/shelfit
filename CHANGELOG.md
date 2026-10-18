@@ -5,6 +5,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-18
+
+### Added
+
+- Rule priorities, in Options → "When room runs out": the active layout rules (strict order, whole sagas in a cube, sagas on one row, each group in its own cubes, every box standing or lying, long side at the front, stack height) are listed with "Every game on the shelves" in order of importance, and arrows change the order. When games are left out for want of room, the engine gives up rules from the bottom of the list, only as many as needed, keeping the more important ones. Rules above "Every game on the shelves" are never given up: some games stay out instead.
+- Each rule in the list tells what it costs: the cubes it takes, the games it leaves out, or nothing. Rules given up are struck through, marked "given up" next to their switch, and counted in a chip of the stats bar that opens the list.
+- Under the two strategies, a line tells what the other one would do: e.g. "With Max space 12 cubes would do instead of 16".
+
+### Changed
+
+- The options panel starts from the goal (ordered or max space) and has fewer sections: Order (sorting, grouping, filling order, strict order), Sagas, Zones, When room runs out, Boxes (orientation, long side, alignment, margin, stacks).
+- "Fill gaps with later games" became "Strict order", on by default (the same as gaps not filled). With the default priorities, strict order is the first rule given up when games would be left out.
+- The layout is computed once for the whole page instead of once for each part of the screen showing it.
+
 ## [0.15.4] - 2026-10-18
 
 ### Fixed
@@ -223,7 +237,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.4...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.4...v0.16.0
 [0.15.4]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.3...v0.15.4
 [0.15.3]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.2...v0.15.3
 [0.15.2]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.1...v0.15.2
