@@ -1,6 +1,6 @@
 import { groupOf } from './grouping'
 import { cellAt, unitGeometry, type CubeSlot } from './geometry'
-import { compareInSaga } from './sorting'
+import { orderSaga } from './saga'
 import type { BoxDimensions, CubeLayout, Game, ShelfUnit, Strategy, Zone, ZonePlace, ZoneRule } from './types'
 
 /*
@@ -175,13 +175,14 @@ export function assignZones(games: Game[], zones: Zone[], ctx: ZoneContext): Rec
   }
 
   const lead = new Map<string, Game>()
-  if (ctx.groupSagas)
+  if (ctx.groupSagas) {
+    const bySaga = new Map<string, Game[]>()
     for (const g of games) {
       const saga = ctx.sagas[g.id]
-      if (!saga) continue
-      const first = lead.get(saga)
-      if (!first || compareInSaga(g, first) < 0) lead.set(saga, g)
+      if (saga) bySaga.set(saga, [...(bySaga.get(saga) ?? []), g])
     }
+    for (const [saga, list] of bySaga) lead.set(saga, orderSaga(list)[0]!)
+  }
 
   const result: Record<string, string> = {}
   for (const g of games) {

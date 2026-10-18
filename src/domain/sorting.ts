@@ -1,5 +1,6 @@
 import { gameColor, hueOf } from './color'
 import { compareGroups, groupPath } from './grouping'
+import { orderSaga } from './saga'
 import type { Game, PackOptions, SortKey } from './types'
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
@@ -36,14 +37,6 @@ function compareValues(a: number | string, b: number | string): number {
   return (a as number) - (b as number)
 }
 
-/** Order of the chapters inside a saga: by year, then by title. */
-export function compareInSaga(a: Game, b: Game): number {
-  const ya = a.year ?? Number.POSITIVE_INFINITY
-  const yb = b.year ?? Number.POSITIVE_INFINITY
-  if (ya !== yb) return ya - yb
-  return collator.compare(a.name, b.name)
-}
-
 export interface Unit {
   games: Game[]
   /** Outermost group of the unit; units of the same group are contiguous. */
@@ -73,7 +66,7 @@ export function orderUnits(
       list.push(g)
       bySaga.set(saga, list)
     }
-    for (const list of bySaga.values()) raw.push(list.sort(compareInSaga))
+    for (const list of bySaga.values()) raw.push(orderSaga(list))
   } else {
     for (const g of games) raw.push([g])
   }
