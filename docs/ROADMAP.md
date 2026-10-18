@@ -20,6 +20,7 @@ Released versions are detailed in the [changelog](../CHANGELOG.md).
 - **0.14** — Custom shelves built compartment by compartment.
 - **0.15** — Maps and filters over the shelves.
 - **0.16** — Rule priorities: the engine gives up the least important rules to fit every game, and tells what each rule costs; options regrouped around the goal.
+- **0.17** — Three goals (in order, balanced, max space), room left counted in standard boxes, sorting without leading articles.
 
 ## Planned
 
