@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.17.4] - 2026-10-18
+
+### Changed
+
+- The repository is named shelfit; the app links to its new address.
+
 ## [0.17.3] - 2026-10-18
 
 ### Changed
@@ -274,32 +280,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.17.2...HEAD
-[0.17.2]: https://github.com/H4Z4RD-H42/kallax/compare/v0.17.1...v0.17.2
-[0.17.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.17.0...v0.17.1
-[0.17.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.16.0...v0.17.0
-[0.16.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.4...v0.16.0
-[0.15.4]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.3...v0.15.4
-[0.15.3]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.2...v0.15.3
-[0.15.2]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.1...v0.15.2
-[0.15.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.0...v0.15.1
-[0.15.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.14.0...v0.15.0
-[0.14.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.13.0...v0.14.0
-[0.13.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.12.0...v0.13.0
-[0.12.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.11.0...v0.12.0
-[0.11.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.10.0...v0.11.0
-[0.10.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.9.0...v0.10.0
-[0.9.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.1...v0.9.0
-[0.8.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.8.0...v0.8.1
-[0.8.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.7.1...v0.8.0
-[0.7.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.7.0...v0.7.1
-[0.7.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.6.0...v0.7.0
-[0.6.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.3...v0.5.0
-[0.4.3]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.2...v0.4.3
-[0.4.2]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.1...v0.4.2
-[0.4.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.4.0...v0.4.1
-[0.4.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/H4Z4RD-H42/kallax/releases/tag/v0.1.0
+[Unreleased]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.17.2...HEAD
+[0.17.2]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.17.1...v0.17.2
+[0.17.1]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.17.0...v0.17.1
+[0.17.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.16.0...v0.17.0
+[0.16.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.15.4...v0.16.0
+[0.15.4]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.15.3...v0.15.4
+[0.15.3]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.15.2...v0.15.3
+[0.15.2]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.15.1...v0.15.2
+[0.15.1]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.15.0...v0.15.1
+[0.15.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.14.0...v0.15.0
+[0.14.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.13.0...v0.14.0
+[0.13.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.12.0...v0.13.0
+[0.12.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.11.0...v0.12.0
+[0.11.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.10.0...v0.11.0
+[0.10.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.9.0...v0.10.0
+[0.9.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.8.1...v0.9.0
+[0.8.1]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.8.0...v0.8.1
+[0.8.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.7.1...v0.8.0
+[0.7.1]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.4.3...v0.5.0
+[0.4.3]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.4.2...v0.4.3
+[0.4.2]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/H4Z4RD-H42/shelfit/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/H4Z4RD-H42/shelfit/releases/tag/v0.1.0
