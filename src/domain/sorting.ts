@@ -9,10 +9,20 @@ export function boxVolume(game: Game): number {
   return game.dims ? game.dims.width * game.dims.height * game.dims.depth : 0
 }
 
-function sortValue(game: Game, key: SortKey): number | string {
+// Italian, English, French, Spanish and German articles; elided ones run into the next word.
+const ARTICLE = /^(?:(?:il|lo|la|i|gli|le|un|uno|una|the|a|an|les|une|el|los|las|der|die|das|ein|eine)\s+|(?:l|un)['’]\s*)/i
+
+/** Title as filed in a library: without a leading article ("Le Case della Follia" under C). */
+export function sortTitle(name: string, ignoreArticles: boolean): string {
+  if (!ignoreArticles) return name
+  const rest = name.replace(ARTICLE, '')
+  return rest.trim() ? rest : name
+}
+
+function sortValue(game: Game, key: SortKey, ignoreArticles: boolean): number | string {
   switch (key) {
     case 'name':
-      return game.name
+      return sortTitle(game.name, ignoreArticles)
     case 'year':
       return game.year ?? Number.POSITIVE_INFINITY
     case 'size':
@@ -51,7 +61,7 @@ export interface Unit {
 export function orderUnits(
   games: Game[],
   sagas: Record<string, string>,
-  options: Pick<PackOptions, 'sortBy' | 'sortDirection' | 'groupSagas' | 'groupBy'>,
+  options: Pick<PackOptions, 'sortBy' | 'sortDirection' | 'groupSagas' | 'groupBy' | 'ignoreArticles'>,
 ): Unit[] {
   const raw: Game[][] = []
   if (options.groupSagas) {
@@ -74,7 +84,10 @@ export function orderUnits(
   const units = raw.map((list) => {
     const first = list[0]!
     const saga = sagas[first.id]
-    const key = options.groupSagas && saga && options.sortBy === 'name' ? saga : sortValue(first, options.sortBy)
+    const key =
+      options.groupSagas && saga && options.sortBy === 'name'
+        ? sortTitle(saga, options.ignoreArticles)
+        : sortValue(first, options.sortBy, options.ignoreArticles)
     return { games: list, key, path: groupPath(first, options.groupBy) }
   })
 

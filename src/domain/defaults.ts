@@ -29,6 +29,7 @@ export const DEFAULT_OPTIONS: PackOptions = {
   strategy: 'ordered',
   sortBy: 'name',
   sortDirection: 'asc',
+  ignoreArticles: false,
   groupBy: [],
   groupStartsNewCube: false,
   groupSagas: true,

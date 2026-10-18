@@ -94,7 +94,7 @@ export function PrioritiesSection() {
               <div className="flex shrink-0 flex-col">
                 <Button
                   variant="ghost"
-                  className="px-1.5 py-0.5"
+                  className="px-2.5 py-1"
                   disabled={index === 0}
                   onClick={() => move(rule, -1)}
                   aria-label={t('rule.moveUp')}
@@ -104,7 +104,7 @@ export function PrioritiesSection() {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="px-1.5 py-0.5"
+                  className="px-2.5 py-1"
                   disabled={index === items.length - 1}
                   onClick={() => move(rule, 1)}
                   aria-label={t('rule.moveDown')}

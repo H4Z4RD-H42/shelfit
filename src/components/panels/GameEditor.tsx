@@ -317,24 +317,27 @@ export function GameEditor({
           )}
         </div>
       </Field>
-      {error && (
-        <p className="text-sm text-danger" role="alert">
-          {t(`game.error.${error}`)}
-        </p>
-      )}
-      <div className="flex items-center gap-2 pt-1">
-        {onDelete && (
-          <Button variant="danger" onClick={onDelete}>
-            {t('game.delete')}
-          </Button>
+      {/* Stays in sight at the bottom of the panel while the long form scrolls. */}
+      <div className="sticky bottom-0 -mx-4 -mb-4 space-y-2 rounded-b-xl border-t border-line bg-surface-1/95 px-4 py-3 backdrop-blur">
+        {error && (
+          <p className="text-sm text-danger" role="alert">
+            {t(`game.error.${error}`)}
+          </p>
         )}
-        <span className="flex-1" />
-        <Button variant="ghost" onClick={onCancel}>
-          {t('game.cancel')}
-        </Button>
-        <Button variant="primary" type="submit">
-          {t('game.save')}
-        </Button>
+        <div className="flex items-center gap-2">
+          {onDelete && (
+            <Button variant="danger" onClick={onDelete}>
+              {t('game.delete')}
+            </Button>
+          )}
+          <span className="flex-1" />
+          <Button variant="ghost" onClick={onCancel}>
+            {t('game.cancel')}
+          </Button>
+          <Button variant="primary" type="submit">
+            {t('game.save')}
+          </Button>
+        </div>
       </div>
     </form>
   )

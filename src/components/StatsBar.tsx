@@ -1,5 +1,5 @@
 import { Scale } from 'lucide-react'
-import { useLayout } from '../hooks/useLayout'
+import { useLayout, useRoom } from '../hooks/useLayout'
 import { useT } from '../i18n'
 import { useAppStore } from '../store/appStore'
 import { ruleName } from './labels'
@@ -9,6 +9,7 @@ export function StatsBar() {
   const layout = useLayout()
   const options = useAppStore((s) => s.options)
   const focusOptions = useAppStore((s) => s.focusOptions)
+  const room = useRoom()
   const { stats, unplaced, relaxed } = layout
   const placedRatio = stats.totalGames ? stats.placedGames / stats.totalGames : 0
 
@@ -21,9 +22,14 @@ export function StatsBar() {
         {t('stats.placed', { placed: stats.placedGames, total: stats.totalGames })}
       </span>
       <span>{t('stats.cubes', { used: stats.usedCubes, total: stats.totalCubes })}</span>
-      <span title={t('stats.fillHint')} className="cursor-help underline decoration-dotted underline-offset-2">
-        {t('stats.fill', { fill: Math.round(stats.volumeFill * 100) })}
-      </span>
+      {room && (
+        <span
+          title={t('stats.roomHint', { empty: room.emptyCubes, fill: Math.round(stats.volumeFill * 100) })}
+          className="cursor-help underline decoration-dotted underline-offset-2"
+        >
+          {t('stats.room', { count: room.boxes })}
+        </span>
+      )}
       {unplaced.length > 0 && <span className="font-medium text-danger">{t('stats.unplaced', { count: unplaced.length })}</span>}
       {relaxed.length > 0 && (
         <button

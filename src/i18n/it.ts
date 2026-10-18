@@ -14,9 +14,6 @@ export const it = {
 
   'stats.placed': '{placed} di {total} giochi sistemati',
   'stats.cubes': '{used} di {total} cubi usati',
-  'stats.fill': 'cubi usati pieni al {fill}%',
-  'stats.fillHint':
-    'Volume delle scatole diviso il volume interno dei cubi che contengono almeno un gioco. Il resto è aria: sopra le pile, ai lati delle scatole in piedi, dietro quelle poco profonde. Non contano i cubi vuoti né le scatole sopra gli scaffali.',
   'stats.unplaced': '{count} giochi senza posto',
 
   'collection.search': 'Cerca un gioco…',
@@ -123,11 +120,6 @@ export const it = {
   'finish.gray-turquoise': 'Grigio-turchese',
 
   'options.orientation': 'Orientamento delle scatole',
-  'options.strategy': 'Strategia',
-  'options.strategy.ordered': 'Ordinata',
-  'options.strategy.orderedHint': 'Rispetta l’ordine scelto, cubo dopo cubo.',
-  'options.strategy.compact': 'Massimo spazio',
-  'options.strategy.compactHint': 'Ignora l’ordine per far entrare più giochi possibile.',
   'options.sortBy': 'Ordina per',
   'options.sort.name': 'Nome',
   'options.sort.year': 'Anno',
@@ -425,6 +417,26 @@ export const it = {
   'stats.relaxed.one': '1 regola sacrificata',
   'stats.relaxed.other': '{count} regole sacrificate',
   'stats.relaxedHint': 'Per far entrare più giochi: {rules}. Clicca per vedere le priorità.',
+  'options.goal.order': 'In ordine',
+  'options.goal.orderHint': 'Le regole prima di tutto',
+  'options.goal.balanced': 'Equilibrio',
+  'options.goal.balancedHint': 'Ordine, ma entrano tutti',
+  'options.goal.space': 'Massimo spazio',
+  'options.goal.spaceHint': 'Più giochi possibile',
+  'options.goal.orderAbout':
+    'Rispetta sempre l’ordine e le regole che scegli: se lo spazio non basta, qualche gioco resta fuori e te lo dice.',
+  'options.goal.balancedAbout':
+    'Segue l’ordine e le tue regole, e ne allenta qualcuna solo quando serve a far entrare tutti i giochi.',
+  'options.goal.spaceAbout': 'Ignora l’ordine per far entrare più giochi possibile nei cubi.',
+  'options.goal.customAbout': 'Priorità scelte da te: le trovi in «Se lo spazio non basta».',
+  'options.goal.balancedFits': 'Con «Equilibrio» entrerebbero {count} giochi in più, allentando qualche regola.',
+  'options.ignoreArticles': 'Ignora gli articoli iniziali',
+  'options.ignoreArticlesHint':
+    'Come in libreria: «Le Case della Follia» va sotto la C, «The Game» sotto la G. Vale per gli articoli italiani, inglesi, francesi, spagnoli e tedeschi.',
+  'options.summary.noArticles': 'senza articoli',
+  'stats.room': 'spazio per altre ~{count} scatole',
+  'stats.roomHint':
+    'Quante scatole di formato standard (30 × 30 × 7 cm) l’app sistemerebbe ancora dopo i tuoi giochi, con le stesse regole e senza lasciarne fuori nessuno. Cubi vuoti: {empty}. Le scatole già sistemate occupano il {fill}% del volume dei cubi usati: il resto è aria sopra le pile, ai lati e dietro le scatole.',
 }
 
 export type Messages = Record<keyof typeof it, string>

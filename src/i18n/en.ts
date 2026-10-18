@@ -16,9 +16,6 @@ export const en: Messages = {
 
   'stats.placed': '{placed} of {total} games placed',
   'stats.cubes': '{used} of {total} cubes used',
-  'stats.fill': 'used cubes {fill}% full',
-  'stats.fillHint':
-    'Volume of the boxes divided by the inner volume of the cubes holding at least one game. The rest is air: above the stacks, beside the standing boxes, behind the shallow ones. Empty cubes and boxes on top of the shelves do not count.',
   'stats.unplaced': '{count} games without a spot',
 
   'collection.search': 'Search a game…',
@@ -124,11 +121,6 @@ export const en: Messages = {
   'finish.gray-turquoise': 'Grey-turquoise',
 
   'options.orientation': 'Box orientation',
-  'options.strategy': 'Strategy',
-  'options.strategy.ordered': 'Ordered',
-  'options.strategy.orderedHint': 'Follows the chosen order, cube after cube.',
-  'options.strategy.compact': 'Max space',
-  'options.strategy.compactHint': 'Ignores the order to fit as many games as possible.',
   'options.sortBy': 'Sort by',
   'options.sort.name': 'Name',
   'options.sort.year': 'Year',
@@ -424,4 +416,23 @@ export const en: Messages = {
   'stats.relaxed.one': '1 rule given up',
   'stats.relaxed.other': '{count} rules given up',
   'stats.relaxedHint': 'To fit more games: {rules}. Click to see the priorities.',
+  'options.goal.order': 'In order',
+  'options.goal.orderHint': 'Rules come first',
+  'options.goal.balanced': 'Balanced',
+  'options.goal.balancedHint': 'Order, yet all fit',
+  'options.goal.space': 'Max space',
+  'options.goal.spaceHint': 'As many games as possible',
+  'options.goal.orderAbout':
+    'Always keeps the order and the rules you choose: when room runs out, some games stay out and you are told.',
+  'options.goal.balancedAbout': 'Follows the order and your rules, and gives some up only when that fits every game.',
+  'options.goal.spaceAbout': 'Ignores the order to fit as many games as possible in the cubes.',
+  'options.goal.customAbout': 'Priorities set by you: see “When room runs out”.',
+  'options.goal.balancedFits': 'With “Balanced” {count} more games would fit, giving up some rules.',
+  'options.ignoreArticles': 'Skip leading articles',
+  'options.ignoreArticlesHint':
+    'Like in a library: “The Game” goes under G, “Le Case della Follia” under C. Works for Italian, English, French, Spanish and German articles.',
+  'options.summary.noArticles': 'articles skipped',
+  'stats.room': 'room for ~{count} more boxes',
+  'stats.roomHint':
+    'How many standard boxes (30 × 30 × 7 cm) the app would still place after your games, with the same rules and without leaving any game out. Empty cubes: {empty}. The boxes in place take {fill}% of the volume of the used cubes: the rest is air above stacks, beside and behind the boxes.',
 }

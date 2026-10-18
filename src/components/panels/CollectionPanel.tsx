@@ -2,6 +2,7 @@ import { Download, Layers, MapPin, Pencil, Plus, RulerDimensionLine, Search, Spa
 import { useMemo, useRef, useState } from 'react'
 import { createBackup, parseBackup, parseCsv } from '../../domain/backup'
 import { hasDims } from '../../domain/types'
+import { sortTitle } from '../../domain/sorting'
 import { useLayout } from '../../hooks/useLayout'
 import { useIsDesktop } from '../../hooks/useMediaQuery'
 import { useZonesById } from '../../hooks/useZones'
@@ -48,6 +49,7 @@ export function CollectionPanel() {
   const zonesById = useZonesById()
   const isDesktop = useIsDesktop()
   const language = useAppStore((s) => s.language)
+  const ignoreArticles = useAppStore((s) => s.options.ignoreArticles)
   const num = (n: number) => n.toLocaleString(language)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
@@ -68,11 +70,14 @@ export function CollectionPanel() {
   const sagaNames = useMemo(() => [...new Set(Object.values(layout.sagas))].sort(collator.compare), [layout.sagas])
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return games
-      .filter((g) => !q || g.name.toLowerCase().includes(q) || layout.sagas[g.id]?.toLowerCase().includes(q))
-      .filter((g) => filter === 'all' || (filter === 'missing' ? !hasDims(g) : unplaced.has(g.id)))
-      .sort((a, b) => collator.compare(a.name, b.name))
-  }, [games, query, filter, layout.sagas, unplaced])
+    return (
+      games
+        .filter((g) => !q || g.name.toLowerCase().includes(q) || layout.sagas[g.id]?.toLowerCase().includes(q))
+        .filter((g) => filter === 'all' || (filter === 'missing' ? !hasDims(g) : unplaced.has(g.id)))
+        // Same filing as the shelves: with articles skipped, "Le Case della Follia" is listed under C.
+        .sort((a, b) => collator.compare(sortTitle(a.name, ignoreArticles), sortTitle(b.name, ignoreArticles)))
+    )
+  }, [games, query, filter, layout.sagas, unplaced, ignoreArticles])
   const missingCount = useMemo(() => games.filter((g) => !hasDims(g)).length, [games])
 
   const importFile = async (file: File) => {

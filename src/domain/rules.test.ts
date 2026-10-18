@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_OPTIONS, RULES, normalizePriorities } from './defaults'
-import { missing, negotiable, planLayout, ruleCosts } from './rules'
+import { goalOf, missing, negotiable, planLayout, ruleCosts, withGoal } from './rules'
 import type { Game, PackOptions, RuleId, ShelfUnit } from './types'
 
 let seq = 0
@@ -82,6 +82,30 @@ describe('negotiable', () => {
     expect(negotiable(opts({ fillGaps: true, keepSagasInLine: true }))).toEqual(['sagaInLine', 'sagaInCube'])
     expect(negotiable(opts({ strategy: 'compact', maxStackHeight: 20 }))).toEqual(['stackHeight'])
     expect(negotiable(opts({ priorities: aboveAllIn('strictOrder') }))).toEqual(['sagaInCube'])
+  })
+})
+
+describe('goals', () => {
+  it('reads the goal from the strategy and the place of every game on the shelves', () => {
+    expect(goalOf(DEFAULT_OPTIONS)).toBe('balanced')
+    expect(goalOf(opts({ strategy: 'compact' }))).toBe('space')
+    expect(goalOf(opts({ priorities: [...RULES.slice(1), 'allIn'] }))).toBe('order')
+    expect(goalOf(opts({ priorities: aboveAllIn('strictOrder') }))).toBe('custom')
+  })
+
+  it('moves every game on the shelves first or last, keeping the order of the rules', () => {
+    const custom = opts({ strategy: 'compact', priorities: aboveAllIn('strictOrder') })
+    const rest = RULES.filter((r) => r !== 'allIn' && r !== 'strictOrder')
+    expect(withGoal(custom, 'balanced')).toEqual({ strategy: 'ordered', priorities: ['allIn', 'strictOrder', ...rest] })
+    expect(withGoal(custom, 'order')).toEqual({ strategy: 'ordered', priorities: ['strictOrder', ...rest, 'allIn'] })
+    expect(withGoal(custom, 'space')).toEqual({ strategy: 'compact' })
+  })
+
+  it('never gives up a rule with the order goal', () => {
+    const options = opts({ orientation: 'vertical' })
+    const layout = planLayout(six(), [unit(1, 1)], { ...options, ...withGoal(options, 'order') })
+    expect(missing(layout)).toBe(1)
+    expect(layout.relaxed).toEqual([])
   })
 })
 

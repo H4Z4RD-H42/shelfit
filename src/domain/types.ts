@@ -155,6 +155,8 @@ export interface PackOptions {
   strategy: Strategy
   sortBy: SortKey
   sortDirection: SortDirection
+  /** Sorting by name skips a leading article ("Le Case della Follia" under C). */
+  ignoreArticles: boolean
   /** Grouping levels, outermost first (at most two in the UI). */
   groupBy: GroupLevel[]
   /** Start every outermost group in a fresh cube. */

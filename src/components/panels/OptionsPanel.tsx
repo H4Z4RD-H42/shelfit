@@ -15,7 +15,7 @@ import {
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { DEFAULT_OPTIONS } from '../../domain/defaults'
 import { GROUP_KEYS } from '../../domain/grouping'
-import { missing, negotiable } from '../../domain/rules'
+import { goalOf, missing, negotiable, withGoal } from '../../domain/rules'
 import type {
   Align,
   GroupKey,
@@ -45,7 +45,7 @@ const SECTIONS: SectionId[] = ['order', 'sagas', 'zones', 'priorities', 'boxes']
 
 /** Options belonging to each section, used for the "modified" dot and the reset. */
 const SECTION_KEYS: Record<SectionId, (keyof PackOptions)[]> = {
-  order: ['sortBy', 'sortDirection', 'groupBy', 'groupStartsNewCube', 'fillGaps', 'fillOrder'],
+  order: ['sortBy', 'sortDirection', 'ignoreArticles', 'groupBy', 'groupStartsNewCube', 'fillGaps', 'fillOrder'],
   sagas: ['groupSagas', 'autoDetectSagas', 'keepSagasInCube', 'keepSagasInLine'],
   // Zones are not options: the reset buttons leave them alone.
   zones: [],
@@ -148,47 +148,59 @@ function Note({ children }: { children: ReactNode }) {
   )
 }
 
-/** The main choice, order or room, with what the other one would give. */
+const GOALS = ['order', 'balanced', 'space'] as const
+
+/**
+ * The main choice, from order to room: rules always kept, rules given up to
+ * fit every game, or no order at all. Tells what another goal would give.
+ */
 function Goal() {
   const t = useT()
-  const strategy = useAppStore((s) => s.options.strategy)
+  const options = useAppStore((s) => s.options)
   const setOptions = useAppStore((s) => s.setOptions)
   const layout = useLayout()
-  const { other } = useInsights()
+  const { goals } = useInsights()
+  const goal = goalOf(options)
   const used = layout.stats.usedCubes
   const out = missing(layout)
 
   let comparison: string
-  if (strategy === 'ordered') {
-    if (other.missing < out) comparison = t('options.goal.compactFits', { count: out - other.missing })
-    else if (other.usedCubes < used) comparison = t('options.goal.compactSaves', { other: other.usedCubes, used })
+  if (goal === 'space') {
+    const { missing: left, usedCubes } = goals.balanced
+    if (left > out) comparison = t('options.goal.orderLeavesOut', { count: left - out })
+    else if (usedCubes > used) comparison = t('options.goal.orderCosts', { other: usedCubes, used })
     else comparison = t('options.goal.orderFree')
+  } else if (goal !== 'balanced' && goals.balanced.missing < out) {
+    comparison = t('options.goal.balancedFits', { count: out - goals.balanced.missing })
+  } else if (goals.space.missing < out) {
+    comparison = t('options.goal.compactFits', { count: out - goals.space.missing })
+  } else if (goals.space.usedCubes < used) {
+    comparison = t('options.goal.compactSaves', { other: goals.space.usedCubes, used })
   } else {
-    if (other.missing > out) comparison = t('options.goal.orderLeavesOut', { count: other.missing - out })
-    else if (other.usedCubes > used) comparison = t('options.goal.orderCosts', { other: other.usedCubes, used })
-    else comparison = t('options.goal.orderFree')
+    comparison = t('options.goal.orderFree')
   }
 
   return (
-    <div className="space-y-2 border-b border-line px-5 py-4">
+    <div className="space-y-2.5 border-b border-line px-5 py-4">
       <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{t('options.goal')}</p>
-      <div className="grid grid-cols-2 gap-2">
-        {(['ordered', 'compact'] as const).map((s) => (
+      <div className="grid grid-cols-3 gap-1.5">
+        {GOALS.map((g) => (
           <button
-            key={s}
+            key={g}
             type="button"
-            aria-pressed={strategy === s}
-            onClick={() => setOptions({ strategy: s })}
+            aria-pressed={goal === g}
+            onClick={() => setOptions(withGoal(options, g))}
             className={cx(
-              'rounded-xl border p-3 text-left transition-colors',
-              strategy === s ? 'border-accent bg-accent/10' : 'border-line hover:border-ink-faint',
+              'rounded-xl border px-2.5 py-2 text-left transition-colors',
+              goal === g ? 'border-accent bg-accent/10' : 'border-line hover:border-ink-faint',
             )}
           >
-            <span className="block text-sm font-semibold">{t(`options.strategy.${s}`)}</span>
-            <span className="mt-1 block text-xs text-ink-soft">{t(`options.strategy.${s}Hint`)}</span>
+            <span className="block text-sm leading-tight font-semibold">{t(`options.goal.${g}`)}</span>
+            <span className="mt-0.5 block text-[11px] leading-snug text-ink-soft">{t(`options.goal.${g}Hint`)}</span>
           </button>
         ))}
       </div>
+      <p className="text-xs text-ink-soft">{t(`options.goal.${goal}About`)}</p>
       <p className="flex gap-2 text-xs text-ink-soft">
         <Scale className="mt-px size-3.5 shrink-0" />
         <span>{comparison}</span>
@@ -256,6 +268,7 @@ export function OptionsPanel() {
     order: ordered
       ? [
           `${t(`options.sort.${options.sortBy}`)} ${options.sortDirection === 'asc' ? '↑' : '↓'}`,
+          options.sortBy === 'name' && options.ignoreArticles && t('options.summary.noArticles'),
           options.groupBy.length > 0 && options.groupBy.map(groupSummary).join(' → '),
           options.groupBy.length > 0 && options.groupStartsNewCube && t('options.summary.newCube'),
           t(`options.fillOrder.${options.fillOrder}`),
@@ -342,6 +355,16 @@ export function OptionsPanel() {
                   <DirectionButton value={options.sortDirection} onChange={(sortDirection) => setOptions({ sortDirection })} />
                 </div>
               </Field>
+              {options.sortBy === 'name' && (
+                <div className="-mt-2">
+                  <Toggle
+                    label={t('options.ignoreArticles')}
+                    hint={t('options.ignoreArticlesHint')}
+                    checked={options.ignoreArticles}
+                    onChange={(ignoreArticles) => setOptions({ ignoreArticles })}
+                  />
+                </div>
+              )}
               <GroupSelect label={t('options.groupBy')} value={primary} onChange={(k) => setGroup(0, k)} />
               {primary && (
                 <GroupSelect

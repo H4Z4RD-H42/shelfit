@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
-import { missing, planLayout, ruleCosts, type RuleCost } from '../domain/rules'
+import { useEffect, useMemo, useState } from 'react'
+import { freeRoom, type FreeRoom } from '../domain/room'
+import { goalOf, missing, planLayout, ruleCosts, withGoal, type Goal, type RuleCost } from '../domain/rules'
 import type { Game, Layout, PackOptions, ShelfUnit, Zone } from '../domain/types'
 import { useAppStore } from '../store/appStore'
 
@@ -32,26 +33,51 @@ export function useLayout(): Layout {
   return useMemo(() => plan(...inputs), [inputs])
 }
 
+export interface Outcome {
+  usedCubes: number
+  missing: number
+}
+
 export interface Insights {
   costs: RuleCost[]
-  /** The same collection packed with the other strategy. */
-  other: { usedCubes: number; missing: number }
+  /** The same collection packed for each of the other goals. */
+  goals: Record<Exclude<Goal, 'custom'>, Outcome>
 }
 
 const insights = lastResult((games, units, options, zones): Insights => {
   const layout = plan(games, units, options, zones)
-  const strategy = options.strategy === 'ordered' ? 'compact' : 'ordered'
-  const other = planLayout(games, units, { ...options, strategy }, zones)
+  const outcome = (goal: Exclude<Goal, 'custom'>): Outcome => {
+    const other = goal === goalOf(options) ? layout : planLayout(games, units, { ...options, ...withGoal(options, goal) }, zones)
+    return { usedCubes: other.stats.usedCubes, missing: missing(other) }
+  }
   return {
     costs: ruleCosts(games, units, options, zones, layout),
-    other: { usedCubes: other.stats.usedCubes, missing: missing(other) },
+    goals: { order: outcome('order'), balanced: outcome('balanced'), space: outcome('space') },
   }
 })
 
-/** What the rules cost and what the other strategy would do; extra packing, so only for the options panel. */
+/** What the rules cost and what the other goals would do; extra packing, so only for the options panel. */
 export function useInsights(): Insights {
   const inputs = useInputs()
   return useMemo(() => insights(...inputs), [inputs])
+}
+
+const room = lastResult((games, units, options, zones) =>
+  freeRoom(games, units, options, zones, plan(games, units, options, zones)),
+)
+
+/**
+ * Room left on the shelves, in standard boxes. Packs the collection again, so
+ * it is worked out once the layout is on screen; meanwhile the last value shows.
+ */
+export function useRoom(): FreeRoom | undefined {
+  const inputs = useInputs()
+  const [result, setResult] = useState<FreeRoom>()
+  useEffect(() => {
+    const timer = setTimeout(() => setResult(room(...inputs)), 0)
+    return () => clearTimeout(timer)
+  }, [inputs])
+  return result
 }
 
 export function useGamesById(): Map<string, Game> {

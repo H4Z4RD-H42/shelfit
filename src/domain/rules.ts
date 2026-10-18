@@ -46,6 +46,27 @@ export function relax(o: PackOptions, rule: RuleId): PackOptions {
   }
 }
 
+/**
+ * The main choice: `order` never gives up a rule, `balanced` gives rules up to
+ * fit every game, `space` ignores the order. `custom` is a line set by hand
+ * in the middle of the priorities.
+ */
+export type Goal = 'order' | 'balanced' | 'space' | 'custom'
+
+export function goalOf(o: PackOptions): Goal {
+  if (o.strategy === 'compact') return 'space'
+  const line = o.priorities.indexOf('allIn')
+  if (line === 0) return 'balanced'
+  return line === o.priorities.length - 1 ? 'order' : 'custom'
+}
+
+/** Options reaching a goal: the strategy, and "every game on the shelves" first or last. */
+export function withGoal(o: PackOptions, goal: Exclude<Goal, 'custom'>): Partial<PackOptions> {
+  if (goal === 'space') return { strategy: 'compact' }
+  const rules = o.priorities.filter((r) => r !== 'allIn')
+  return { strategy: 'ordered', priorities: goal === 'balanced' ? ['allIn', ...rules] : [...rules, 'allIn'] }
+}
+
 /** Games left out for want of room: the only ones giving up a rule can bring in. */
 export function missing(layout: Layout): number {
   return layout.unplaced.filter((u) => u.reason === 'no-space' || u.reason === 'zone-full').length
