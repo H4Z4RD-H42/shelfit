@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_OPTIONS, migrateCube } from './defaults'
-import { cellAt, cubeSlots, editShape, kallaxShape, remapKeys, unitGeometry } from './geometry'
+import { cellAt, cubeSlots, editShape, existingIn, kallaxShape, remapKeys, unitGeometry } from './geometry'
 import { FRAME, KALLAX_CUBE } from './kallax'
 import { packCollection } from './packer'
 import type { CustomShape, Game, ShelfUnit } from './types'
@@ -183,5 +183,13 @@ describe('packing custom units', () => {
       ],
     })
     expect(packCollection([huge], [flat], DEFAULT_OPTIONS).tops[0]!.placements).toHaveLength(1)
+  })
+})
+
+describe('existingIn', () => {
+  it('drops the keys of cubes a smaller KALLAX no longer has', () => {
+    const unit: ShelfUnit = { id: 'u', name: 'U', columns: 2, rows: 2, color: '#fff' }
+    expect(remapKeys(['0:0', '1:1', '6:3', '0:2'], existingIn(unit))).toEqual(['0:0', '1:1'])
+    expect(remapKeys(['u:1:1', 'u:2:0', 'v:5:5'], existingIn(unit), 'u:')).toEqual(['u:1:1', 'v:5:5'])
   })
 })

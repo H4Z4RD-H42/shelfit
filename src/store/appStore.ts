@@ -5,7 +5,7 @@ import { createJSONStorage, persist, type StateStorage } from 'zustand/middlewar
 import { sampleCollection } from '../data/sampleCollection'
 import { mergeGames, type ImportedGame } from '../domain/backup'
 import { DEFAULT_OPTIONS, migrateCube, migrateUnits, normalizeOptions, type LegacySpaceOptions } from '../domain/defaults'
-import { editShape, remapKeys, type ShapeEdit } from '../domain/geometry'
+import { editShape, existingIn, remapKeys, type ShapeEdit } from '../domain/geometry'
 import { EMPTY_LENS, type Lens } from '../domain/lens'
 import { KALLAX_FINISHES } from '../domain/kallax'
 import type { CubeSize, Game, PackOptions, ShelfUnit, Zone, ZoneRule } from '../domain/types'
@@ -81,6 +81,18 @@ const idbStorage: StateStorage = {
   removeItem: (name) => del(name),
 }
 
+/** Drops blocked and zone cubes that no longer exist in their unit. */
+function pruneKeys(units: ShelfUnit[], zones: Zone[]): Pick<AppState, 'units' | 'zones'> {
+  return {
+    units: units.map((u) => (u.blocked ? { ...u, blocked: remapKeys(u.blocked, existingIn(u)) } : u)),
+    zones: zones.map((z) =>
+      z.cubes
+        ? { ...z, cubes: units.reduce<string[] | undefined>((keys, u) => remapKeys(keys, existingIn(u), `${u.id}:`), z.cubes) }
+        : z,
+    ),
+  }
+}
+
 const newUnit = (n: number): ShelfUnit => ({
   id: nanoid(),
   name: `KALLAX ${n}`,
@@ -121,7 +133,12 @@ export const useAppStore = create<AppState>()(
       clearGames: () => setState({ games: [], selectedId: null }),
 
       addUnit: () => setState((s) => ({ units: [...s.units, newUnit(s.units.length + 1)] })),
-      updateUnit: (id, patch) => setState((s) => ({ units: s.units.map((u) => (u.id === id ? { ...u, ...patch } : u)) })),
+      updateUnit: (id, patch) =>
+        setState((s) => {
+          const units = s.units.map((u) => (u.id === id ? { ...u, ...patch } : u))
+          // A smaller grid forgets the blocked and zone cubes it lost.
+          return 'columns' in patch || 'rows' in patch ? pruneKeys(units, s.zones) : { units }
+        }),
       removeUnit: (id) => setState((s) => ({ units: s.units.length > 1 ? s.units.filter((u) => u.id !== id) : s.units })),
       reshapeUnit: (id, edit) =>
         setState((s) => {
@@ -176,9 +193,8 @@ export const useAppStore = create<AppState>()(
           games,
           // Backups made before 0.13 keep the overhang and the top in the options,
           // before 0.14 one cube size for every unit.
-          units: migrateCube(migrateUnits(units, options as LegacySpaceOptions), cube),
+          ...pruneKeys(migrateCube(migrateUnits(units, options as LegacySpaceOptions), cube), zones ?? []),
           options: normalizeOptions(options),
-          zones: zones ?? [],
           selectedId: null,
         }),
     }),
@@ -209,7 +225,9 @@ export const useAppStore = create<AppState>()(
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<AppState>
-        return { ...current, ...p, options: normalizeOptions(p.options) }
+        const units = p.units ?? current.units
+        // Older versions kept the blocked cubes of a KALLAX after it was made smaller.
+        return { ...current, ...p, ...pruneKeys(units, p.zones ?? current.zones), options: normalizeOptions(p.options) }
       },
     },
   ),

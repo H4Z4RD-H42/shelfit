@@ -286,6 +286,12 @@ export function editShape(shape: CustomShape, edit: ShapeEdit): { shape: CustomS
   return { shape: { ...shape, columns }, remap }
 }
 
+/** Keeps the compartments the unit has: a smaller KALLAX drops the keys of the cubes it lost. */
+export function existingIn(unit: ShelfUnit): Remap {
+  const { columns } = unitShape(unit)
+  return (column, row) => (row >= 0 && row < (columns[column]?.cells.length ?? 0) ? [column, row] : undefined)
+}
+
 /** Applies a remap to `column:row` keys, after an optional prefix (e.g. `unitId:`). */
 export function remapKeys(keys: string[] | undefined, remap: Remap, prefix = ''): string[] | undefined {
   if (!keys) return keys
