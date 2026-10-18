@@ -104,6 +104,7 @@ function hasDetails(game?: Game): boolean {
 export function GameEditor({
   initial,
   sagas,
+  detectedSaga,
   suggestions,
   onSave,
   onCancel,
@@ -111,6 +112,8 @@ export function GameEditor({
 }: {
   initial?: Game
   sagas: string[]
+  /** Saga found from the title, shown while the field is empty. */
+  detectedSaga?: string
   suggestions: Suggestions
   onSave: (draft: GameDraft) => void
   onCancel: () => void
@@ -196,7 +199,7 @@ export function GameEditor({
           <input
             className={inputClass}
             list="saga-list"
-            placeholder={t('game.sagaPlaceholder')}
+            placeholder={detectedSaga ? t('game.sagaDetected', { saga: detectedSaga }) : t('game.sagaPlaceholder')}
             value={draft.saga ?? ''}
             onChange={(e) => patch({ saga: e.target.value })}
           />

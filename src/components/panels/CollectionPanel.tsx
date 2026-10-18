@@ -186,6 +186,7 @@ export function CollectionPanel() {
               key={editing}
               initial={editingGame}
               sagas={sagaNames}
+              detectedSaga={editingGame && layout.sagas[editingGame.id]}
               suggestions={suggestions}
               onCancel={() => setEditing(null)}
               onSave={(draft) => {

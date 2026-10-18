@@ -25,7 +25,8 @@ export function ListView() {
     outer ? [...new Set(gameIds.map((id) => groupLabel(t, outer, layout.groups[id])))] : []
 
   return (
-    <div className="h-full overflow-y-auto p-4 sm:p-6">
+    // The top padding leaves room for the floating "Maps and filters" button.
+    <div className="h-full overflow-y-auto p-4 pt-16 sm:p-6 sm:pt-16">
       <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-3">
         {layout.tops.map((top) => (
           <article key={`top-${top.unitId}`} className="rounded-xl border border-accent/40 bg-surface-0 p-3">

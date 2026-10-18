@@ -46,6 +46,7 @@ export const en: Messages = {
   'game.depth': 'Thickness',
   'game.saga': 'Saga',
   'game.sagaPlaceholder': 'Automatic',
+  'game.sagaDetected': 'Automatic: {saga}',
   'game.orientation': 'Orientation',
   'game.year': 'Year',
   'game.color': 'Colour',

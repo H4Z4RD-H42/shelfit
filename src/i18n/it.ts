@@ -44,6 +44,7 @@ export const it = {
   'game.depth': 'Spessore',
   'game.saga': 'Saga',
   'game.sagaPlaceholder': 'Automatica',
+  'game.sagaDetected': 'Automatica: {saga}',
   'game.orientation': 'Orientamento',
   'game.year': 'Anno',
   'game.color': 'Colore',
