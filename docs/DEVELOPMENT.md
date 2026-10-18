@@ -14,7 +14,7 @@ npm run check      # typecheck, lint, format check and tests
 npm run build      # production build in dist/
 ```
 
-The app is hosted on Cloudflare Workers, not public yet: see [HOSTING.md](HOSTING.md).
+The app is not published yet.
 
 ## CSV import
 
