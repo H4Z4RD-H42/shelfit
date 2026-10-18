@@ -5,6 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-10-18
+
+### Changed
+
+- Explanations show their keywords and the names of buttons and options in bold.
+- Clearer texts in the Shelves tab: compartment sizes, cubes to exclude (drawers, doors, baskets), KALLAX or custom, overhang and its side. "Sticks out" is now "Overhang side", "Free top" is now "Always use the top", and its explanation tells which boxes go on top: those too large for any compartment and those set to "Keep it on top of the shelf".
+- With an overhang of 0 the overhang side cannot be changed: nothing sticks out.
+
 ## [0.17.1] - 2026-10-18
 
 ### Changed
@@ -260,7 +268,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.17.1...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.17.2...HEAD
+[0.17.2]: https://github.com/H4Z4RD-H42/kallax/compare/v0.17.1...v0.17.2
 [0.17.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.4...v0.16.0
