@@ -97,10 +97,6 @@ function TagInput({ value, onChange, options }: { value: string[]; onChange: (ta
 
 type ZoneChoice = 'auto' | 'in' | 'out'
 
-function hasDetails(game?: Game): boolean {
-  return !!game && [game.genre, game.designer, game.publisher, game.playTime, game.maxPlayers].some((v) => v !== undefined)
-}
-
 export function GameEditor({
   initial,
   sagas,
@@ -221,7 +217,7 @@ export function GameEditor({
           options={orientations.map((o) => ({ value: o, label: t(`orientation.${o}`) }))}
         />
       </Field>
-      <details className="group rounded-lg border border-line" open={hasDetails(initial)}>
+      <details className="group rounded-lg border border-line">
         <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 text-xs font-semibold tracking-wide text-ink-soft uppercase">
           {t('game.details')}
           <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
