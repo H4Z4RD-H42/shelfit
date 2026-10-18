@@ -5,6 +5,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-18
+
+### Added
+
+- Three goals at the top of the options: "In order" never gives up a rule (some games may stay out), "Balanced", the default, gives up the least important rules to fit every game, and "Max space" ignores the order. A line below tells what another goal would give, e.g. "With Balanced 2 more games would fit". Moving "Every game on the shelves" by hand in the priorities shows no goal selected: the priorities are yours.
+- The stats bar tells how much room is left: "room for ~12 more boxes" is how many standard boxes (30 × 30 × 7 cm) the engine could still place with the same rules and no game left out, found by planning the collection again with them. The fill percentage moved to its tooltip.
+- "Skip leading articles" under the name sorting: "Le Case della Follia" goes under C, "The Game" under G, for Italian, English, French, Spanish and German articles. The collection list follows the same order.
+
+### Changed
+
+- The save, cancel and delete buttons of the game editor stay at the bottom of the panel while the form scrolls.
+- Bigger arrows in the priority list, easier to tap on phones.
+
+### Fixed
+
+- When a KALLAX was made smaller, the excluded and zone cubes it lost stayed in the saved data. They are now dropped, also from data saved by older versions.
+
 ## [0.16.0] - 2026-10-18
 
 ### Added
@@ -237,7 +254,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.4...v0.16.0
 [0.15.4]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.3...v0.15.4
 [0.15.3]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.2...v0.15.3
