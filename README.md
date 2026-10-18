@@ -1,8 +1,6 @@
-# Shelf Planner
+# shelfit.to
 
-> Working title — the final name is still to be chosen.
-
-**Shelf Planner** finds the best way to fit your board game collection into IKEA KALLAX shelves. Tell it which games you own and which shelves you have: it decides where every box goes, standing or lying flat, so that as many games as possible fit.
+**shelfit.to** finds the best way to fit your board game collection into IKEA KALLAX shelves. Tell it which games you own and which shelves you have: it decides where every box goes, standing or lying flat, so that as many games as possible fit.
 
 ## Features
 

@@ -1,6 +1,6 @@
 # Project conventions
 
-- **Product**: web app (PWA) that plans where to put board game boxes in IKEA KALLAX shelves. "Shelf Planner" is a working title; the name lives in `src/config.ts`, `index.html`, `vite.config.ts` (manifest) and `README.md`.
+- **Product**: web app (PWA) that plans where to put board game boxes in IKEA KALLAX shelves. The product name is "shelfit.to" (`src/config.ts`, `index.html`, `vite.config.ts` manifest, `README.md`). Keep internal identifiers (storage key, backup format, Worker name) unchanged: changing them would break existing user data or the hosting.
 - **Language**: code, comments, commits and docs in English; UI strings in `src/i18n/it.ts` and `src/i18n/en.ts` (every key in both).
 - **Units**: all lengths are centimetres.
 - **Architecture**: `src/domain` is pure TypeScript (no React) and must stay unit-tested; UI in `src/components`; state in `src/store/appStore.ts` (Zustand persisted to IndexedDB).

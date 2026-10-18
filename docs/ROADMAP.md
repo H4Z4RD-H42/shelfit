@@ -56,8 +56,12 @@ A public `/stats` page in the spirit of a service status page, fed by anonymous 
 - **Activity**: layouts computed per day (bar chart) and an anonymous feed of the latest plans (no usernames).
 - **Privacy**: on by default, switchable off in the settings and explained on the page; no cookies, no IP stored, a random installation id only, aggregated per day.
 
+### More languages
+
+- Interface in languages other than Italian and English (the translations live in `src/i18n`).
+
 ### 1.0 — Public release
 
-- Final name and branding, public repository, hosting on a custom domain.
+- Final branding, public repository, hosting on the custom domain shelfit.to.
 - Optional cloud sync between devices.
 - Community database of box sizes.

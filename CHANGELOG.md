@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.17.3] - 2026-10-18
+
+### Changed
+
+- The app is named shelfit.to (formerly the working title "Shelf Planner"): window title, home screen name and README.
+
 ## [0.17.2] - 2026-10-18
 
 ### Changed

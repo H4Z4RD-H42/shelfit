@@ -22,8 +22,8 @@ export default defineConfig({
       useCredentials: true,
       includeAssets: ['favicon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
-        name: 'Shelf Planner',
-        short_name: 'Shelf Planner',
+        name: 'shelfit.to',
+        short_name: 'shelfit.to',
         description: 'Plan the best layout of your board game collection on KALLAX shelves.',
         theme_color: '#0f1115',
         background_color: '#0f1115',

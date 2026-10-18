@@ -1,5 +1,4 @@
-/** Working title: the final product name is still to be chosen. */
-export const APP_NAME = 'Shelf Planner'
+export const APP_NAME = 'shelfit.to'
 
 export const APP_VERSION = __APP_VERSION__
 
