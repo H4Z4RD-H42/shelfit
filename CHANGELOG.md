@@ -5,6 +5,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.15.4] - 2026-10-18
+
+### Fixed
+
+- A game joins the saga typed by hand on its other chapters when its title starts with that saga: "The Thing: The Boardgame" now stands with the expansions marked "The Thing" instead of on its own.
+- Inside a saga every game is followed by its own expansions: "Nemesis: Lockdown – Stretch Goals" comes after "Nemesis: Lockdown" and no longer before it, and "Black Rose Wars: Duel – Lex" no longer sits between "Rebirth" and its expansions. An expansion goes under the game whose title starts its own, otherwise under the latest base game released before it.
+- In the list view the "Maps and filters" button no longer covers the first cubes.
+- The saga field of a game shows the saga found from the title (e.g. "Automatic: Black Rose Wars") instead of a bare "Automatic".
+
 ## [0.15.3] - 2026-10-18
 
 ### Changed
@@ -214,7 +223,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Local persistence in IndexedDB, installable offline PWA.
 - Italian and English interface, light and dark theme.
 
-[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.3...HEAD
+[Unreleased]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.4...HEAD
+[0.15.4]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.3...v0.15.4
 [0.15.3]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.2...v0.15.3
 [0.15.2]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.1...v0.15.2
 [0.15.1]: https://github.com/H4Z4RD-H42/kallax/compare/v0.15.0...v0.15.1
