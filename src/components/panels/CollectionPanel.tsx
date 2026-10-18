@@ -10,7 +10,7 @@ import { useBoxColor } from '../../hooks/useBoxColor'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
 import { UNPLACED_LABEL, zoneName } from '../labels'
-import { Button, Segmented } from '../ui'
+import { Button, Rich, Segmented } from '../ui'
 import { cx, inputClass } from '../styles'
 import { GameEditor } from './GameEditor'
 
@@ -213,11 +213,15 @@ export function CollectionPanel() {
 
         {games.length === 0 && !editing && (
           <div className="flex flex-col items-center gap-4 px-6 py-12 text-center">
-            <p className="text-sm text-ink-soft">{t('collection.empty')}</p>
+            <p className="text-sm text-ink-soft">
+              <Rich text={t('collection.empty')} />
+            </p>
             <Button variant="primary" onClick={loadSample}>
               <Sparkles className="size-4" /> {t('collection.loadSample')}
             </Button>
-            <p className="text-xs text-ink-faint">{t('collection.sampleNote')}</p>
+            <p className="text-xs text-ink-faint">
+              <Rich text={t('collection.sampleNote')} />
+            </p>
           </div>
         )}
 

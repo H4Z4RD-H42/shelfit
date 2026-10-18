@@ -6,7 +6,7 @@ import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
 import { ruleName } from '../labels'
 import { cx } from '../styles'
-import { Button } from '../ui'
+import { Button, Rich } from '../ui'
 
 /**
  * The active rules in order of importance, with "every game on the shelves"
@@ -53,7 +53,9 @@ export function PrioritiesSection() {
 
   return (
     <>
-      <p className="text-xs text-ink-soft">{t('priorities.hint')}</p>
+      <p className="text-xs text-ink-soft">
+        <Rich text={t('priorities.hint')} />
+      </p>
       <ol className="space-y-1.5">
         {items.map((rule, index) => {
           const relaxed = layout.relaxed.includes(rule)
@@ -117,7 +119,9 @@ export function PrioritiesSection() {
           )
         })}
       </ol>
-      <p className="text-xs text-ink-faint">{t(items.length > 1 ? 'priorities.inactive' : 'priorities.empty')}</p>
+      <p className="text-xs text-ink-faint">
+        <Rich text={t(items.length > 1 ? 'priorities.inactive' : 'priorities.empty')} />
+      </p>
     </>
   )
 }

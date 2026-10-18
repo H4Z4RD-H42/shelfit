@@ -86,7 +86,7 @@ export const it = {
   'shelves.kind.kallax': 'KALLAX',
   'shelves.kind.custom': 'Su misura',
   'shelves.kindHint':
-    'KALLAX ha le misure standard IKEA. Su misura serve per qualsiasi altro mobile: lo ricrei colonna per colonna, con vani di misure diverse, partendo dalla griglia attuale.',
+    '**KALLAX** ripropone le misure ufficiali, mentre usando **Su misura** è possibile creare scaffali con forme personalizzate.',
   'shelves.frame': 'Struttura (cm)',
   'shelves.frameHint':
     'La profondità utile dei vani e lo spessore dei pannelli: esterni sono i fianchi, il fondo e il piano in alto; interni i ripiani e i divisori tra le colonne.',
@@ -105,12 +105,11 @@ export const it = {
   'shelves.addColumnRight': 'Colonna a destra',
   'shelves.removeColumn': 'Togli colonna',
   'shelves.cellBlocked': 'Non usare questo vano',
-  'shelves.cellBlockedHint': 'Per esempio se ha cassetti, ante o lo usi per altro. Lì non verranno messi giochi.',
-  'shelves.sizesHint': 'Le misure sono interne, in cm: quelle dello spazio utile del vano.',
+  'shelves.cellBlockedHint': 'Per esempio se ha cassetti, ante o ceste. Lì non verranno posizionati giochi.',
+  'shelves.sizesHint': 'Indica la **larghezza** e l’**altezza** interna del vano in centimetri.',
 
   'shelves.blocked': 'Cubi da non usare',
-  'shelves.blockedHint':
-    'Tocca un cubo per escluderlo, per esempio se ci sono cassetti, ante o lo usi per altro. Lì non verranno messi giochi.',
+  'shelves.blockedHint': 'Tocca i vani che vuoi **escludere** (cassetti, ante, ceste). Lì non verranno posizionati giochi.',
 
   'finish.white': 'Bianco',
   'finish.black-brown': 'Nero-marrone',
@@ -184,9 +183,9 @@ export const it = {
   'game.complexity': 'Complessità (1–5)',
   'game.rating': 'Il mio voto (1–10)',
 
-  'shelves.topFree': 'Ripiano in alto libero',
+  'shelves.topFree': 'Usa sempre il ripiano in alto',
   'shelves.topFreeHint':
-    'Sopra lo scaffale vanno i giochi che non entrano nei cubi e quelli che scegli di tenere sopra dalla loro scheda. Spegnilo se sopra c’è altro, per esempio una TV.',
+    'Sopra lo scaffale verranno posizionate le scatole troppo grandi per qualsiasi vano e quelle per cui hai scelto «Tienilo sopra lo scaffale». Spento, queste scatole verranno contrassegnate «Senza posto».',
   'game.onTop': 'Tienilo sopra lo scaffale',
   'game.onTopShort': 'SOPRA',
   'list.top': 'Sopra {unit}',
@@ -226,12 +225,11 @@ export const it = {
   'options.clearanceHint': 'Spazio in più lasciato attorno a ogni scatola, per poterla sfilare senza fatica.',
   'shelves.overhang': 'Sporgenza (cm)',
   'shelves.overhangHint':
-    'Di quanto una scatola più profonda del cubo può sporgere da questo scaffale. Con 0 le scatole troppo profonde qui non entrano e vanno negli altri scaffali, se possono.',
-  'shelves.overhangSide': 'Sporgono',
+    'Di quanti centimetri possono sporgere al massimo le scatole dal vano. Con **0**, le scatole troppo profonde troveranno posto su altri scaffali se possibile, oppure sopra lo scaffale se usi il ripiano in alto; altrimenti verranno contrassegnate «Senza posto».',
+  'shelves.overhangSide': 'Lato sporgenza',
   'shelves.overhangSide.front': 'Davanti',
   'shelves.overhangSide.back': 'Dietro',
-  'shelves.overhangSideHint':
-    'Da che lato escono le scatole troppo profonde. «Dietro» va bene se lo scaffale ha spazio libero alle spalle: sul davanti restano tutte a filo.',
+  'shelves.overhangSideHint': 'Scegli da quale lato dello scaffale devono sporgere le scatole.',
   'options.maxStackHeightShort': 'Altezza pile (cm)',
   'options.maxStackHeightHint': 'Altezza massima di una pila di scatole sdraiate. Con 0 si usa tutta l’altezza del cubo.',
   'options.summary.notUsed': 'Non usato con «Massimo spazio»',

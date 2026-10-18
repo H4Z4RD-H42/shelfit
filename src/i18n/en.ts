@@ -87,8 +87,7 @@ export const en: Messages = {
   'shelves.kind': 'Type',
   'shelves.kind.kallax': 'KALLAX',
   'shelves.kind.custom': 'Custom',
-  'shelves.kindHint':
-    'KALLAX has the standard IKEA sizes. Custom is for any other furniture: you rebuild it column by column, with compartments of different sizes, starting from the current grid.',
+  'shelves.kindHint': '**KALLAX** uses the official sizes, while **Custom** lets you build shelves of any shape.',
   'shelves.frame': 'Frame (cm)',
   'shelves.frameHint':
     'Usable depth of the compartments and thickness of the panels: outer ones are the sides, the bottom and the top; inner ones the shelves and the dividers between columns.',
@@ -107,11 +106,11 @@ export const en: Messages = {
   'shelves.addColumnRight': 'Column on the right',
   'shelves.removeColumn': 'Remove column',
   'shelves.cellBlocked': 'Do not use this compartment',
-  'shelves.cellBlockedHint': 'For example when it holds drawers, doors or other things. No games will go there.',
-  'shelves.sizesHint': 'Sizes are inner sizes, in cm: the usable room of the compartment.',
+  'shelves.cellBlockedHint': 'For example when it has drawers, doors or baskets. No games will be placed there.',
+  'shelves.sizesHint': 'Enter the inner **width** and **height** of the compartment, in centimetres.',
 
   'shelves.blocked': 'Cubes not to use',
-  'shelves.blockedHint': 'Tap a cube to exclude it, e.g. when it holds drawers, doors or other things. No games will go there.',
+  'shelves.blockedHint': 'Tap the compartments you want to **exclude** (drawers, doors, baskets). No games will be placed there.',
 
   'finish.white': 'White',
   'finish.black-brown': 'Black-brown',
@@ -185,9 +184,9 @@ export const en: Messages = {
   'game.complexity': 'Complexity (1–5)',
   'game.rating': 'My rating (1–10)',
 
-  'shelves.topFree': 'Free top',
+  'shelves.topFree': 'Always use the top',
   'shelves.topFreeHint':
-    'The top of the shelf holds the games that fit in no cube and the ones you choose to keep on top from their card. Turn it off when something else stands there, a TV for example.',
+    'Boxes too large for any compartment and the ones set to “Keep it on top of the shelf” go on top of the shelf. When off, these boxes are marked “No spot”.',
   'game.onTop': 'Keep it on top of the shelf',
   'game.onTopShort': 'TOP',
   'list.top': 'On top of {unit}',
@@ -225,12 +224,11 @@ export const en: Messages = {
   'options.clearanceHint': 'Extra room left around each box, so it can be pulled out easily.',
   'shelves.overhang': 'Overhang (cm)',
   'shelves.overhangHint':
-    'How far a box deeper than the cube may stick out of this shelf. With 0, boxes that are too deep do not fit here and go to the other shelves, when they can.',
-  'shelves.overhangSide': 'Stick out',
+    'How many centimetres boxes may stick out of the compartment at most. With **0**, boxes that are too deep find a place on other shelves when possible, or on top of the shelf if you use the top; otherwise they are marked “No spot”.',
+  'shelves.overhangSide': 'Overhang side',
   'shelves.overhangSide.front': 'At the front',
   'shelves.overhangSide.back': 'At the back',
-  'shelves.overhangSideHint':
-    'Which side too-deep boxes stick out from. “At the back” works when there is free room behind the shelf: at the front they all stay flush.',
+  'shelves.overhangSideHint': 'Choose which side of the shelf boxes stick out from.',
   'options.maxStackHeightShort': 'Stack height (cm)',
   'options.maxStackHeightHint': 'Maximum height of a stack of lying boxes. With 0 the full height of the cube is used.',
   'options.summary.notUsed': 'Not used with “Max space”',

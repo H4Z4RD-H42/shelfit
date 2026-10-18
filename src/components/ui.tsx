@@ -1,7 +1,29 @@
 import { Info } from 'lucide-react'
-import { useId, useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { Fragment, useId, useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { useT } from '../i18n'
 import { cx, inputClass } from './styles'
+
+// **Keywords** and the names of buttons and options, quoted «like this» or “like this”.
+const EMPHASIS = /\*\*(.+?)\*\*|«(.+?)»|“(.+?)”/g
+
+/** Explanation text with its keywords and quoted option names in bold. */
+export function Rich({ text }: { text: string }) {
+  const parts: ReactNode[] = []
+  let last = 0
+  for (const m of text.matchAll(EMPHASIS)) {
+    const [whole, plain, it, en] = m
+    const strong = <strong className="font-semibold text-ink">{plain ?? it ?? en}</strong>
+    parts.push(
+      text.slice(last, m.index),
+      <Fragment key={m.index}>{plain !== undefined ? strong : [whole[0], strong, whole.at(-1)]}</Fragment>,
+    )
+    last = m.index + whole.length
+  }
+  parts.push(text.slice(last))
+  return <>{parts}</>
+}
+
+const rich = (node: ReactNode) => (typeof node === 'string' ? <Rich text={node} /> : node)
 
 type ButtonVariant = 'primary' | 'ghost' | 'danger' | 'subtle'
 
@@ -36,20 +58,27 @@ export function Segmented<T extends string>({
   options,
   onChange,
   size = 'md',
+  disabled,
 }: {
   value: T
   options: { value: T; label: ReactNode; title?: string }[]
   onChange: (value: T) => void
   size?: 'sm' | 'md'
+  disabled?: boolean
 }) {
   return (
-    <div role="radiogroup" className="flex rounded-lg border border-line bg-surface-2 p-0.5">
+    <div
+      role="radiogroup"
+      aria-disabled={disabled}
+      className={cx('flex rounded-lg border border-line bg-surface-2 p-0.5', disabled && 'opacity-40')}
+    >
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
           role="radio"
           aria-checked={o.value === value}
+          disabled={disabled}
           title={o.title}
           onClick={() => onChange(o.value)}
           className={cx(
@@ -141,7 +170,7 @@ export function Toggle({
       </div>
       {hint && (
         <Reveal open={showHint}>
-          <p className="pt-1 pr-12 text-xs text-ink-soft">{hint}</p>
+          <p className="pt-1 pr-12 text-xs text-ink-soft">{rich(hint)}</p>
         </Reveal>
       )}
     </div>
@@ -170,11 +199,11 @@ export function Field({
       </div>
       {info && (
         <Reveal open={showInfo}>
-          <p className="pb-1 text-xs text-ink-soft">{info}</p>
+          <p className="pb-1 text-xs text-ink-soft">{rich(info)}</p>
         </Reveal>
       )}
       {children}
-      {hint && <p className="text-xs text-ink-faint">{hint}</p>}
+      {hint && <p className="text-xs text-ink-faint">{rich(hint)}</p>}
     </div>
   )
 }

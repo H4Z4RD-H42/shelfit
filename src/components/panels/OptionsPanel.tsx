@@ -31,7 +31,7 @@ import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
 import { ruleName, zoneName } from '../labels'
 import { cx, inputClass } from '../styles'
-import { Button, Field, NumberInput, Segmented, Toggle } from '../ui'
+import { Button, Field, NumberInput, Rich, Segmented, Toggle } from '../ui'
 import { OptionSection } from './OptionSection'
 import { PrioritiesSection } from './PrioritiesSection'
 import { ZonesSection } from './ZonesSection'
@@ -200,7 +200,9 @@ function Goal() {
           </button>
         ))}
       </div>
-      <p className="text-xs text-ink-soft">{t(`options.goal.${goal}About`)}</p>
+      <p className="text-xs text-ink-soft">
+        <Rich text={t(`options.goal.${goal}About`)} />
+      </p>
       <p className="flex gap-2 text-xs text-ink-soft">
         <Scale className="mt-px size-3.5 shrink-0" />
         <span>{comparison}</span>
@@ -337,7 +339,11 @@ export function OptionsPanel() {
           <ListOrdered className="size-4" />,
           t('options.section.order'),
           <>
-            {!ordered && <Note>{t('options.compactNote')}</Note>}
+            {!ordered && (
+              <Note>
+                <Rich text={t('options.compactNote')} />
+              </Note>
+            )}
             <div className={cx('space-y-4', !ordered && 'pointer-events-none opacity-40')}>
               <Field label={t('options.sortBy')}>
                 <div className="flex gap-2">
@@ -374,7 +380,11 @@ export function OptionsPanel() {
                   onChange={(k) => setGroup(1, k)}
                 />
               )}
-              {!primary && <p className="-mt-2 text-xs text-ink-faint">{t('options.groupingHint')}</p>}
+              {!primary && (
+                <p className="-mt-2 text-xs text-ink-faint">
+                  <Rich text={t('options.groupingHint')} />
+                </p>
+              )}
               <Field label={t('options.fillOrder')} info={t('options.fillOrderHint')}>
                 <Segmented
                   size="sm"

@@ -9,7 +9,7 @@ import { useAppStore } from '../../store/appStore'
 import { cubePosition, zoneName } from '../labels'
 import { UnitCells } from '../UnitCells'
 import { cx, inputClass } from '../styles'
-import { Button, InfoButton, Reveal, Segmented } from '../ui'
+import { Button, InfoButton, Reveal, Rich, Segmented } from '../ui'
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
 
@@ -162,7 +162,9 @@ function ZoneCard({ zone, index, count }: { zone: Zone; index: number; count: nu
           <InfoButton open={showRule} onClick={() => setShowRule((v) => !v)} />
         </div>
         <Reveal open={showRule}>
-          <p className="pb-1 text-xs text-ink-soft">{t(`zones.ruleHint.${zone.rule}`)}</p>
+          <p className="pb-1 text-xs text-ink-soft">
+            <Rich text={t(`zones.ruleHint.${zone.rule}`)} />
+          </p>
         </Reveal>
         <div className="flex gap-2">
           <select
@@ -205,7 +207,9 @@ function ZoneCard({ zone, index, count }: { zone: Zone; index: number; count: nu
           <InfoButton open={showPlace} onClick={() => setShowPlace((v) => !v)} />
         </div>
         <Reveal open={showPlace}>
-          <p className="pb-1 text-xs text-ink-soft">{zone.place === 'cubes' ? t('zones.cubesHint') : t('zones.placeHint')}</p>
+          <p className="pb-1 text-xs text-ink-soft">
+            <Rich text={zone.place === 'cubes' ? t('zones.cubesHint') : t('zones.placeHint')} />
+          </p>
         </Reveal>
         <select className={inputClass} value={zone.place} onChange={(e) => patch({ place: e.target.value as ZonePlace })}>
           {ZONE_PLACES.map((p) => (
@@ -223,7 +227,9 @@ function ZoneCard({ zone, index, count }: { zone: Zone; index: number; count: nu
           <InfoButton open={showStrategy} onClick={() => setShowStrategy((v) => !v)} />
         </div>
         <Reveal open={showStrategy}>
-          <p className="pb-1 text-xs text-ink-soft">{t('zones.strategyHint')}</p>
+          <p className="pb-1 text-xs text-ink-soft">
+            <Rich text={t('zones.strategyHint')} />
+          </p>
         </Reveal>
         <Segmented<Strategy>
           size="sm"
@@ -278,7 +284,9 @@ export function ZonesSection() {
   const { addZone } = useAppStore.getState()
   return (
     <>
-      <p className="text-xs text-ink-soft">{t('zones.hint')}</p>
+      <p className="text-xs text-ink-soft">
+        <Rich text={t('zones.hint')} />
+      </p>
       {zones.map((zone, i) => (
         <ZoneCard key={zone.id} zone={zone} index={i} count={zones.length} />
       ))}

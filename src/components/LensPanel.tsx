@@ -30,7 +30,7 @@ import { useLensPaint } from '../hooks/useLens'
 import { useT } from '../i18n'
 import { useAppStore } from '../store/appStore'
 import { cx, inputClass } from './styles'
-import { Button, InfoButton, RangeSlider, Reveal, Section, Segmented } from './ui'
+import { Button, InfoButton, RangeSlider, Reveal, Rich, Section, Segmented } from './ui'
 
 /** Values of a list shown before "show all". */
 const SHORT_LIST = 8
@@ -155,7 +155,11 @@ export function LensPanel({ docked = false }: { docked?: boolean }) {
       {docked && folded && <FoldedLegend scale={paint.scale} matches={paint.matches?.size} total={games.length} />}
 
       <div className={cx('min-h-0 flex-1 overflow-y-auto', docked && folded && 'hidden')}>
-        {!hasAny && <p className="px-5 py-4 text-sm text-ink-soft">{t('lens.empty')}</p>}
+        {!hasAny && (
+          <p className="px-5 py-4 text-sm text-ink-soft">
+            <Rich text={t('lens.empty')} />
+          </p>
+        )}
 
         {heatKeys.length > 0 && (
           <Section
@@ -167,7 +171,9 @@ export function LensPanel({ docked = false }: { docked?: boolean }) {
             }
           >
             <Reveal open={showMapInfo}>
-              <p className="text-xs text-ink-soft">{t('lens.mapHint')}</p>
+              <p className="text-xs text-ink-soft">
+                <Rich text={t('lens.mapHint')} />
+              </p>
             </Reveal>
             <select
               className={inputClass}
@@ -202,7 +208,9 @@ export function LensPanel({ docked = false }: { docked?: boolean }) {
             }
           >
             <Reveal open={showFilterInfo}>
-              <p className="text-xs text-ink-soft">{t('lens.filtersHint')}</p>
+              <p className="text-xs text-ink-soft">
+                <Rich text={t('lens.filtersHint')} />
+              </p>
             </Reveal>
 
             {data.players && <PlayersFilter lens={lens} setLens={setLens} />}
@@ -531,7 +539,9 @@ function Legend({ scale }: { scale: HeatScale }) {
         )}
         {missing}
       </ul>
-      <p className="text-xs text-ink-faint">{t('lens.mapFirst')}</p>
+      <p className="text-xs text-ink-faint">
+        <Rich text={t('lens.mapFirst')} />
+      </p>
     </div>
   )
 }

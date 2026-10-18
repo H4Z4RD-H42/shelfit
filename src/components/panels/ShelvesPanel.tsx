@@ -1,13 +1,21 @@
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Plus, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { isCustom, kallaxShape, unitGeometry } from '../../domain/geometry'
-import { KALLAX_FINISHES, KALLAX_PRESETS, cubeKey, isBlocked, isTopFree, unitOverhangSide } from '../../domain/kallax'
+import {
+  KALLAX_FINISHES,
+  KALLAX_PRESETS,
+  cubeKey,
+  isBlocked,
+  isTopFree,
+  unitOverhang,
+  unitOverhangSide,
+} from '../../domain/kallax'
 import type { CustomColumn, CustomShape, ShelfUnit, UnitKind } from '../../domain/types'
 import { useT } from '../../i18n'
 import { useAppStore } from '../../store/appStore'
 import { cubePosition } from '../labels'
 import { UnitCells } from '../UnitCells'
-import { Button, Field, NumberInput, Section, Segmented, Toggle } from '../ui'
+import { Button, Field, NumberInput, Rich, Section, Segmented, Toggle } from '../ui'
 import { cx, inputClass } from '../styles'
 
 /** Size of the maps of the compartments in the panel (px). */
@@ -181,7 +189,9 @@ function CustomEditor({ unit, shape }: { unit: ShelfUnit; shape: CustomShape }) 
             <NumberInput value={col.cells[row]} onChange={positive(setHeight)} />
           </Field>
         </div>
-        <p className="text-xs text-ink-faint">{t('shelves.sizesHint')}</p>
+        <p className="text-xs text-ink-faint">
+          <Rich text={t('shelves.sizesHint')} />
+        </p>
         <Toggle
           label={t('shelves.cellBlocked')}
           hint={t('shelves.cellBlockedHint')}
@@ -305,6 +315,8 @@ export function ShelvesPanel() {
               <Field label={t('shelves.overhangSide')} info={t('shelves.overhangSideHint')}>
                 <Segmented
                   size="sm"
+                  // Nothing sticks out without an overhang.
+                  disabled={unitOverhang(unit) === 0}
                   value={unitOverhangSide(unit)}
                   onChange={(overhangSide) => updateUnit(unit.id, { overhangSide })}
                   options={(['front', 'back'] as const).map((o) => ({ value: o, label: t(`shelves.overhangSide.${o}`) }))}
